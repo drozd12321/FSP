@@ -1,20 +1,31 @@
 # users/serializers.py
-from rest_framework import serializers 
-from .models import User, Competition, CompetitionDate, Region, Discipline, Team, UserInfo
+from rest_framework import serializers
+from .models import User, Competition, CompetitionDate, Region, Discipline, UserInfo
 
 
+class UserInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserInfo
+        fields = ['surname', 'name', 'patronymic', 'region', 'role', 'birthday']
+        
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
+    info = UserInfoSerializer()  # вложенный сериализатор для UserInfo
 
     class Meta:
         model = User
-        fields = ['email', 'password', 'first_name', 'last_name', 'middle_name', 'nickName', 'status', 'region', 'birth_date']
+        fields = ['email', 'nickName', 'password', 'info']
 
     def create(self, validated_data):
+        info_data = validated_data.pop('info')
         password = validated_data.pop('password')
-        user = User(**validated_data)
+
+        user = User.objects.create(**validated_data)
         user.set_password(password)
         user.save()
+
+        UserInfo.objects.create(user=user, **info_data)
+
         return user
 
 class LoginSerializer(serializers.Serializer):
