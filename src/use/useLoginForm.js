@@ -2,12 +2,12 @@ import { watch } from "vue";
 import { useField, useForm } from "vee-validate";
 import { computed } from "vue";
 import * as yup from "yup";
-import { useStore } from "vuex";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 export default function useLoginForm() {
   const router = useRouter();
-  const store = useStore();
+  const authStore = useAuthStore();
   const validationSchema = yup.object({
     email: yup
       .string()
@@ -18,7 +18,7 @@ export default function useLoginForm() {
       .string()
       .trim()
       .required("Введите пароль")
-      .min(6, "Минимум 8 символов "),
+      .min(8, "Минимум 8 символов "),
     name: yup.string().trim().required("Введите имя").min(3),
     firstname: yup.string().trim().required("Введите фамилию").min(3),
     lastname: yup.string().trim(),
@@ -45,7 +45,7 @@ export default function useLoginForm() {
     value: email,
     errorMessage: emailError,
     handleBlur: emailBlur,
-  } = useField("password");
+  } = useField("email");
   const {
     value: password,
     errorMessage: passwordError,
@@ -55,43 +55,46 @@ export default function useLoginForm() {
     value: name,
     errorMessage: nameError,
     handleBlur: nameBlur,
-  } = useField("password");
+  } = useField("name");
   const {
     value: firstname,
     errorMessage: firstnameError,
     handleBlur: firstnameBlur,
-  } = useField("password");
+  } = useField("firstname");
   const {
     value: lastname,
     errorMessage: lastnameError,
     handleBlur: lastnameBlur,
-  } = useField("password");
+  } = useField("lastname");
   const {
     value: nickname,
     errorMessage: nicknameError,
     handleBlur: nicknameBlur,
-  } = useField("password");
+  } = useField("nickname");
   const {
     value: status,
     errorMessage: statusError,
     handleBlur: statusBlur,
-  } = useField("password");
+  } = useField("status");
   const {
     value: dt,
     errorMessage: dtError,
     handleBlur: dtBlur,
-  } = useField("password");
+  } = useField("dt");
   const {
     value: region,
     errorMessage: regionError,
     handleBlur: regionBlur,
-  } = useField < string > "email";
+  } = useField("region");
   const onSubmit = handleSubmit(async (val) => {
-    await store.dispatch("auth/login", val);
+    console.log("fff");
+    console.log(val);
+    await authStore.login();
     router.push("/");
     resetForm();
   });
-  const istomanyAttemots = computed < boolean > (() => submitCount.value >= 3);
+
+  const istomanyAttemots = computed(() => submitCount.value >= 3);
   watch(istomanyAttemots, (val) => {
     if (val) {
       setTimeout(() => {
@@ -100,7 +103,6 @@ export default function useLoginForm() {
     }
   });
   return {
-    nicknameBlur,
     nicknameBlur,
     nicknameError,
     email,
@@ -114,8 +116,6 @@ export default function useLoginForm() {
     region,
     onSubmit,
     istomanyAttemots,
-    firstnameBlur,
-    firstnameError,
     emailBlur,
     emailError,
     passwordBlur,
@@ -132,5 +132,7 @@ export default function useLoginForm() {
     dtError,
     regionBlur,
     regionError,
+    isSubmitting,
+    handleSubmit,
   };
 }

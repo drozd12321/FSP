@@ -6,14 +6,30 @@
           <TheHeadAuth :key="mode" :mode="mode" @mode="setMode" />
         </transition>
       </div>
-      <AppForm :mode="mode" />
+      <AppForm :mode="mode" @submit="onSubmit" />
     </div>
   </div>
 </template>
 <script setup>
 import AppForm from "@/components/Auth/AppForm.vue";
 import TheHeadAuth from "@/components/Auth/TheHeadAuth.vue";
-import { ref } from "vue";
+import useLoginForm from "@/use/useLoginForm";
+import { provide, ref } from "vue";
+const {
+  dt,
+  email,
+  firstname,
+  lastname,
+  name,
+  nickname,
+  onSubmit,
+  password,
+  region,
+  status,
+  isSubmitting,
+  istomanyAttemots,
+} = useLoginForm();
+
 const mode = ref("reg");
 const setMode = (newMode) => {
   mode.value = newMode;

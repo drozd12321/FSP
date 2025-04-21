@@ -1,38 +1,119 @@
 <template>
-  <form class="form" @submit.prevent="login">
+  <form class="form" @submit.prevent="$emit('submit')">
     <div class="inf">
       <transition name="fade" mode="out-in">
         <div class="pole" v-if="mode === 'log'">
-          <DivLogin />
+          <DivLogin v-model:emailVal="email" v-model:passwordVal="password" />
+          <button type="submit" :disabled="isSubmitting" @click="login">
+            Войти
+          </button>
         </div>
         <div class="pole" v-else>
-          <DivReg />
+          <DivReg
+            v-model:emailVal="email"
+            v-model:passwordVal="password"
+            v-model:firstnameVal="firstname"
+            v-model:lastnameVal="lastname"
+            v-model:nameVal="name"
+            v-model:nicknameVal="nickname"
+            v-model:regionVal="region"
+            v-model:statusVal="status"
+            v-model:dtVal="dt"
+            @emailblur="emailBlur"
+            @passwordBlur="passwordBlur"
+            @nameBlur="nameBlur"
+            @firstnameBlur="firstnameBlur"
+            @lastnameBlur="lastnameBlur"
+            @nicknameBlur="nicknameBlur"
+          />
+          <button type="submit" :disabled="isSubmitting" @click="login">
+            Зарегистрироваться
+          </button>
         </div>
       </transition>
     </div>
   </form>
 </template>
 <script setup>
-import { useAuthStore } from "@/stores/useAuthStore";
-import { useRouter } from "vue-router";
 import DivReg from "./DivReg.vue";
 import DivLogin from "./DivLogin.vue";
+import useLoginForm from "@/use/useLoginForm";
+import { useAuthStore } from "@/stores/useAuthStore";
+import router from "@/router";
+const authStore = useAuthStore();
+const {
+  email,
+  firstname,
+  lastname,
+  name,
+  nickname,
+  password,
+  region,
+  status,
+  dt,
+  isSubmitting,
+  passwordBlur,
+  nameBlur,
+  emailBlur,
+  dtBlur,
+  firstnameBlur,
+  lastnameBlur,
+  nicknameBlur,
+  statusBlur,
+  istomanyAttemots,
+} = useLoginForm();
 const props = defineProps({
   mode: String,
 });
-const authStore = useAuthStore();
-const router = useRouter();
+
 const login = async () => {
-  try {
-    await authStore.login("name", "passwd");
-    console.log("login");
-    router.push("/");
-  } catch (error) {
-    console.log(error);
+  if (props.mode === "reg") {
+    const formstate = {
+      email: email.value,
+      password: password.value,
+      nickName: nickname.value,
+      info: {
+        name: name.value,
+        surname: firstname.value,
+        patronymic: lastname.value,
+        role: status.value,
+        region: region.value,
+        birthday: dt.value,
+      },
+    };
+    await authStore.login(
+      "http://10.8.0.23:8000/api/auth/register/",
+      formstate
+    );
+  } else {
+    const formstate = {
+      username: email.value,
+      password: password.value,
+    };
+    await authStore.login("http://10.8.0.23:8000/api/auth/login/", formstate);
   }
+  router.push("/");
 };
 </script>
 <style scoped>
+button {
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  background-color: var(--fon);
+  width: 200px;
+  font-weight: 600;
+  color: var(--sin);
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: auto;
+  align-self: flex-end;
+}
+button:hover {
+  color: white;
+  background-color: var(--sin);
+  transition: all 0.5s ease;
+}
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease, transform 0.3s ease;

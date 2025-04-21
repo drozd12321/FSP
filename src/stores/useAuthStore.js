@@ -1,5 +1,6 @@
 import { ref, computed } from "vue";
 import { defineStore } from "pinia";
+import axios from "axios";
 
 export const useAuthStore = defineStore("auth", () => {
   const token = ref(localStorage.getItem("jwtToken"));
@@ -13,32 +14,13 @@ export const useAuthStore = defineStore("auth", () => {
   }
   const getToken = computed(() => token.value);
   const isAuth = computed(() => !!token.value);
-  async function login(username, password) {
+  async function login(url, formstate) {
     try {
-      // Закомментированный запрос — пример того, как будет работать логин
-      // const response = await fetch('https://api.example.com/login', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ username, password }),
-      // });
-
-      // if (!response.ok) {
-      //   throw new Error('Ошибка при авторизации');
-      // }
-
-      // const data = await response.json();
-
-      // Для демонстрации, заменим это на setTimeout, чтобы имитировать асинхронную операцию
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          setToken("new-jwt-token");
-          console.log("User logged in successfully");
-          resolve(); // <- Важный момент
-        }, 1000);
-      });
-
+      console.log("sdsds");
+      console.log(formstate);
+      const responce = await axios.post(url, formstate);
+      console.log(responce.data);
+      setToken(responce.data.token);
       return true;
     } catch (error) {
       console.error("Ошибка при логине:", error);

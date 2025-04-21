@@ -2,25 +2,32 @@
   <h2>Войти в систему</h2>
   <div class="inpdiv">
     <label class="label" for="email">Email:</label>
-    <input type="email" id="email" />
+    <input
+      type="email"
+      id="email"
+      :value="emailVal"
+      @input="$emit('update:emailVal', $event.target.value)"
+    />
   </div>
   <div class="inpdiv">
     <label class="label" for="password">Password:</label>
-    <input type="password" id="password" />
-  </div>
-  <button type="submit">Войти</button>
-  <div class="reg">
-    <h3>Войти через</h3>
-    <div class="one">
-      <div>
-        <span>Госуслуги</span>
-      </div>
-      <div><span>Google</span></div>
-      <div><span>Соц Сети</span></div>
-    </div>
+    <input
+      type="password"
+      id="password"
+      :value="passwordVal"
+      @input="$emit('update:passwordVal', $event.target.value)"
+    />
   </div>
 </template>
-<script setup></script>
+<script setup>
+const emit = defineEmits(["update:emailVal", "update:passwordVal", "submit"]);
+const props = defineProps({
+  emailVal: String,
+  passwordVal: String,
+  isSubmitting: Boolean,
+  istomanyAttemots: Boolean,
+});
+</script>
 <style scoped>
 .inpdiv {
   display: flex;
