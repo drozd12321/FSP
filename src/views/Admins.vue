@@ -1,3 +1,7 @@
-<template>admins</template>
+<template><div>admins</div></template>
 <script setup></script>
-<style scoped></style>
+<style scoped>
+div {
+  color: white;
+}
+</style>

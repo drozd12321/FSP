@@ -2,6 +2,12 @@ import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/views/Home.vue";
 import Auth from "@/views/Auth.vue";
 import { useAuthStore } from "@/stores/useAuthStore";
+import Admins from "@/views/Admins.vue";
+import Command from "@/views/Command.vue";
+import Competitions from "@/views/Competitions.vue";
+import FAQ from "@/views/FAQ.vue";
+import Rating from "@/views/Rating.vue";
+import News from "@/views/News.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -16,18 +22,54 @@ const router = createRouter({
       },
     },
     {
-      path: "/",
-      name: "home",
-      component: Home,
+      path: "/admins",
+      name: "admins",
+      component: Admins,
       meta: {
         layout: "Main",
         auth: true,
       },
     },
     {
-      path: "/",
-      name: "home",
-      component: Home,
+      path: "/command",
+      name: "command",
+      component: Command,
+      meta: {
+        layout: "Main",
+        auth: true,
+      },
+    },
+    {
+      path: "/competitions",
+      name: "competitions",
+      component: Competitions,
+      meta: {
+        layout: "Main",
+        auth: true,
+      },
+    },
+    {
+      path: "/rating",
+      name: "rating",
+      component: Rating,
+      meta: {
+        layout: "Main",
+        auth: true,
+      },
+    },
+    {
+      path: "/news",
+      name: "news",
+      component: News,
+      meta: {
+        layout: "Main",
+        auth: true,
+      },
+    },
+    {
+      path: "/FAQ",
+      name: "FAQ",
+      component: FAQ,
       meta: {
         layout: "Main",
         auth: true,

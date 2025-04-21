@@ -5,16 +5,23 @@
     <div class="poch">Почта</div>
   </header>
   <div class="head">
-    <div class="one">Соревнования</div>
-    <div class="two">Поиск команд</div>
-    <div class="three">Рейтинг</div>
-    <div class="fo">Представители</div>
-    <div class="five">Новости</div>
-    <div class="c">FAQ</div>
+    <div class="one">
+      <RouterLink to="/competitions">Соревнования</RouterLink>
+    </div>
+    <div class="two"><RouterLink to="/command">Поиск команд</RouterLink></div>
+    <div class="three"><RouterLink to="/rating">Рейтинг</RouterLink></div>
+    <div class="fo"><RouterLink to="/admins">Представители</RouterLink></div>
+    <div class="five"><RouterLink to="news">Новости</RouterLink></div>
+    <div class="c"><RouterLink to="/FAQ">FAQ</RouterLink></div>
   </div>
 </template>
 <script setup></script>
 <style scoped>
+a {
+  color: white; /* Цвет текста */
+  text-decoration: none; /* Убирает подчеркивание */
+  list-style: none;
+}
 header {
   background-color: var(--fon);
   color: white;

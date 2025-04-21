@@ -1,3 +1,7 @@
-<template>comand</template>
+<template><div>commsnds</div></template>
 <script setup></script>
-<style scoped></style>
+<style scoped>
+div {
+  color: white;
+}
+</style>

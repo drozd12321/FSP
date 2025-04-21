@@ -1,3 +1,7 @@
-<template>news</template>
+<template><div>news</div></template>
 <script setup></script>
-<style scoped></style>
+<style scoped>
+div {
+  color: white;
+}
+</style>

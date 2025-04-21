@@ -1,3 +1,7 @@
-<template>compet</template>
+<template><div>compet</div></template>
 <script setup></script>
-<style scoped></style>
+<style scoped>
+div {
+  color: white;
+}
+</style>
