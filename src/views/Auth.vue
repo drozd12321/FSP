@@ -3,7 +3,7 @@
     <div class="cont">
       <div class="head">
         <transition name="fade" mode="out-in">
-          <TheHeadAuth :mode="mode" @mode="setMode" />
+          <TheHeadAuth :key="mode" :mode="mode" @mode="setMode" />
         </transition>
       </div>
       <AppForm :mode="mode" />
@@ -58,7 +58,7 @@ const setMode = (newMode) => {
 .head {
   grid-area: head;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(1, 1fr);
   padding: 5px;
   cursor: pointer;
   transition: all 0.4s ease;
