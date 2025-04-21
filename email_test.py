@@ -239,3 +239,31 @@ sender.send_email(
     message="Привет! Это тестовое письмо из Python.",
     is_html=False
 )
+
+
+# 3. Массовая рассылка с персонализацией
+recipients = {
+    "user1@example.com": "Алексей",
+    "user2@mail.ru": "Мария",
+    "user3@yandex.ru": "Иван"
+}
+
+html_template = """
+<html>
+  <body>
+    <h1>Привет, {name}!</h1>
+    <p>Это персонализированное письмо из нашей рассылки.</p>
+    <p>С уважением,<br>Команда проекта</p>
+  </body>
+</html>
+"""
+
+results = sender.send_bulk_emails(
+    recipients=recipients,
+    subject="Персональное предложение",
+    message_template=html_template,
+    is_html=True,
+    delay=2.0,
+    batch_size=20,
+    batch_delay=120.0
+)
