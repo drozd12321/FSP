@@ -1,6 +1,6 @@
 # users/serializers.py
 from rest_framework import serializers
-from .models import User, Competition, CompetitionDate, Region, Discipline, UserInfo
+from .models import User, Competition, CompetitionDate, Region, Discipline, UserInfo, Team
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
