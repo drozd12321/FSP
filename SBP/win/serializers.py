@@ -1,7 +1,9 @@
 # users/serializers.py
 from rest_framework import serializers
-from django.contrib.auth import authenticate
-from .models import User
+from django.contrib.auth.password_validation import validate_password
+from .models import User, Competition, CompetitionDate, Region, Discipline
+from django.db import models
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
@@ -49,3 +51,72 @@ class LoginSerializer(serializers.Serializer):
 
         data['user'] = user
         return data
+    
+class CompetitionDateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompetitionDate
+        fields = [
+            'registration_start',
+            'registration_end',
+            'start_date',
+            'end_date',
+        ]
+
+    def validate(self, data):
+        if data['registration_start'] >= data['registration_end']:
+            raise serializers.ValidationError(
+                "Дата окончания регистрации должна быть позже начала."
+            )
+        
+        if data['start_date'] >= data['end_date']:
+            raise serializers.ValidationError(
+                "Дата окончания проведения должна быть позже начала."
+            )
+        
+        if data['registration_end'] > data['start_date']:
+            raise serializers.ValidationError(
+                "Регистрация должна закрываться до начала проведения."
+            )
+        
+        return data
+    
+class CompetitionSerializer(serializers.ModelSerializer):
+    dates = CompetitionDateSerializer()
+    regions = serializers.PrimaryKeyRelatedField(
+        queryset=Region.objects.all(),
+        many=True,
+        required=True
+    )
+    discipline = serializers.PrimaryKeyRelatedField(
+        queryset=Discipline.objects.all()
+    )
+
+    class Meta:
+        model = Competition
+        fields = [
+            'name',
+            'regions',
+            'discipline',
+            'description',
+            'max_participants',
+            'max_participants_in_team',
+            'min_age',
+            'max_age',
+            'competition_type',
+            'type',
+            'dates',
+        ]
+
+    def create(self, validated_data):
+        dates_data = validated_data.pop('dates')
+        regions = validated_data.pop('regions')
+        
+        competition = Competition.objects.create(**validated_data)
+        competition.regions.set(regions)
+        
+        CompetitionDate.objects.create(
+            competition=competition,
+            **dates_data
+        )
+        
+        return competition
