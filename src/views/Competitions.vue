@@ -1,11 +1,14 @@
 <template>
   <!-- <div><CardInfoComp /></div> -->
   <div class="card"><ListCard /></div>
+  {{ getError }}
 </template>
 <script setup>
-import CardInfoComp from "@/components/CardInfoComp.vue";
+import AppErrorMsg from "@/components/AppErrorMsg.vue";
 import ListCard from "@/components/ListCard.vue";
-import Loader from "@/components/Loader.vue";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { storeToRefs } from "pinia";
+const { getError } = storeToRefs(useAuthStore());
 </script>
 <style scoped>
 .card {

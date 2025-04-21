@@ -1,4 +1,7 @@
 <template>
+  <div class="error-overlay" v-if="getError">
+    <AppErrorMsg />
+  </div>
   <div v-if="isLoading" class="loader-overlay"><Loader /></div>
   <form class="form" @submit.prevent="login">
     <div class="inf">
@@ -40,8 +43,9 @@ import router from "@/router";
 import { computed } from "vue";
 import Loader from "../Loader.vue";
 import { storeToRefs } from "pinia";
+import AppErrorMsg from "../AppErrorMsg.vue";
 const authStore = useAuthStore();
-const { isLoading } = storeToRefs(useAuthStore());
+const { isLoading, getError } = storeToRefs(useAuthStore());
 const isLoad = computed(() => {
   authStore.isLoading;
 });
@@ -61,39 +65,66 @@ const props = defineProps({
   mode: String,
 });
 const login = async () => {
-  if (props.mode === "reg") {
-    const formstate = {
-      email: email.value,
-      password: password.value,
-      nickName: nickname.value,
-      info: {
-        name: name.value,
-        surname: firstname.value,
-        patronymic: lastname.value,
-        role: status.value,
-        region: region.value,
-        birthday: dt.value,
-      },
-    };
-    await authStore.login(
-      "http://10.8.0.23:8000/api/auth/register/",
-      formstate
-    );
-
-    console.log(formstate);
-    router.push("/");
-  } else {
-    const formstate = {
-      username: email.value,
-      password: password.value,
-    };
-    console.log("log", formstate);
-    await authStore.login("http://10.8.0.23:8000/api/auth/login/", formstate);
-    router.push("/");
+  try {
+    if (props.mode === "reg") {
+      const formstate = {
+        email: email.value,
+        password: password.value,
+        nickName: nickname.value,
+        info: {
+          name: name.value,
+          surname: firstname.value,
+          patronymic: lastname.value,
+          role: status.value,
+          region: region.value,
+          birthday: dt.value,
+        },
+      };
+      const response = await authStore.login(
+        "http://10.8.0.23:8000/api/auth/register/",
+        formstate
+      );
+      if (response.success) {
+        console.log(formstate);
+        router.push("/");
+      } else {
+        console.error("Registration failed", response.error);
+      }
+    } else {
+      const formstate = {
+        username: email.value,
+        password: password.value,
+      };
+      console.log("log", formstate);
+      const response = await authStore.login(
+        "http://10.8.0.23:8000/api/auth/login/",
+        formstate
+      );
+      if (response.success) {
+        router.push("/");
+      } else {
+        console.error("Login failed", response.error);
+      }
+    }
+  } catch (error) {
+    console.error("An error occurred:", error);
   }
 };
 </script>
 <style scoped>
+.error-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.9); /* Полупрозрачный белый фон */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* Очень высокий z-index чтобы быть поверх всего */
+  backdrop-filter: blur(2px); /* Легкое размытие фона */
+}
 .loader-overlay {
   position: fixed; /* Или absolute, в зависимости от ваших нужд */
   top: 0;
