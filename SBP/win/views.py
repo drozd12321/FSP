@@ -2,12 +2,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import RegisterSerializer, LoginSerializer
+from .serializers import RegisterSerializer, LoginSerializer, TeamCreateSerializer, CompetitionSerializer
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
-from rest_framework.permissions import AllowAny
-from rest_framework import generics
-from .serializers import CompetitionSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
 
 class RegisterView(APIView):
     permission_classes = [AllowAny] 
@@ -52,4 +51,23 @@ class CompetitionCreateView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class TeamCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = TeamCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            # Автоматически подставляем текущего пользователя как создателя
+            serializer.validated_data['creator_id'] = request.user.userinfo
+            
+            team = serializer.save()
+            return Response({
+                'id': team.id,
+                'name': team.name,
+                'competition_id': team.competition.id,
+                'captain_id': team.captain.id,
+                'members': [team.captain.id]
+            }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

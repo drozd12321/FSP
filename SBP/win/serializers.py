@@ -1,7 +1,6 @@
 # users/serializers.py
-from rest_framework import serializers
-from .models import User, Competition, CompetitionDate, Region, Discipline
-from django.db import models
+from rest_framework import serializers 
+from .models import User, Competition, CompetitionDate, Region, Discipline, Team, UserInfo
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -119,3 +118,39 @@ class CompetitionSerializer(serializers.ModelSerializer):
         )
         
         return competition
+    
+class TeamCreateSerializer(serializers.ModelSerializer):
+    competition_id = serializers.PrimaryKeyRelatedField(
+        queryset=Competition.objects.all(),
+        source='competition',
+        write_only=True
+    )
+    creator_id = serializers.PrimaryKeyRelatedField(
+        queryset=UserInfo.objects.all(),
+        source='captain',
+        write_only=True
+    )
+
+    class Meta:
+        model = Team
+        fields = ['competition_id', 'name', 'creator_id']
+        extra_kwargs = {
+            'name': {'required': True},
+            'competition_id': {'required': True},
+            'creator_id': {'required': True},
+        }
+
+    def create(self, validated_data):
+        # Извлекаем капитана из validated_data
+        captain = validated_data.pop('captain')
+        
+        # Создаем команду
+        team = Team.objects.create(
+            captain=captain,
+            **validated_data
+        )
+        
+        # Добавляем капитана в члены команды
+        team.members.add(captain)
+        
+        return team
