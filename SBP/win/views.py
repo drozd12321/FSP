@@ -54,7 +54,20 @@ class LoginView(APIView):
         return Response({'token': token.key})
     
 class CompetitionCreateView(APIView):
+    permission_classes = [AllowAny]
+    
     def post(self, request):
+        # Преобразуем название дисциплины в ID если нужно
+        if 'discipline' in request.data and isinstance(request.data['discipline'], str):
+            try:
+                discipline = Discipline.objects.get(name=request.data['discipline'])
+                request.data['discipline'] = discipline.id
+            except Discipline.DoesNotExist:
+                return Response(
+                    {"discipline": "Discipline not found"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
         serializer = CompetitionSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -62,47 +75,75 @@ class CompetitionCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class TeamCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]  # Разрешаем доступ без авторизации
 
     def post(self, request):
-        serializer = TeamCreateSerializer(data=request.data)
+        # Для анонимных пользователей требуем явное указание captain_id
+        if request.user.is_anonymous:
+            if 'captain_id' not in request.data:
+                return Response(
+                    {"error": "captain_id_required", "detail": "Для анонимных пользователей обязательно укажите captain_id"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            try:
+                captain = UserInfo.objects.get(id=request.data['captain_id'])
+            except UserInfo.DoesNotExist:
+                return Response(
+                    {"error": "invalid_captain", "detail": "Указанный captain_id не существует"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            # Для авторизованных пользователей
+            try:
+                captain = request.user.info
+            except UserInfo.DoesNotExist:
+                return Response(
+                    {"error": "user_profile_incomplete", "detail": "Профиль пользователя не заполнен"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+        serializer = TeamCreateSerializer(
+            data=request.data,
+            context={'captain': captain}  # Передаем капитана в сериализатор
+        )
+        
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Проверяем региональные ограничения
+        # Остальная логика (проверка регионов и т.д.)
         competition = serializer.validated_data['competition']
-        user_region = request.user.userinfo.region
-        
-        if (hasattr(competition, 'permissions') and 
-            'allowed_regions' in competition.permissions and 
-            user_region.id not in competition.permissions['allowed_regions']):
-            
-            allowed_regions = Region.objects.filter(
-                id__in=competition.permissions['allowed_regions']
-            ).values_list('name', flat=True)
-            
-            return Response(
-                {
-                    "detail": (
-                        "На региональные соревнования могут создаваться команды только из разрешенных регионов. "
-                        f"Допустимые регионы: {', '.join(allowed_regions)}"
-                    )
-                },
-                status=status.HTTP_403_FORBIDDEN
-            )
+        captain_region_id = captain.region.id
 
-        # Создаем команду
-        serializer.validated_data['creator_id'] = request.user.userinfo
-        team = serializer.save()
-        
-        return Response({
-            'id': team.id,
-            'name': team.name,
-            'competition_id': team.competition.id,
-            'captain_id': team.captain.id,
-            'members': [team.captain.id],
-            'message': 'Команда успешно создана'
-        }, status=status.HTTP_201_CREATED)
+        if competition.permissions and isinstance(competition.permissions, list):
+            if captain_region_id not in competition.permissions:
+                allowed_regions = Region.objects.filter(
+                    id__in=competition.permissions
+                ).values_list('name', flat=True)
+                
+                return Response(
+                    {
+                        "error": "regional_restriction",
+                        "detail": f"Регион капитана ({captain.region.name}) не разрешен",
+                        "allowed_regions": list(allowed_regions)
+                    },
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+        try:
+            team = serializer.save()
+            return Response({
+                "team_id": team.id,
+                "name": team.name,
+                "competition_id": team.competition.id,
+                "captain_id": team.captain.id,
+                "region": team.captain.region.name
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response(
+                {"error": "creation_error", "detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class InvitationCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -203,11 +244,12 @@ class TeamApplicationResponseView(UpdateAPIView):
         serializer.save()
         
 class CompetitionListView(ListAPIView):
+    permission_classes = [AllowAny]
     serializer_class = CompetitionSerializer
     queryset = Competition.objects.all().select_related(
         'discipline',
         'dates'
-    ).prefetch_related('regions')
+    )
     
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
@@ -225,7 +267,7 @@ class NewsPagination(PageNumberPagination):
     max_page_size = 100
 
 class NewsListView(ListAPIView):
-    queryset = News.objects.filter(is_published=True).order_by('-created_at')
+    queryset = News.objects.all().order_by('-created_at')
     serializer_class = NewsSerializer
     pagination_class = NewsPagination
     search_fields = ['title', 'content']

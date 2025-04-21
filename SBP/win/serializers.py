@@ -2,6 +2,7 @@
 from rest_framework import serializers
 from .models import *
 from rest_framework.exceptions import ValidationError
+from datetime import date
 
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -132,40 +133,44 @@ class CompetitionSerializer(serializers.ModelSerializer):
     
 class TeamCreateSerializer(serializers.ModelSerializer):
     competition_id = serializers.PrimaryKeyRelatedField(
-        queryset=Competition.objects.all(),
+        queryset=Competition.objects.filter(type='team'),
         source='competition',
         write_only=True
     )
-    creator_id = serializers.PrimaryKeyRelatedField(
-        queryset=UserInfo.objects.all(),
-        source='captain',
-        write_only=True
+    captain_id = serializers.IntegerField(
+        write_only=True,
+        required=False  # Не обязательно, так как может браться из контекста
     )
 
     class Meta:
         model = Team
-        fields = ['competition_id', 'name', 'creator_id']
+        fields = ['competition_id', 'name', 'captain_id']
         extra_kwargs = {
-            'name': {'required': True},
-            'competition_id': {'required': True},
-            'creator_id': {'required': True},
+            'name': {'required': True, 'max_length': 100}
         }
 
+    def validate(self, data):
+        # Проверка максимального количества команд
+        competition = data['competition']
+        if competition.teams.count() >= competition.max_participants_in_team:
+            raise serializers.ValidationError(
+                "Достигнуто максимальное количество команд"
+            )
+        return data
+
     def create(self, validated_data):
-        # Извлекаем капитана из validated_data
-        captain = validated_data.pop('captain')
-        
-        # Создаем команду
+        captain = self.context.get('captain')
+        if not captain:
+            raise serializers.ValidationError("Не указан капитан команды")
+            
         team = Team.objects.create(
             captain=captain,
-            **validated_data
+            competition=validated_data['competition'],
+            name=validated_data['name']
         )
-        
-        # Добавляем капитана в члены команды
         team.members.add(captain)
-        
         return team
-    
+        
 class InvitationCreateSerializer(serializers.ModelSerializer):
     team_id = serializers.PrimaryKeyRelatedField(
         queryset=Team.objects.all(),
@@ -381,19 +386,23 @@ class TeamApplicationResponseSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
     
-class CompetitionDateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CompetitionDate
-        fields = ['registration_start', 'registration_end', 'start_date', 'end_date']
 
 class DisciplineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Discipline
         fields = ['id', 'name']
 
+class CompetitionDateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompetitionDate
+        fields = ['start_date', 'end_date', 'registration_start', 'registration_end']
+        
 class CompetitionSerializer(serializers.ModelSerializer):
-    dates = CompetitionDateSerializer(source='dates', read_only=True)
-    discipline = DisciplineSerializer(read_only=True)
+    dates = CompetitionDateSerializer()
+    discipline = serializers.PrimaryKeyRelatedField(queryset=Discipline.objects.all())
+    discipline_name = serializers.CharField(source='discipline.name', read_only=True)
+    
+    # остальные поля остаются без изменений
     competition_type_display = serializers.CharField(
         source='get_competition_type_display',
         read_only=True
@@ -409,6 +418,7 @@ class CompetitionSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'discipline',
+            'discipline_name',  # добавляем поле для отображения названия
             'description',
             'max_participants',
             'max_participants_in_team',
@@ -422,7 +432,17 @@ class CompetitionSerializer(serializers.ModelSerializer):
             'permissions',
             'dates'
         ]
-        read_only_fields = fields
+
+    def create(self, validated_data):
+        dates_data = validated_data.pop('dates')
+        
+        # discipline уже будет объектом, так как использовали PrimaryKeyRelatedField
+        competition = Competition.objects.create(**validated_data)
+        
+        # Создаем даты для соревнования
+        CompetitionDate.objects.create(competition=competition, **dates_data)
+        
+        return competition
         
 class FAQSerializer(serializers.ModelSerializer):
     class Meta:
