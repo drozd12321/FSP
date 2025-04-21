@@ -201,8 +201,21 @@ class CompetitionOrganizer(models.Model):
     user = models.ForeignKey(UserInfo, on_delete=models.CASCADE, related_name='organized_competitions')
     competition = models.ForeignKey(Competition, on_delete=models.CASCADE, related_name='organizers')
     status = models.CharField(max_length=50)
+    rated = models.BooleanField()
     class Meta:
         unique_together = ('user', 'competition')  # чтобы один пользователь не был организатором одного соревнования несколько раз
 
     def __str__(self):
         return f"Organizer {self.user} for {self.competition}"
+    
+class CompetitionResult(models.Model):
+    competition = models.ForeignKey('Competition', on_delete=models.CASCADE, related_name='results')
+    participant = models.ForeignKey('UserInfo', on_delete=models.CASCADE, related_name='competition_results')
+    place = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = ('competition', 'participant')  # один результат на участника в соревновании
+        ordering = ['place']  # сортировка по месту
+
+    def __str__(self):
+        return f"{self.participant} - {self.place} место в {self.competition}"
