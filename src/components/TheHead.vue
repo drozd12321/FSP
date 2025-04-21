@@ -1,11 +1,4 @@
 <template>
-  <header class="hd">
-    <div class="img">Картинка</div>
-    <div class="cab">
-      <RouterLink :to="isAuth ? '/cabinet' : '/auth'">Кабинет</RouterLink>
-    </div>
-    <div class="poch">Почта</div>
-  </header>
   <div class="head">
     <div class="one">
       <RouterLink to="/competitions">Соревнования</RouterLink>
