@@ -30,7 +30,9 @@
         <div class="nav-item">
           <RouterLink to="/FAQ" class="nav-link">FAQ</RouterLink>
         </div>
+        {{ isAuth }}
       </nav>
+
       <div class="user-actions">
         <RouterLink to="#" class="icon-link" title="Сообщения">
           <svg

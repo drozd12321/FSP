@@ -5,8 +5,9 @@
         <div class="pole" v-if="mode === 'log'">
           <DivLogin v-model:emailVal="email" v-model:passwordVal="password" />
           <button type="submit" :disabled="isSubmitting" @click="login">
-            Войти
+            {{ isLoad ? "Загрузка" : "Войти" }}
           </button>
+          {{ isLoad }}
         </div>
         <div class="pole" v-else>
           <DivReg
@@ -34,7 +35,11 @@ import DivLogin from "./DivLogin.vue";
 import useLoginForm from "@/use/useLoginForm";
 import { useAuthStore } from "@/stores/useAuthStore";
 import router from "@/router";
+import { computed } from "vue";
 const authStore = useAuthStore();
+const isLoad = computed(() => {
+  authStore.isLoading;
+});
 const {
   email,
   firstname,
@@ -59,7 +64,6 @@ const {
 const props = defineProps({
   mode: String,
 });
-
 const login = async () => {
   if (props.mode === "reg") {
     const formstate = {
@@ -79,14 +83,15 @@ const login = async () => {
       "http://10.8.0.23:8000/api/auth/register/",
       formstate
     );
+    router.push("/");
   } else {
     const formstate = {
       username: email.value,
       password: password.value,
     };
     await authStore.login("http://10.8.0.23:8000/api/auth/login/", formstate);
+    router.push("/auth");
   }
-  router.push("/");
 };
 </script>
 <style scoped>

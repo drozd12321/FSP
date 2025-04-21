@@ -1,12 +1,17 @@
 import { ref, computed } from "vue";
 import { defineStore } from "pinia";
 import axios from "axios";
+import { useRouter } from "vue-router";
 
 export const useAuthStore = defineStore("auth", () => {
   const token = ref(localStorage.getItem("jwtToken"));
+  const error = ref(null);
+  const isLoading = ref(false);
+
   function setToken(newToken) {
     token.value = newToken;
     localStorage.setItem("jwtToken", newToken);
+    error.value = null;
   }
   function removeToken() {
     token.value = null;
@@ -16,18 +21,32 @@ export const useAuthStore = defineStore("auth", () => {
   const isAuth = computed(() => !!token.value);
   async function login(url, formstate) {
     try {
-      console.log("sdsds");
-      console.log(formstate);
-      const responce = await axios.post(url, formstate);
-      console.log(responce.data);
-      setToken(responce.data);
+      isLoading.value = true;
+      console.log(isLoading);
+      error.value = null;
+      const response = await axios.post(url, formstate);
+      if (!response.data?.token) {
+        throw new Error("Сервер не вернул токен");
+      }
+      setToken(response.data.token);
+      isLoading.value = false;
+      console.log(isLoading);
       return true;
-    } catch (error) {
-      console.error("Ошибка при логине:", error);
-      return false; // Логин неудачен
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message;
+      return false;
+    } finally {
+      isLoading.value = false;
     }
   }
-
-  // Возвращаем состояние, методы и геттеры
-  return { token, setToken, removeToken, getToken, isAuth, login };
+  return {
+    token,
+    error,
+    isLoading,
+    setToken,
+    removeToken,
+    getToken,
+    isAuth,
+    login,
+  };
 });
