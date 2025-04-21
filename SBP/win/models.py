@@ -24,24 +24,8 @@ class UserManager(BaseUserManager):
         return self.create_user(email, nickName, password, **extra_fields)
 
 class User(AbstractBaseUser, PermissionsMixin):
-    STATUS_CHOICES = (
-        ('student', 'Студент'),
-        ('teacher', 'Преподаватель'),
-        ('other', 'Другое'),
-    )
-
     email = models.EmailField(unique=True, null=True, blank=True)
     nickName = models.CharField(max_length=50, unique=True)
-    first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
-    middle_name = models.CharField(max_length=30, blank=True, null=True)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
-    region = models.CharField(max_length=100)
-    birth_date = models.DateField()
-
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
-
     date_joined = models.DateTimeField(default=timezone.now)
 
     objects = UserManager()
@@ -70,7 +54,6 @@ class UserInfo(models.Model):
     region = models.ForeignKey(Region, on_delete=models.PROTECT, related_name='users')
     role = models.ForeignKey(Role, on_delete=models.PROTECT, related_name='users')
     birthday = models.DateField()
-    nickname = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return f"{self.surname} {self.name} ({self.nickname})"
