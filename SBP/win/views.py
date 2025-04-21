@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import (RegisterSerializer, LoginSerializer, TeamCreateSerializer,
 CompetitionSerializer, InvitationCreateSerializer, InvitationSerializer, InvitationResponseSerializer,
-RoleSerializer,RegionSerializer)
+RoleSerializer,RegionSerializer, TeamApplicationSerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -146,3 +146,23 @@ class RegionListView(ListAPIView):
 class RoleListView(ListAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
+    
+class TeamApplicationCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = TeamApplicationSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        
+        if serializer.is_valid():
+            application = serializer.save()
+            return Response({
+                'id': application.id,
+                'team_id': application.team.id,
+                'status': application.status,
+                'reason': application.reason
+            }, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

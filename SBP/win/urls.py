@@ -9,4 +9,5 @@ urlpatterns = [
     path('invitations/', InvitationCreateView.as_view(), name='create-invitation'),
     path('user/invitations/', UserInvitationsView.as_view(), name='user-invitations'),
     path('invitations/<int:pk>/respond/', InvitationResponseView.as_view(), name='invitation-respond'),
+    path('team-applications/', TeamApplicationCreateView.as_view(), name='team-application-create'),
 ]

@@ -296,3 +296,43 @@ class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
         fields = '__all__'  # или конкретные поля
+        
+class TeamApplicationSerializer(serializers.ModelSerializer):
+    team_id = serializers.PrimaryKeyRelatedField(
+        queryset=Team.objects.all(),
+        source='team',
+        write_only=True
+    )
+
+    class Meta:
+        model = TeamApplication
+        fields = ['team_id', 'status', 'reason']
+        read_only_fields = ['status', 'reason']
+        extra_kwargs = {
+            'team_id': {'required': True}
+        }
+
+    def validate(self, attrs):
+        # Проверяем, что команда существует
+        team = attrs.get('team')
+        if not team:
+            raise serializers.ValidationError("Команда не найдена")
+        
+        # Проверяем, что у пользователя есть права на создание заявки для этой команды
+        user = self.context['request'].user
+        if not team.members.filter(user=user).exists():
+            raise serializers.ValidationError("Вы не являетесь участником этой команды")
+        
+        return attrs
+
+    def create(self, validated_data):
+        team = validated_data['team']
+        
+        # Удаляем все приглашения для этой команды
+        Invitation.objects.filter(team=team).delete()
+        # Устанавливаем статус "На модерации" и пустое поле reason
+        return TeamApplication.objects.create(
+            status='На модерации',
+            reason=None,
+            **validated_data
+        )
