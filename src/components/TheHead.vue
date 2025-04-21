@@ -43,10 +43,13 @@
               d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"
             />
           </svg>
-          <!-- <span class="badge" v-if="unreadMessages">3</span> -->
         </RouterLink>
 
-        <RouterLink to="/cabinet" class="icon-link" title="Личный кабинет">
+        <RouterLink
+          :to="isAuth ? '/cabinet' : '/auth'"
+          class="icon-link"
+          title="Личный кабинет"
+        >
           <svg
             class="icon"
             xmlns="http://www.w3.org/2000/svg"
@@ -62,7 +65,7 @@
         <button
           class="icon-link logout-btn"
           v-if="isAuth"
-          @click="logout"
+          @click="removeToken"
           title="Выйти"
         >
           <svg
@@ -85,7 +88,7 @@
 import { ref } from "vue";
 import { useAuthStore } from "@/stores/useAuthStore";
 
-const { isAuth, logout } = useAuthStore();
+const { isAuth, removeToken } = useAuthStore();
 const unreadMessages = ref(true); // В реальном приложении это должно быть из хранилища
 </script>
 
