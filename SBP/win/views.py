@@ -4,13 +4,15 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import (RegisterSerializer, LoginSerializer, TeamCreateSerializer,
 CompetitionSerializer, InvitationCreateSerializer, InvitationSerializer, InvitationResponseSerializer,
-RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationResponseSerializer)
+RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationResponseSerializer,
+FAQSerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import *
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import UpdateAPIView, ListAPIView
+from rest_framework.pagination import PageNumberPagination
 
 
 
@@ -206,3 +208,13 @@ class CompetitionListView(ListAPIView):
         'discipline',
         'dates'
     ).prefetch_related('regions')
+    
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class FAQListView(ListAPIView):
+    queryset = FAQ.objects.all()
+    serializer_class = FAQSerializer
+    pagination_class = StandardResultsSetPagination

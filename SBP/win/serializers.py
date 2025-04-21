@@ -423,3 +423,9 @@ class CompetitionSerializer(serializers.ModelSerializer):
             'dates'
         ]
         read_only_fields = fields
+        
+class FAQSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FAQ
+        fields = ['id', 'question', 'answer']
+        read_only_fields = ['id']

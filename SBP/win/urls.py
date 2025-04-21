@@ -12,4 +12,5 @@ urlpatterns = [
     path('invitations/<int:pk>/respond/', InvitationResponseView.as_view(), name='invitation-respond'),
     path('team-applications/', TeamApplicationCreateView.as_view(), name='team-application-create'),
     path('team-applications/<int:pk>/response/', TeamApplicationResponseView.as_view(), name='team-application-response'),
+    path('faq/', FAQListView.as_view(), name='faq-list'),
 ]

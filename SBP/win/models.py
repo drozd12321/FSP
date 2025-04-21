@@ -229,3 +229,14 @@ class CompetitionResult(models.Model):
 
     def __str__(self):
         return f"{self.participant} - {self.place} место в {self.competition}"
+    
+class FAQ(models.Model):
+    question = models.CharField(max_length=255, verbose_name="Вопрос")
+    answer = models.TextField(verbose_name="Ответ")
+
+    class Meta:
+        verbose_name = "FAQ"
+        verbose_name_plural = "FAQ"
+
+    def __str__(self):
+        return self.question[:50] + "..." if len(self.question) > 50 else self.question
