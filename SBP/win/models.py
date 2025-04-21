@@ -105,7 +105,7 @@ class Competition(models.Model):
 
     max_participants = models.IntegerField()
     max_participants_in_team = models.IntegerField()
-    min_age = models.PositiveIntegerField(min=0)
+    min_age = models.PositiveIntegerField(min=1)
     max_age = models.PositiveIntegerField(min=120)
     name = models.CharField(max_length=50)
     competition_type = models.CharField(max_length=10, choices=COMPETITION_TYPE_CHOICES)
