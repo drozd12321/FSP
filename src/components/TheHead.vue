@@ -30,7 +30,7 @@ a {
 header {
   background-color: var(--fon);
   color: white;
-  font-size: 25px;
+  font-size: 22px;
   cursor: pointer;
 }
 .hd {
