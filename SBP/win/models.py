@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
     STATUS_CHOICES = [
@@ -21,7 +22,6 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'  # Аутентификация по email
     REQUIRED_FIELDS = ['first_name', 'last_name', 'nickname', 'status', 'region', 'birth_date']
 
-    def __str__(self):
 
 
 class Region(models.Model):
