@@ -65,7 +65,7 @@
         <button
           class="icon-link logout-btn"
           v-if="isAuth"
-          @click="removeToken"
+          @click="logout"
           title="Выйти"
         >
           <svg
@@ -85,13 +85,17 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { useRouter } from "vue-router";
 
-const { isAuth, removeToken } = useAuthStore();
-const unreadMessages = ref(true); // В реальном приложении это должно быть из хранилища
+const { isAuth } = useAuthStore();
+const authStore = useAuthStore();
+const router = useRouter();
+const logout = () => {
+  authStore.removeToken();
+  router.push("/auth");
+};
 </script>
-
 <style scoped>
 .header-container {
   background: rgb(73, 73, 73);

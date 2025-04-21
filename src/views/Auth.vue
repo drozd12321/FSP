@@ -6,7 +6,7 @@
           <TheHeadAuth :key="mode" :mode="mode" @mode="setMode" />
         </transition>
       </div>
-      <AppForm :mode="mode" @submit="onSubmit" />
+      <AppForm :mode="mode" />
     </div>
   </div>
 </template>
