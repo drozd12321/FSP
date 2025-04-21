@@ -1,8 +1,9 @@
 <template>
-  <div>Home</div>
+  <TheHead />
   <button @click="logout">Выйти</button>
 </template>
 <script setup>
+import TheHead from "@/components/TheHead.vue";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useRouter } from "vue-router";
 const authStore = useAuthStore();

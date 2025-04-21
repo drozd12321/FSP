@@ -1,5 +1,4 @@
 <template>
-  Main
   <RouterView></RouterView>
 </template>
 <script setup></script>

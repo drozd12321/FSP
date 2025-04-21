@@ -7,7 +7,6 @@
       id="email"
       :value="emailVal"
       @input="$emit('update:emailVal', $event.target.value)"
-      @blur="emit('emailblur', $event)"
     />
   </div>
   <div class="inpdiv">
@@ -17,7 +16,6 @@
       id="password"
       :value="passwordVal"
       @input="$emit('update:passwordVal', $event.target.value)"
-      @blur="emit('passwordBlur', $event)"
     />
   </div>
   <div class="fio">
@@ -28,7 +26,6 @@
         id="name"
         :value="nameVal"
         @input="$emit('update:nameVal', $event.target.value)"
-        @blur="emit('nameBlur', $event)"
       />
     </div>
     <div class="inpdiv">
@@ -38,7 +35,6 @@
         id="fam"
         :value="firstnameVal"
         @input="$emit('update:firstnameVal', $event.target.value)"
-        @blur="emit('firstnameBlur', $event)"
       />
     </div>
     <div class="inpdiv">
@@ -48,7 +44,6 @@
         id="otch"
         :value="lastnameVal"
         @input="$emit('update:lastnameVal', $event.target.value)"
-        @blur="emit('lastnameBlur', $event)"
       />
     </div>
   </div>
@@ -59,7 +54,6 @@
       id="nickname"
       :value="nicknameVal"
       @input="$emit('update:nicknameVal', $event.target.value)"
-      @blur="emit('nicknameBlur', $event)"
     />
   </div>
   <div class="inpdiv">
@@ -109,13 +103,6 @@ const emit = defineEmits([
   "update:statusVal",
   "update:nicknameVal",
   "submit",
-  "passwordBlur",
-  "nameBlur",
-  "emailBlur",
-  "dtBlur",
-  "firstnameBlur",
-  "lastnameBlur",
-  "nicknameBlur",
 ]);
 const props = defineProps({
   mode: String,

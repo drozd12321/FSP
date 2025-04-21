@@ -1,15 +1,75 @@
 <template>
-  <header>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
+  <header class="hd">
+    <div class="img">Картинка</div>
+    <div class="cab">Кабинет</div>
+    <div class="poch">Почта</div>
   </header>
+  <div class="head">
+    <div class="one">Соревнования</div>
+    <div class="two">Поиск команд</div>
+    <div class="three">Рейтинг</div>
+    <div class="fo">Представители</div>
+    <div class="five">Новости</div>
+    <div class="c">FAQ</div>
+  </div>
 </template>
 <script setup></script>
 <style scoped>
 header {
+  background-color: var(--fon);
   color: white;
+  font-size: 25px;
+  cursor: pointer;
+}
+.hd {
+  display: grid;
+  grid-template-areas: "img img img cab poch";
+  align-items: center;
+  text-align: center;
+}
+.img {
+  grid-area: img;
+  padding: 30px;
+}
+.cab {
+  grid-area: cab;
+  padding: 30px;
+}
+.poch {
+  grid-area: poch;
+  padding: 30px;
+}
+.head {
+  color: white;
+  background-color: var(--red);
+  display: grid;
+  grid-template-areas: "one two three fo five five six";
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+}
+.one {
+  grid-area: one;
+  padding: 20px;
+}
+.two {
+  grid-area: two;
+  padding: 20px;
+}
+.three {
+  grid-area: three;
+  padding: 20px;
+}
+.fo {
+  grid-area: fo;
+  padding: 20px;
+}
+.five {
+  grid-area: five;
+  padding: 20px;
+}
+.six {
+  grid-area: six;
+  padding: 20px;
 }
 </style>

@@ -19,12 +19,6 @@
             v-model:regionVal="region"
             v-model:statusVal="status"
             v-model:dtVal="dt"
-            @emailblur="emailBlur"
-            @passwordBlur="passwordBlur"
-            @nameBlur="nameBlur"
-            @firstnameBlur="firstnameBlur"
-            @lastnameBlur="lastnameBlur"
-            @nicknameBlur="nicknameBlur"
           />
           <button type="submit" :disabled="isSubmitting" @click="login">
             Зарегистрироваться
