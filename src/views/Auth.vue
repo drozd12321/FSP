@@ -2,20 +2,9 @@
   <div class="wrapper">
     <div class="cont">
       <div class="head">
-        <div
-          class="name"
-          @click="setMode('reg')"
-          :class="{ active: mode === 'reg' }"
-        >
-          Регистрация
-        </div>
-        <div
-          class="name"
-          @click="setMode('log')"
-          :class="{ active: mode === 'log' }"
-        >
-          Вход
-        </div>
+        <transition name="fade" mode="out-in">
+          <TheHeadAuth :mode="mode" @mode="setMode" />
+        </transition>
       </div>
       <AppForm :mode="mode" />
     </div>
@@ -23,6 +12,7 @@
 </template>
 <script setup>
 import AppForm from "@/components/Auth/AppForm.vue";
+import TheHeadAuth from "@/components/Auth/TheHeadAuth.vue";
 import { ref } from "vue";
 const mode = ref("reg");
 const setMode = (newMode) => {
@@ -30,6 +20,22 @@ const setMode = (newMode) => {
 };
 </script>
 <style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-enter-to,
+.fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
 .wrapper {
   display: flex;
   justify-content: center;
@@ -40,7 +46,7 @@ const setMode = (newMode) => {
   display: grid;
   justify-content: center;
   align-items: center;
-  height: 830px;
+  height: 800px;
   padding: 20px;
   width: 800px;
   background-color: #fff;

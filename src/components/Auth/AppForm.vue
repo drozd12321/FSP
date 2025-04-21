@@ -1,12 +1,14 @@
 <template>
   <form class="form" @submit.prevent="login">
     <div class="inf">
-      <div class="pole" v-if="mode === 'log'">
-        <DivLogin />
-      </div>
-      <div class="pole" v-if="mode === 'reg'">
-        <DivReg />
-      </div>
+      <transition name="fade" mode="out-in">
+        <div class="pole" v-if="mode === 'log'">
+          <DivLogin />
+        </div>
+        <div class="pole" v-else>
+          <DivReg />
+        </div>
+      </transition>
     </div>
   </form>
 </template>
@@ -31,15 +33,32 @@ const login = async () => {
 };
 </script>
 <style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-enter-to,
+.fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
 form {
   width: 700px;
-  height: 60vh;
 }
 .inf {
   height: 100%;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  align-items: center;
+  transition: all 0.5s ease;
 }
 
 .pole {

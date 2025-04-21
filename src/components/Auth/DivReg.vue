@@ -39,8 +39,8 @@
     <select name="region" id="region"></select>
   </div>
   <div class="inpdiv">
-    <label class="label" for="email"> Дата Рождения</label>
-    <input />
+    <label class="label" for="data"> Дата Рождения</label>
+    <input type="date" id="data" />
   </div>
   <button type="submit">Войти</button>
   <div class="reg">
