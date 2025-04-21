@@ -1,7 +1,9 @@
 <template>
   <header class="hd">
     <div class="img">Картинка</div>
-    <div class="cab">Кабинет</div>
+    <div class="cab">
+      <RouterLink :to="isAuth ? '/cabinet' : '/auth'">Кабинет</RouterLink>
+    </div>
     <div class="poch">Почта</div>
   </header>
   <div class="head">
@@ -15,7 +17,10 @@
     <div class="c"><RouterLink to="/FAQ">FAQ</RouterLink></div>
   </div>
 </template>
-<script setup></script>
+<script setup>
+import { useAuthStore } from "@/stores/useAuthStore";
+const { isAuth } = useAuthStore();
+</script>
 <style scoped>
 a {
   color: white; /* Цвет текста */

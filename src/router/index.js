@@ -8,6 +8,7 @@ import Competitions from "@/views/Competitions.vue";
 import FAQ from "@/views/FAQ.vue";
 import Rating from "@/views/Rating.vue";
 import News from "@/views/News.vue";
+import Cabinet from "@/views/Cabinet.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,7 +19,7 @@ const router = createRouter({
       component: Home,
       meta: {
         layout: "Main",
-        auth: true,
+        auth: false,
       },
     },
     {
@@ -27,7 +28,7 @@ const router = createRouter({
       component: Admins,
       meta: {
         layout: "Main",
-        auth: true,
+        auth: false,
       },
     },
     {
@@ -36,7 +37,7 @@ const router = createRouter({
       component: Command,
       meta: {
         layout: "Main",
-        auth: true,
+        auth: false,
       },
     },
     {
@@ -45,7 +46,7 @@ const router = createRouter({
       component: Competitions,
       meta: {
         layout: "Main",
-        auth: true,
+        auth: false,
       },
     },
     {
@@ -54,7 +55,7 @@ const router = createRouter({
       component: Rating,
       meta: {
         layout: "Main",
-        auth: true,
+        auth: false,
       },
     },
     {
@@ -63,7 +64,7 @@ const router = createRouter({
       component: News,
       meta: {
         layout: "Main",
-        auth: true,
+        auth: false,
       },
     },
     {
@@ -72,7 +73,16 @@ const router = createRouter({
       component: FAQ,
       meta: {
         layout: "Main",
-        auth: true,
+        auth: false,
+      },
+    },
+    {
+      path: "/cabinet",
+      name: "cabinet",
+      component: Cabinet,
+      meta: {
+        layout: "Main",
+        auth: false,
       },
     },
     {
