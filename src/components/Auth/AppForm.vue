@@ -1,13 +1,14 @@
 <template>
-  <form class="form" @submit.prevent="$emit('submit')">
+  <div v-if="isLoading" class="loader-overlay"><Loader /></div>
+  <form class="form" @submit.prevent="login">
     <div class="inf">
       <transition name="fade" mode="out-in">
         <div class="pole" v-if="mode === 'log'">
           <DivLogin v-model:emailVal="email" v-model:passwordVal="password" />
-          <button type="submit" :disabled="isSubmitting" @click="login">
+          <button type="submit" :disabled="isSubmitting">
+            <!-- Убрали @click -->
             {{ isLoad ? "Загрузка" : "Войти" }}
           </button>
-          {{ isLoad }}
         </div>
         <div class="pole" v-else>
           <DivReg
@@ -21,7 +22,8 @@
             v-model:statusVal="status"
             v-model:dtVal="dt"
           />
-          <button type="submit" :disabled="isSubmitting" @click="login">
+          <button type="submit" :disabled="isSubmitting">
+            <!-- Убрали @click -->
             Зарегистрироваться
           </button>
         </div>
@@ -36,7 +38,10 @@ import useLoginForm from "@/use/useLoginForm";
 import { useAuthStore } from "@/stores/useAuthStore";
 import router from "@/router";
 import { computed } from "vue";
+import Loader from "../Loader.vue";
+import { storeToRefs } from "pinia";
 const authStore = useAuthStore();
+const { isLoading } = storeToRefs(useAuthStore());
 const isLoad = computed(() => {
   authStore.isLoading;
 });
@@ -51,15 +56,6 @@ const {
   status,
   dt,
   isSubmitting,
-  passwordBlur,
-  nameBlur,
-  emailBlur,
-  dtBlur,
-  firstnameBlur,
-  lastnameBlur,
-  nicknameBlur,
-  statusBlur,
-  istomanyAttemots,
 } = useLoginForm();
 const props = defineProps({
   mode: String,
@@ -83,18 +79,33 @@ const login = async () => {
       "http://10.8.0.23:8000/api/auth/register/",
       formstate
     );
+
+    console.log(formstate);
     router.push("/");
   } else {
     const formstate = {
       username: email.value,
       password: password.value,
     };
+    console.log("log", formstate);
     await authStore.login("http://10.8.0.23:8000/api/auth/login/", formstate);
-    router.push("/auth");
+    router.push("/");
   }
 };
 </script>
 <style scoped>
+.loader-overlay {
+  position: fixed; /* Или absolute, в зависимости от ваших нужд */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.7); /* Полупрозрачный фон */
+  z-index: 1000; /* Убедитесь, что это значение выше, чем у других элементов */
+}
 button {
   padding: 10px;
   font-size: 16px;

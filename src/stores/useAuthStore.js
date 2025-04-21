@@ -17,23 +17,30 @@ export const useAuthStore = defineStore("auth", () => {
     token.value = null;
     localStorage.removeItem("jwtToken");
   }
+  function setError(err) {
+    error.value = err;
+  }
+  const getError = computed(() => error.value);
   const getToken = computed(() => token.value);
   const isAuth = computed(() => !!token.value);
   async function login(url, formstate) {
     try {
       isLoading.value = true;
-      console.log(isLoading);
+      console.log("gg");
       error.value = null;
       const response = await axios.post(url, formstate);
       if (!response.data?.token) {
         throw new Error("Сервер не вернул токен");
       }
+      console.log(response);
       setToken(response.data.token);
       isLoading.value = false;
+
       console.log(isLoading);
       return true;
     } catch (err) {
-      error.value = err.response?.data?.message || err.message;
+      setError(err.response.data);
+      console.log(err.response.data);
       return false;
     } finally {
       isLoading.value = false;
@@ -42,11 +49,13 @@ export const useAuthStore = defineStore("auth", () => {
   return {
     token,
     error,
+    getError,
     isLoading,
     setToken,
     removeToken,
     getToken,
     isAuth,
     login,
+    setError,
   };
 });
