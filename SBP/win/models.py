@@ -77,6 +77,8 @@ class Competition(models.Model):
         (TEAM, 'Team'),
     ]
 
+    max_participants = models.IntegerField()
+    name = models.CharField(max_length=50)
     competition_type = models.CharField(max_length=10, choices=COMPETITION_TYPE_CHOICES)
     status = models.CharField(max_length=25)
     discipline = models.ForeignKey(Discipline, on_delete=models.PROTECT, related_name='competitions')
