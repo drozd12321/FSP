@@ -32,7 +32,7 @@
         </div>
       </nav>
       <div class="user-actions">
-        <RouterLink to="/messages" class="icon-link" title="Сообщения">
+        <RouterLink to="#" class="icon-link" title="Сообщения">
           <svg
             class="icon"
             xmlns="http://www.w3.org/2000/svg"
@@ -43,7 +43,7 @@
               d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"
             />
           </svg>
-          <span class="badge" v-if="unreadMessages">3</span>
+          <!-- <span class="badge" v-if="unreadMessages">3</span> -->
         </RouterLink>
 
         <RouterLink to="/cabinet" class="icon-link" title="Личный кабинет">
@@ -91,7 +91,7 @@ const unreadMessages = ref(true); // В реальном приложении э
 
 <style scoped>
 .header-container {
-  background: var(--red);
+  background: rgb(73, 73, 73);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
