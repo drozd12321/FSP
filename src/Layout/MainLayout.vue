@@ -1,5 +1,10 @@
 <template>
-  <RouterView></RouterView>
+  <TheHead />
+  <main>
+    <RouterView></RouterView>
+  </main>
 </template>
-<script setup></script>
+<script setup>
+import TheHead from "@/components/TheHead.vue";
+</script>
 <style scoped></style>

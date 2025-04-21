@@ -3,7 +3,7 @@ import { defineStore } from "pinia";
 import axios from "axios";
 
 export const useAuthStore = defineStore("auth", () => {
-  const token = ref(localStorage.getItem("jwtToken"));
+  const token = ref("fff");
   function setToken(newToken) {
     token.value = newToken;
     localStorage.setItem("jwtToken", newToken);
@@ -20,7 +20,7 @@ export const useAuthStore = defineStore("auth", () => {
       console.log(formstate);
       const responce = await axios.post(url, formstate);
       console.log(responce.data);
-      setToken(responce.data.token);
+      setToken("fff");
       return true;
     } catch (error) {
       console.error("Ошибка при логине:", error);
