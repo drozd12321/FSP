@@ -26,6 +26,7 @@ const emit = defineEmits(["mode"]);
 .block {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  width: 100%;
 }
 .name {
   padding: 10px 40px;

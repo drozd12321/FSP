@@ -10,6 +10,7 @@
     </div>
   </div>
 </template>
+
 <script setup>
 import AppForm from "@/components/Auth/AppForm.vue";
 import TheHeadAuth from "@/components/Auth/TheHeadAuth.vue";
@@ -21,6 +22,7 @@ const setMode = (newMode) => {
   mode.value = newMode;
 };
 </script>
+
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
@@ -38,49 +40,58 @@ const setMode = (newMode) => {
   opacity: 1;
   transform: translateY(0);
 }
+
 .wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-}
-.cont {
-  display: grid;
-  justify-content: center;
-  align-items: center;
-  height: 800px;
+  min-height: 100vh;
   padding: 20px;
-  width: 800px;
-  background-color: #fff;
-  grid-template-areas:
-    "head head"
-    "frm frm"
-    "reg reg";
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
 }
-.head {
-  grid-area: head;
-  display: grid;
-  grid-template-columns: repeat(1, 1fr);
-  padding: 5px;
-  cursor: pointer;
-  transition: all 0.4s ease;
-  gap: 20px;
-  padding: 2px;
-  border-radius: 6px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-}
-.name {
-  padding: 10px 40px;
-  text-align: center;
-}
-.frm {
-  grid-area: frm;
+
+.cont {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  height: 100%;
+  max-width: 700px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
+
+.head {
+  padding: 20px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 98, 255, 0.1);
+}
+
+.name {
+  padding: 12px 0;
+  text-align: center;
+  font-weight: 600;
+  color: #333;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
 .active {
-  border-radius: 6px;
-  background-color: var(--red);
+  background: linear-gradient(135deg, #0062ff 0%, #0038a3 100%);
   color: white;
+  box-shadow: 0 4px 12px rgba(0, 98, 255, 0.2);
+}
+
+.frm {
+  padding: 0 20px 20px;
+}
+
+.head:hover {
+  box-shadow: 0 4px 12px rgba(0, 98, 255, 0.15);
+}
+
+.name:hover:not(.active) {
+  color: #0062ff;
+  transform: translateY(-2px);
 }
 </style>
