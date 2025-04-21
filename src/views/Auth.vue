@@ -1,17 +1,16 @@
 <template>
-  <div>Home</div>
-  <button @click="logout">Выйти</button>
+  <button @click="login">Войти</button>
 </template>
 <script setup>
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useRouter } from "vue-router";
 const authStore = useAuthStore();
 const router = useRouter();
-const logout = async () => {
+const login = async () => {
   try {
-    authStore.removeToken();
-    console.log("logout");
-    router.push("/auth");
+    await authStore.login("name", "passwd");
+    console.log("login");
+    router.push("/");
   } catch (error) {
     console.log(error);
   }

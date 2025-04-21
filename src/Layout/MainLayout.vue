@@ -1,5 +1,6 @@
 <template>
-  <div></div>
+  Main
+  <RouterView></RouterView>
 </template>
 <script setup></script>
 <style scoped></style>
