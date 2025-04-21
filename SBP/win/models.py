@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
+from django.core.validators import MinValueValidator
 
 class UserManager(BaseUserManager):
     def create_user(self, email, nickName, password=None, **extra_fields):
@@ -105,8 +106,8 @@ class Competition(models.Model):
 
     max_participants = models.IntegerField()
     max_participants_in_team = models.IntegerField()
-    min_age = models.PositiveIntegerField(min=0)
-    max_age = models.PositiveIntegerField(min=120)
+    min_age = models.PositiveIntegerField(validators=[MinValueValidator(0)])
+    max_age = models.PositiveIntegerField(validators=[MinValueValidator(120)])
     name = models.CharField(max_length=50)
     competition_type = models.CharField(max_length=10, choices=COMPETITION_TYPE_CHOICES)
     status = models.CharField(max_length=25)
