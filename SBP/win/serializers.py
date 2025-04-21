@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from .models import User, Competition, CompetitionDate, Region, Discipline
+from django.db import models
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -96,6 +97,9 @@ class CompetitionSerializer(serializers.ModelSerializer):
             'discipline',
             'description',
             'max_participants',
+            'max_participants_in_team',
+            'min_age',
+            'max_age',
             'competition_type',
             'type',
             'dates',
