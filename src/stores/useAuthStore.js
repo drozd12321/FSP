@@ -31,13 +31,13 @@ export const useAuthStore = defineStore("auth", () => {
       // const data = await response.json();
 
       // Для демонстрации, заменим это на setTimeout, чтобы имитировать асинхронную операцию
-      setTimeout(() => {
-        setToken("new-jwt-token");
-        console.log(
-          "User logged in successfully",
-          localStorage.getItem("jwtToken")
-        );
-      }, 1000);
+      await new Promise((resolve) => {
+        setTimeout(() => {
+          setToken("new-jwt-token");
+          console.log("User logged in successfully");
+          resolve(); // <- Важный момент
+        }, 1000);
+      });
 
       return true;
     } catch (error) {

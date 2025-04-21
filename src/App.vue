@@ -1,6 +1,5 @@
 <template>
   <component :is="lay">
-    {{ lay }}
     <RouterView></RouterView>
   </component>
 </template>
@@ -11,7 +10,6 @@ const route = useRoute();
 const metalay = route.meta.layout;
 const lay = computed(() => {
   const layoutName = `${route.meta.layout}Layout`;
-  console.log(layoutName);
   return layoutName;
 });
 </script>
