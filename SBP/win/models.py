@@ -58,19 +58,25 @@ class UserInfo(models.Model):
     def __str__(self):
         return f"{self.surname} {self.name} ({self.user.nickName})"
 
-class UserStats(models.Model):
-    user = models.OneToOneField(UserInfo, on_delete=models.CASCADE, primary_key=True)
-    competitions_count = models.PositiveIntegerField(default=0)
-    points_count = models.PositiveIntegerField(default=0)
-
-    def __str__(self):
-        return f"Stats for {self.user.nickname}: {self.competitions_count} competitions, {self.points_count} points"
-
 class Discipline(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
+    
+class UserDisciplineStats(models.Model):
+    user = models.ForeignKey(UserInfo, on_delete=models.CASCADE, related_name='discipline_stats')
+    discipline = models.ForeignKey(Discipline, on_delete=models.CASCADE)
+    competitions_count = models.PositiveIntegerField(default=0)
+    points_count = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        unique_together = ('user', 'discipline')
+        verbose_name_plural = 'User discipline statistics'
+    
+    def __str__(self):
+        return f"{self.user} in {self.discipline}: {self.competitions_count} comps, {self.points_count} pts"
+
 
 class Competition(models.Model):
     ONLINE = 'online'

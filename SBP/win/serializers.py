@@ -452,3 +452,10 @@ class NewsSerializer(serializers.ModelSerializer):
 
     def get_date(self, obj):
         return obj.created_at.strftime("%d.%m.%Y")
+    
+class UserDisciplineStatsSerializer(serializers.ModelSerializer):
+    discipline = DisciplineSerializer()
+    
+    class Meta:
+        model = UserDisciplineStats
+        fields = ['discipline', 'competitions_count', 'points_count']
