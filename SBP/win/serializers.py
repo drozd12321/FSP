@@ -336,3 +336,90 @@ class TeamApplicationSerializer(serializers.ModelSerializer):
             reason=None,
             **validated_data
         )
+        
+class TeamApplicationResponseSerializer(serializers.ModelSerializer):
+    action = serializers.ChoiceField(
+        choices=['approve', 'reject'],
+        write_only=True,
+        required=True
+    )
+    reason = serializers.CharField(
+        required=False,
+        allow_null=True,
+        allow_blank=True
+    )
+
+    class Meta:
+        model = TeamApplication
+        fields = ['action', 'reason']
+        read_only_fields = ['id', 'team', 'status']
+
+    def validate(self, attrs):
+        if self.instance.status != 'На модерации':
+            raise serializers.ValidationError(
+                "Можно обрабатывать только заявки со статусом 'На модерации'"
+            )
+        
+        if attrs['action'] == 'reject' and not attrs.get('reason'):
+            raise serializers.ValidationError(
+                "При отклонении заявки необходимо указать причину"
+            )
+        
+        return attrs
+
+    def update(self, instance, validated_data):
+        action = validated_data['action']
+        
+        if action == 'approve':
+            instance.status = 'Одобрено'
+            instance.reason = None
+            instance.team.save()
+        else:
+            instance.status = 'Отклонено'
+            instance.reason = validated_data['reason']
+        
+        instance.save()
+        return instance
+    
+class CompetitionDateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompetitionDate
+        fields = ['registration_start', 'registration_end', 'start_date', 'end_date']
+
+class DisciplineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Discipline
+        fields = ['id', 'name']
+
+class CompetitionSerializer(serializers.ModelSerializer):
+    dates = CompetitionDateSerializer(source='dates', read_only=True)
+    discipline = DisciplineSerializer(read_only=True)
+    competition_type_display = serializers.CharField(
+        source='get_competition_type_display',
+        read_only=True
+    )
+    type_display = serializers.CharField(
+        source='get_type_display',
+        read_only=True
+    )
+
+    class Meta:
+        model = Competition
+        fields = [
+            'id',
+            'name',
+            'discipline',
+            'description',
+            'max_participants',
+            'max_participants_in_team',
+            'min_age',
+            'max_age',
+            'competition_type',
+            'competition_type_display',
+            'type',
+            'type_display',
+            'status',
+            'permissions',
+            'dates'
+        ]
+        read_only_fields = fields

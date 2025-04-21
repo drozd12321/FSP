@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import (RegisterSerializer, LoginSerializer, TeamCreateSerializer,
 CompetitionSerializer, InvitationCreateSerializer, InvitationSerializer, InvitationResponseSerializer,
-RoleSerializer,RegionSerializer, TeamApplicationSerializer)
+RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationResponseSerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -166,3 +166,19 @@ class TeamApplicationCreateView(APIView):
             }, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class TeamApplicationResponseView(UpdateAPIView):
+    serializer_class = TeamApplicationResponseSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = TeamApplication.objects.all()
+    http_method_names = ['patch']
+
+    def perform_update(self, serializer):   
+        serializer.save()
+        
+class CompetitionListView(ListAPIView):
+    serializer_class = CompetitionSerializer
+    queryset = Competition.objects.all().select_related(
+        'discipline',
+        'dates'
+    ).prefetch_related('regions')
