@@ -1,5 +1,5 @@
 <template>
-  <div>cabinet</div>
+  <div>glavn</div>
 </template>
 <script setup>
 import TheHead from "@/components/TheHead.vue";

@@ -1,7 +1,7 @@
-<template><div>compet</div></template>
-<script setup></script>
-<style scoped>
-div {
-  color: white;
-}
-</style>
+<template>
+  <div><CardInfoComp /></div>
+</template>
+<script setup>
+import CardInfoComp from "@/components/CardInfoComp.vue";
+</script>
+<style scoped></style>
