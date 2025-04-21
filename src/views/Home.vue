@@ -1,5 +1,4 @@
 <template>
-  <TheHead />
   <button @click="logout">Выйти</button>
 </template>
 <script setup>

@@ -1,5 +1,6 @@
 <template>
   <TheHead />
+  <h1>fff</h1>
   <main>
     <RouterView></RouterView>
   </main>

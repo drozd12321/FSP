@@ -1,5 +1,4 @@
 <template>
-  <TheHead />
   <div>admins</div>
 </template>
 <script setup>
