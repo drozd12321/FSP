@@ -5,7 +5,7 @@ from rest_framework import status
 from .serializers import (RegisterSerializer, LoginSerializer, TeamCreateSerializer,
 CompetitionSerializer, InvitationCreateSerializer, InvitationSerializer, InvitationResponseSerializer,
 RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationResponseSerializer,
-FAQSerializer)
+FAQSerializer, NewsSerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -218,3 +218,14 @@ class FAQListView(ListAPIView):
     queryset = FAQ.objects.all()
     serializer_class = FAQSerializer
     pagination_class = StandardResultsSetPagination
+    
+class NewsPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class NewsListView(ListAPIView):
+    queryset = News.objects.filter(is_published=True).order_by('-created_at')
+    serializer_class = NewsSerializer
+    pagination_class = NewsPagination
+    search_fields = ['title', 'content']

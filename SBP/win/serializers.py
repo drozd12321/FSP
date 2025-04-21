@@ -429,3 +429,26 @@ class FAQSerializer(serializers.ModelSerializer):
         model = FAQ
         fields = ['id', 'question', 'answer']
         read_only_fields = ['id']
+        
+class NewsSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+    date = serializers.SerializerMethodField()
+
+    class Meta:
+        model = News
+        fields = [
+            'id',
+            'title',
+            'content',
+            'image_url',
+            'date'
+        ]
+        read_only_fields = fields
+
+    def get_image_url(self, obj):
+        if obj.image:
+            return self.context['request'].build_absolute_uri(obj.image.url)
+        return None
+
+    def get_date(self, obj):
+        return obj.created_at.strftime("%d.%m.%Y")
