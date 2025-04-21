@@ -1,9 +1,6 @@
 # users/serializers.py
 from rest_framework import serializers
-from django.contrib.auth.password_validation import validate_password
 from .models import User, Competition, CompetitionDate, Region, Discipline
-from django.db import models
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
