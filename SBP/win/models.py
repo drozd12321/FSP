@@ -31,8 +31,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'nickName'  # Для логина по умолчанию
-    REQUIRED_FIELDS = ['email', 'first_name', 'last_name', 'status', 'region', 'birth_date']
-
+    REQUIRED_FIELDS = ['email']
 
 
 class Region(models.Model):
@@ -48,6 +47,7 @@ class Role(models.Model):
         return self.name    
 
 class UserInfo(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='info')
     surname = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
     patronymic = models.CharField(max_length=100, blank=True, null=True)
@@ -56,7 +56,7 @@ class UserInfo(models.Model):
     birthday = models.DateField()
 
     def __str__(self):
-        return f"{self.surname} {self.name} ({self.nickname})"
+        return f"{self.surname} {self.name} ({self.user.nickName})"
 
 class UserStats(models.Model):
     user = models.OneToOneField(UserInfo, on_delete=models.CASCADE, primary_key=True)
