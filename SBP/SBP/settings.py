@@ -75,8 +75,12 @@ WSGI_APPLICATION = 'SBP.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'sbp',       # имя вашей базы данных
+        'USER': 'postgres',           # имя пользователя PostgreSQL
+        'PASSWORD': '2418908595',   # пароль пользователя
+        'HOST': '10.8.0.23',        # адрес сервера базы данных
+        'PORT': '5432',             # порт PostgreSQL (обычно 5432)
     }
 }
 
