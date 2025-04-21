@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-spw1@!3(iqz^$e!=ua4wl58li*c*!b$61&)+dazcgw7k8jylg%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
+    'win',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +51,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://10.8.0.6:5173",  # адрес фронтенда
 ]
 
 ROOT_URLCONF = 'SBP.urls'
@@ -80,7 +88,7 @@ DATABASES = {
         'USER': 'postgres',           # имя пользователя PostgreSQL
         'PASSWORD': '2418908595',   # пароль пользователя
         'HOST': '10.8.0.23',        # адрес сервера базы данных
-        'PORT': '5432',             # порт PostgreSQL (обычно 5432)
+        'PORT': '54320',             # порт PostgreSQL (обычно 5432)
     }
 }
 
@@ -125,3 +133,19 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+AUTH_USER_MODEL = 'win.User'  # Замените yourapp на имя вашего приложения
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    )
+}
+
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('JWT',),
+}
