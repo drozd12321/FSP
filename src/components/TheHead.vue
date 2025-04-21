@@ -41,15 +41,15 @@ header {
 }
 .img {
   grid-area: img;
-  padding: 30px;
+  padding: 25px;
 }
 .cab {
   grid-area: cab;
-  padding: 30px;
+  padding: 25px;
 }
 .poch {
   grid-area: poch;
-  padding: 30px;
+  padding: 25px;
 }
 .head {
   color: white;
