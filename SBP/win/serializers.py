@@ -1,7 +1,7 @@
 # users/serializers.py
 from rest_framework import serializers
-from .models import User, Competition, CompetitionDate, Region, Discipline, UserInfo, Team
-
+from .models import *
+from rest_framework.exceptions import ValidationError
 
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -165,3 +165,134 @@ class TeamCreateSerializer(serializers.ModelSerializer):
         team.members.add(captain)
         
         return team
+    
+class InvitationCreateSerializer(serializers.ModelSerializer):
+    team_id = serializers.PrimaryKeyRelatedField(
+        queryset=Team.objects.all(),
+        source='team',
+        write_only=True
+    )
+    user_id = serializers.PrimaryKeyRelatedField(
+        queryset=UserInfo.objects.all(),
+        source='user',
+        write_only=True
+    )
+
+    class Meta:
+        model = Invitation
+        fields = ['team_id', 'user_id']
+        extra_kwargs = {
+            'team_id': {'required': True},
+            'user_id': {'required': True},
+        }
+
+    def validate(self, data):
+        # Проверка что пользователь не уже в команде
+        if data['user'] in data['team'].members.all():
+            raise serializers.ValidationError(
+                "Пользователь уже является членом этой команды"
+            )
+
+        # Проверка что приглашение уже не существует
+        if Invitation.objects.filter(
+            team=data['team'],
+            user=data['user'],
+            status='Ожидает'
+        ).exists():
+            raise serializers.ValidationError(
+                "Приглашение этому пользователю уже отправлено"
+            )
+        if data['user'].user == self.context['request'].user:
+            raise serializers.ValidationError("Нельзя приглашать самого себя")
+
+        return data
+
+    def create(self, validated_data):
+        # Создаем приглашение со статусом "Ожидает"
+        return Invitation.objects.create(
+            **validated_data,
+            status='Ожидает'
+        )
+        
+class InvitationSerializer(serializers.ModelSerializer):
+    team_id = serializers.PrimaryKeyRelatedField(
+        source='team',
+        read_only=True
+    )
+    team_name = serializers.CharField(
+        source='team.name',
+        read_only=True
+    )
+    competition_name = serializers.CharField(
+        source='team.competition.name',
+        read_only=True
+    )
+    user_id = serializers.PrimaryKeyRelatedField(
+        source='user',
+        read_only=True
+    )
+    username = serializers.CharField(
+        source='user.user.username',
+        read_only=True
+    )
+
+    class Meta:
+        model = Invitation
+        fields = [
+            'id',
+            'team_id',
+            'team_name',
+            'competition_name',
+            'user_id',
+            'username',
+            'status',
+            'created_at'
+        ]
+        read_only_fields = fields
+    
+class InvitationResponseSerializer(serializers.ModelSerializer):
+    action = serializers.ChoiceField(
+        choices=['accept', 'reject'],
+        write_only=True,
+        required=True
+    )
+
+    class Meta:
+        model = Invitation
+        fields = ['action']
+        read_only_fields = ['id', 'team', 'user', 'status']
+
+    def validate(self, attrs):
+        if self.instance.status != 'Ожидает':
+            raise ValidationError("Можно ответить только на приглашения со статусом 'Ожидает'")
+        return attrs
+
+    def update(self, instance, validated_data):
+        action = validated_data['action']
+        
+        if action == 'accept':
+            # Проверяем максимальное количество участников
+            team = instance.team
+            if team.members.count() >= team.competition.max_participants:
+                raise ValidationError(
+                    f"Команда уже достигла максимального количества участников ({team.competition.max_participants})"
+                )
+            
+            # Добавляем пользователя в команду
+            team.members.add(instance.user)
+            instance.status = 'Принято'
+        else:
+            instance.status = 'Отклонено'
+        
+        instance.save()
+        return instance
+    
+class RegionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Region
+        fields = '__all__'  # или конкретные поля, например ['id', 'name', 'code']
+        
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = '__all__'  # или конкретные поля

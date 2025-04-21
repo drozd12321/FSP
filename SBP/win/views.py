@@ -2,10 +2,16 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import RegisterSerializer, LoginSerializer, TeamCreateSerializer, CompetitionSerializer
+from .serializers import (RegisterSerializer, LoginSerializer, TeamCreateSerializer,
+CompetitionSerializer, InvitationCreateSerializer, InvitationSerializer, InvitationResponseSerializer,
+RoleSerializer,RegionSerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from .models import *
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.generics import UpdateAPIView, ListAPIView
+
 
 
 class RegisterView(APIView):
@@ -71,3 +77,72 @@ class TeamCreateView(APIView):
                 'members': [team.captain.id]
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class InvitationCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = InvitationCreateSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        
+        if serializer.is_valid():
+            # Проверяем что текущий пользователь - капитан команды
+            team = serializer.validated_data['team']
+            if team.captain.user != request.user:
+                return Response(
+                    {"detail": "Только капитан команды может отправлять приглашения"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            invitation = serializer.save()
+            return Response({
+                'id': invitation.id,
+                'team_id': invitation.team.id,
+                'user_id': invitation.user.id,
+                'status': invitation.status
+            }, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class UserInvitationsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        invitations = Invitation.objects.filter(
+            user=request.user.userinfo,
+            status='Ожидает'
+        )
+        serializer = InvitationSerializer(invitations, many=True)
+        return Response(serializer.data)
+    
+class InvitationResponseView(UpdateAPIView):
+    serializer_class = InvitationResponseSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Invitation.objects.all()
+    http_method_names = ['patch']
+
+    def get_object(self):
+        invitation = super().get_object()
+        # Проверяем, что текущий пользователь - получатель приглашения
+        if invitation.user.user != self.request.user:
+            raise PermissionDenied("Вы можете отвечать только на свои приглашения")
+        return invitation
+
+    def perform_update(self, serializer):
+        try:
+            serializer.save()
+        except ValidationError as e:
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+class RegionListView(ListAPIView):
+    queryset = Region.objects.all()
+    serializer_class = RegionSerializer
+    
+class RoleListView(ListAPIView):
+    queryset = Role.objects.all()
+    serializer_class = RoleSerializer
