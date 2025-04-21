@@ -1,1 +1,1 @@
-print('xiy')
+print('')
