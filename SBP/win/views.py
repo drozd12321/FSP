@@ -45,9 +45,6 @@ class LoginView(APIView):
 
         token, created = Token.objects.get_or_create(user=user)
         return Response({'token': token.key})
-
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
     
 class CompetitionCreateView(APIView):
     def post(self, request):
