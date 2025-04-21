@@ -1,7 +1,7 @@
 import asyncio
 import asyncpg
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, Update
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
 # Параметры подключения к PostgreSQL
 DB_CONFIG = {
@@ -41,12 +41,86 @@ async def save_user(username: str, user_id: int):
     finally:
         await conn.close()
 
-# Обработчик /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     await save_user(user.username, user.id)
     print(f"Новый пользователь: {user.username} — {user.id}")
-    await update.message.reply_text("Привет! Ты подписался на рассылку от ФСП.\nДля просмотра соревнований, в которых ты учавствуешь используй /send")
+
+    keyboard = [
+        ["📅 Мои соревнования", "ℹ️ Помощь"],
+        ["⚙️ Настройки", "📌 О боте"],
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+
+    await update.message.reply_text(
+        f"Привет, {user.first_name}! 👋\n"
+        "Ты успешно подписался на рассылку от ФСП."
+        "Этот бот помогает отслеживать соревнования ФСП, а таже искать команды под свой скилл.\n\n"
+        "Выбери нужное действие:",
+        reply_markup=reply_markup,
+    )
+
+async def get_user_competitions(user_id: int):
+    """Функция для получения соревнований пользователя из БД"""
+    print('подкл')
+    conn = await asyncpg.connect(**DB_CONFIG)
+    print('ищу')
+    try:
+        # Здесь ваша логика запроса к базе данных
+        competitions = await conn.fetch(
+            "SELECT * FROM win_competition WHERE id = $1", 
+            user_id
+        )
+        return competitions if competitions else None
+    finally:
+        await conn.close()
+
+async def handle_competitions(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик кнопки 'Мои соревнования'"""
+    user = update.effective_user
+    loading_msg = await update.message.reply_text("⏳ Загружаю список соревнований...")
+    
+    try:
+        # Получаем user_id из вашей основной таблицы пользователей
+        conn = await asyncpg.connect(**DB_CONFIG)
+        user_id = await conn.fetchval(
+            "SELECT user_id FROM tg_acc WHERE user_id = $1", 
+            user.id
+        )
+        
+        if user_id:
+            competitions = await get_user_competitions(user_id)
+            
+            if competitions:
+                response = "🏆 Твои соревнования:\n\n" + "\n".join(
+                    f"• {comp['name']} ({comp['date']})" 
+                    for comp in competitions
+                )
+            else:
+                response = "🤷 Ты пока не участвуешь ни в каких соревнованиях"
+        else:
+            response = "🔍 Не удалось найти твой аккаунт в системе"
+        
+        await loading_msg.edit_text(response)
+        
+    except Exception as e:
+        print(f"Ошибка: {e}")
+        await loading_msg.edit_text("😞 Произошла ошибка при загрузке данных")
+    finally:
+        await conn.close()
+
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    if text == "📅 Мои соревнования":
+        await handle_competitions(update, context)
+    elif text == "ℹ️ Помощь":
+        await update.message.reply_text('''
+Вот список доступных команд:
+''')
+    elif text == "⚙️ Настройки":
+        await update.message.reply_text("Здесь будут настройки...")
+    elif text == "📌 О боте":
+        await update.message.reply_text("Бот от команды Аналитик!\nЭтот бот помогает отслеживать соревнования ФСП, а таже искать команды под свой скилл.")
 
 # Обработчик /send
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -77,6 +151,7 @@ async def main():
     app = Application.builder().token("7396130456:AAG8C8b5R1A_eKGgsbOmjXQ93039wKbSbkQ").build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("send", broadcast))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     await app.run_polling()
 
 if __name__ == "__main__":
