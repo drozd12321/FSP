@@ -46,29 +46,30 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     await save_user(user.username, user.id)
     print(f"Новый пользователь: {user.username} — {user.id}")
-    await update.message.reply_text("Привет! Ты добавлен в базу для рассылок.")
+    await update.message.reply_text("Привет! Ты подписался на рассылку от ФСП.\nДля просмотра соревнований, в которых ты учавствуешь используй /send")
 
 # Обработчик /send
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    target_usernames = ['someuser', 'anotheruser']  # здесь можно задать любые username
-
+    sender_id = update.effective_user.id
+    sender_username = update.effective_user.username  # может быть None, если username не установлен
     conn = await asyncpg.connect(**DB_CONFIG)
+    competitions = False
     try:
-        for username in target_usernames:
-            user_id = await conn.fetchval(
-                "SELECT user_id FROM users WHERE username = $1", 
-                username
-            )
-            if user_id:
-                try:
-                    await context.bot.send_message(chat_id=user_id, text="Привет по username!")
-                    print(f"Отправлено: {username} ({user_id})")
-                except Exception as e:
-                    print(f"Ошибка для {username}: {e}")
+        user_id = await conn.fetchval(
+            "SELECT user_id FROM tg_acc WHERE username = $1", 
+            sender_username
+        )
+        if user_id and competitions:
+            try:
+                await context.bot.send_message(chat_id=user_id, text="Привет! Ты учавствуешь в соревнованиях ...")
+                print(f"Отправлено: {sender_username} ({user_id})")
+            except Exception as e:
+                print(f"Ошибка для {sender_username}: {e}")
+        else:
+            await context.bot.send_message(chat_id=user_id, text="Привет! Ты пока нигде не учавствуешь")
     finally:
         await conn.close()
 
-    await update.message.reply_text("Рассылка завершена.")
 
 # Основная функция
 async def main():
