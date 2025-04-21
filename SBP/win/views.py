@@ -64,19 +64,43 @@ class TeamCreateView(APIView):
 
     def post(self, request):
         serializer = TeamCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            # Автоматически подставляем текущего пользователя как создателя
-            serializer.validated_data['creator_id'] = request.user.userinfo
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Проверяем региональные ограничения
+        competition = serializer.validated_data['competition']
+        user_region = request.user.userinfo.region
+        
+        if (hasattr(competition, 'permissions') and 
+            'allowed_regions' in competition.permissions and 
+            user_region.id not in competition.permissions['allowed_regions']):
             
-            team = serializer.save()
-            return Response({
-                'id': team.id,
-                'name': team.name,
-                'competition_id': team.competition.id,
-                'captain_id': team.captain.id,
-                'members': [team.captain.id]
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            allowed_regions = Region.objects.filter(
+                id__in=competition.permissions['allowed_regions']
+            ).values_list('name', flat=True)
+            
+            return Response(
+                {
+                    "detail": (
+                        "На региональные соревнования могут создаваться команды только из разрешенных регионов. "
+                        f"Допустимые регионы: {', '.join(allowed_regions)}"
+                    )
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Создаем команду
+        serializer.validated_data['creator_id'] = request.user.userinfo
+        team = serializer.save()
+        
+        return Response({
+            'id': team.id,
+            'name': team.name,
+            'competition_id': team.competition.id,
+            'captain_id': team.captain.id,
+            'members': [team.captain.id],
+            'message': 'Команда успешно создана'
+        }, status=status.HTTP_201_CREATED)
 
 class InvitationCreateView(APIView):
     permission_classes = [IsAuthenticated]
