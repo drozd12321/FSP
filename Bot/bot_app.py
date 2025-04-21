@@ -1,4 +1,3 @@
-# bot_module.py
 import asyncpg
 from telegram import Bot
 
