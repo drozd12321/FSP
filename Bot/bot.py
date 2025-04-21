@@ -62,9 +62,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def get_user_competitions(user_id: int):
     """Функция для получения соревнований пользователя из БД"""
-    print('подкл')
     conn = await asyncpg.connect(**DB_CONFIG)
-    print('ищу')
     try:
         # Здесь ваша логика запроса к базе данных
         competitions = await conn.fetch(
@@ -97,7 +95,7 @@ async def handle_competitions(update: Update, context: ContextTypes.DEFAULT_TYPE
                     for comp in competitions
                 )
             else:
-                response = "🤷 Ты пока не участвуешь ни в каких соревнованиях"
+                response = "🤷 Ты пока не участвуешь ни в каких соревнованиях.\nСкорее заходи на сайт и учавствуй!\nhttp://10.8.0.6:5173/"
         else:
             response = "🔍 Не удалось найти твой аккаунт в системе"
         
