@@ -1,5 +1,4 @@
 <template>
-  {{ userData }}
   <div>
     <div v-if="loading" class="loader-overlay"><Loader /></div>
     <div><InfoUser :data="userData" /></div>

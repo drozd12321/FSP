@@ -4,11 +4,10 @@
       <h2>Личный кабинет</h2>
       <div class="id">Уникальный номер:</div>
     </div>
-
     <div class="profile-content">
       <div class="avatar-section">
         <div class="avatar-wrapper">
-          <img src="../assets/user.png" alt="Аватар" class="avatar-image" />
+          <img src="../../assets/user.png" alt="Аватар" class="avatar-image" />
           <button class="avatar-upload-btn" @click="triggerFileInput">
             <i class="upload-icon">↑</i> Сменить фото
           </button>
@@ -24,39 +23,42 @@
       <div class="personal-data-section">
         <h3 class="section-title">Личные данные</h3>
         <form @submit.prevent="saveProfile" class="profile-form">
-          <div class="form-group">
-            <label for="fullName">Фамилия</label>
-            <input
-              type="text"
-              id="surname"
-              v-model="data.info.surname"
-              placeholder="Иванов"
-            />
+          <div class="fio">
+            <div class="form-group">
+              <label for="fullName">Фамилия</label>
+              <input
+                type="text"
+                id="surname"
+                v-model="user.surname"
+                placeholder="Иванов"
+              />
+            </div>
+            <div class="form-group">
+              <label for="fullName">Имя</label>
+              <input
+                type="text"
+                id="name"
+                v-model="user.name"
+                placeholder="Иван"
+              />
+            </div>
+            <div class="form-group">
+              <label for="fullName">Отчество</label>
+              <input
+                type="text"
+                id="patronymic"
+                v-model="user.patronymic"
+                placeholder="Иванович"
+              />
+            </div>
           </div>
-          <div class="form-group">
-            <label for="fullName">Имя</label>
-            <input
-              type="text"
-              id="name"
-              v-model="data.info.name"
-              placeholder="Иван"
-            />
-          </div>
-          <div class="form-group">
-            <label for="fullName">Отчество</label>
-            <input
-              type="text"
-              id="patronymic"
-              v-model="data.info.patronymic"
-              placeholder="Иванович"
-            />
-          </div>
+
           <div class="form-group">
             <label for="email">Регион</label>
             <input
               type="text"
               id="region"
-              v-model="data.info.region_name"
+              v-model="user.region"
               placeholder="Новгородская область"
             />
           </div>
@@ -65,7 +67,7 @@
             <input
               type="email"
               id="email"
-              v-model="data.user.email"
+              v-model="user.email"
               placeholder="example@mail.com"
             />
           </div>
@@ -74,13 +76,13 @@
             <input
               type="text"
               id="role"
-              v-model="data.info.role"
+              v-model="user.role"
               placeholder="example@mail.com"
             />
           </div>
           <div class="form-group">
             <label for="birthDate">Дата рождения</label>
-            <input type="date" id="birthDate" v-model="data.info.birthday" />
+            <input type="date" id="birthDate" v-model="user.birthDate" />
           </div>
           <div class="form-actions">
             <button type="submit" class="save-btn">Сохранить изменения</button>
@@ -94,19 +96,18 @@
   </div>
 </template>
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 const props = defineProps({
   data: Object,
 });
 const user = ref({
-  avatar: "",
-  name: "Алексей",
-  surname: "Петров",
-  patronymic: "Сергеевич",
-  email: "alexey.petrov@example.com",
-  birthDate: "1990-01-15",
-  region: "Великий Новгород",
-  role: "Роль",
+  name: "",
+  surname: "",
+  patronymic: "",
+  email: "",
+  birthDate: "",
+  region: "",
+  role: "",
 });
 const fileInput = ref(null);
 const triggerFileInput = () => {
@@ -128,21 +129,44 @@ const saveProfile = () => {
 
 const resetForm = () => {
   user.value = {
-    avatar: "",
-    fullName: "Петров Алексей Сергеевич",
-    email: "alexey.petrov@example.com",
-    phone: "+7 (912) 345-67-89",
-    birthDate: "1990-01-15",
+    name: "",
+    surname: "",
+    patronymic: "",
+    email: "",
+    birthDate: "",
+    region: "",
+    role: "",
   };
 };
+const updateUserFromProps = () => {
+  if (props.data) {
+    console.log(props.data.info.birthDate);
+    user.value = {
+      name: props.data.info.name,
+      surname: props.data.info.surname,
+      patronymic: props.data.info.patronymic,
+      email: props.data.user.email,
+      birthDate: props.data.info.birthday,
+      region: props.data.info.region,
+      role: props.data.info.role,
+    };
+  }
+};
+onMounted(updateUserFromProps);
+watch(() => props.data, updateUserFromProps);
 </script>
 
 <style scoped>
+.fio {
+  display: flex;
+  width: 100%;
+  gap: 90px;
+}
 .id {
   margin-top: 10px;
 }
 .profile-container {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
   background: #ffffff;
@@ -239,7 +263,7 @@ const resetForm = () => {
   transition: border-color 0.3s;
 }
 .form-group input:focus {
-  border-color: #3b82f6;
+  border: 1px solid var(--sin);
   outline: none;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
