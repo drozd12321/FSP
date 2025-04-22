@@ -5,15 +5,14 @@
 
     <form @submit.prevent="handleSubmit">
       <div class="form-group">
-        <label>Название соревнования*</label>
+        <label>Название соревнования</label>
         <input v-model="form.name" required />
       </div>
 
       <div class="form-group">
         <label>Дисциплина</label>
-        <input v-model="form.discipline.name" required />
+        <input v-model="form.discipline" required />
       </div>
-
       <div class="form-group">
         <label>Описание</label>
         <textarea v-model="form.description"></textarea>
@@ -28,7 +27,7 @@
           />
         </div>
         <div class="form-group">
-          <label>Макс. в команде*</label>
+          <label>Макс. в команде</label>
           <input
             type="number"
             v-model.number="form.max_participants_in_team"
@@ -43,7 +42,7 @@
         </div>
 
         <div class="form-group">
-          <label>Максимальный возраст*</label>
+          <label>Максимальный возраст</label>
           <input type="number" v-model.number="form.max_age" required />
         </div>
       </div>
@@ -56,7 +55,6 @@
             <option value="hybrid">Гибрид</option>
           </select>
         </div>
-
         <div class="form-group">
           <label>Формат*</label>
           <select v-model="form.type" required>
@@ -88,7 +86,6 @@
           placeholder="Выберите регионы"
           label="name"
           track-by="code"
-          required
         ></multiselect>
       </div>
       <div class="form-group">
@@ -103,7 +100,6 @@
           <input type="datetime-local" v-model="form.dates.end_date" required />
         </div>
       </div>
-
       <div class="form-group">
         <label>Даты регистрации*</label>
         <div class="date-inputs">
@@ -120,7 +116,9 @@
           />
         </div>
       </div>
-      <button type="submit" class="submit-btn">Создать соревнование</button>
+      <button type="submit" class="submit-btn" :disabled="loading">
+        Создать соревнование
+      </button>
     </form>
   </div>
 </template>
@@ -138,11 +136,9 @@ const russianRegions = ref([
   { code: "RU-SPE", name: "Санкт-Петербург" },
   { code: "RU-MOS", name: "Московская область" },
 ]);
-
-const loader = ref(false);
 const form = ref({
   name: "",
-  discipline: { name: "" },
+  discipline: "",
   description: "",
   max_participants: 100,
   max_participants_in_team: 4,
@@ -222,14 +218,15 @@ const toggleAllRegions = () => {
 }
 .form-group {
   margin-bottom: 1rem;
+  width: 100%;
 }
 .form-row {
   display: flex;
-  gap: 2.5rem;
+  gap: 0.5rem;
 }
 
 .form-row .form-group {
-  flex: 0.7;
+  flex: 1;
 }
 
 label {
@@ -237,7 +234,6 @@ label {
   margin-bottom: 0.5rem;
   font-weight: 500;
 }
-
 input,
 textarea,
 select {
