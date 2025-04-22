@@ -6,6 +6,7 @@ import { useRouter } from "vue-router";
 export const useAuthStore = defineStore("auth", () => {
   const token = ref(localStorage.getItem("jwtToken"));
   const role = ref(localStorage.getItem("role"));
+  const user = ref(localStorage.getItem("user"));
   const error = ref(null);
   const isLoading = ref(false);
 
@@ -14,9 +15,13 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.setItem("jwtToken", newToken);
     error.value = null;
   }
+  function setUser(newUser) {
+    user.value = newUser;
+    localStorage.setItem("user", JSON.stringify(newUser));
+  }
   function setRole(newRole) {
     role.value = newRole;
-    localStorage.setItem("role");
+    localStorage.setItem("role", newRole);
     error.value = null;
   }
   function removeToken() {
@@ -27,6 +32,7 @@ export const useAuthStore = defineStore("auth", () => {
     error.value = err;
   }
   const getError = computed(() => error.value);
+  const getUser = computed(() => user.value);
   const getToken = computed(() => token.value);
   const isAuth = computed(() => !!token.value);
   async function login(url, formstate) {
@@ -38,7 +44,14 @@ export const useAuthStore = defineStore("auth", () => {
         throw new Error("Сервер не вернул токен");
       }
       const tk = response.data.token;
+      const rl = response.data.role;
+      console.log(rl.id);
+      console.log(response.data.user);
       setToken(tk);
+      setRole(rl.id);
+      setUser(response.data.user);
+      console.log("log1", response);
+
       isLoading.value = false;
       console.log(isLoading);
       return true;
@@ -62,5 +75,7 @@ export const useAuthStore = defineStore("auth", () => {
     login,
     setError,
     setRole,
+    setUser,
+    getUser,
   };
 });

@@ -3,16 +3,18 @@
     <div v-if="loading" class="loader-overlay"><Loader /></div>
     <div class="competition-form">
       <h2>Создание нового соревнования</h2>
-
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
           <label>Название соревнования</label>
           <input v-model="form.name" required />
         </div>
-
         <div class="form-group">
           <label>Дисциплина</label>
-          <input v-model="form.discipline" required />
+          <select v-model="form.discipline" required>
+            <option v-for="dicp in distiplines" :value="dicp.id">
+              {{ dicp.name }}
+            </option>
+          </select>
         </div>
         <div class="form-group">
           <label>Описание</label>
@@ -20,7 +22,7 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Макс. участников*</label>
+            <label>Макс. участников</label>
             <input
               type="number"
               v-model.number="form.max_participants"
@@ -38,8 +40,14 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Минимальный возраст*</label>
-            <input type="number" v-model.number="form.min_age" required />
+            <label>Минимальный возраст</label>
+            <input
+              min="10"
+              max="50"
+              type="number"
+              v-model.number="form.min_age"
+              required
+            />
           </div>
 
           <div class="form-group">
@@ -53,11 +61,10 @@
             <select v-model="form.competition_type" required>
               <option value="offline">Оффлайн</option>
               <option value="online">Онлайн</option>
-              <option value="hybrid">Гибрид</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Формат*</label>
+            <label>Формат</label>
             <select v-model="form.type" required>
               <option value="individual">Индивидуальный</option>
               <option value="team">Командный</option>
@@ -130,13 +137,15 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import Multiselect from "vue-multiselect";
 import Loader from "./Loader.vue";
 import { competitionStore } from "@/stores/storeComp";
 import { storeToRefs } from "pinia";
+import axios from "axios";
 const compStore = competitionStore();
 const { loading } = storeToRefs(competitionStore());
+const distiplines = ref();
 const russianRegions = ref([
   { code: "RU-MOW", name: "Москва" },
   { code: "RU-SPE", name: "Санкт-Петербург" },
@@ -191,6 +200,20 @@ const toggleAllRegions = () => {
     form.value.permissions = [...russianRegions.value];
   }
 };
+const getDisciplin = async () => {
+  try {
+    const response = await axios.get("http://10.8.0.23:8000/disciplines/");
+
+    distiplines.value = response.data;
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching regions:", error);
+    throw error;
+  }
+};
+onMounted(() => {
+  getDisciplin();
+});
 </script>
 
 <style scoped>
@@ -229,14 +252,14 @@ const toggleAllRegions = () => {
   width: 100%;
 }
 .form-row {
-  display: flex;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
 }
-
 .form-row .form-group {
-  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, fr);
 }
-
 label {
   display: block;
   margin-bottom: 0.5rem;
@@ -246,7 +269,7 @@ label {
 input,
 textarea,
 select {
-  width: 100%;
+  width: 95%;
   padding: 0.75rem;
   border: 1px solid #ddd;
   border-radius: 4px;

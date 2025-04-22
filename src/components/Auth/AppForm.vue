@@ -76,7 +76,7 @@ const login = async () => {
           name: name.value,
           surname: firstname.value,
           patronymic: lastname.value,
-          role: { id: status.value },
+          role: status.value,
           region: region.value,
           birthday: dt.value,
         },
@@ -101,7 +101,7 @@ const login = async () => {
         "http://10.8.0.23:8000/api/auth/login/",
         formstate
       );
-      console.log("log1", response);
+
       if (isAuth) {
         router.push("/");
       } else {

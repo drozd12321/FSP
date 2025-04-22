@@ -9,7 +9,7 @@ import AppErrorMsg from "@/components/AppErrorMsg.vue";
 import ListCard from "@/components/ListCard.vue";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { storeToRefs } from "pinia";
-const { getError } = storeToRefs(useAuthStore());
+const { getError, getUser } = storeToRefs(useAuthStore());
 </script>
 <style scoped>
 .card {
