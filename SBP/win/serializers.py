@@ -701,3 +701,25 @@ class ResultDistributionSerializer(serializers.Serializer):
 class CompetitionResultsSerializer(serializers.Serializer):
     competition_id = serializers.IntegerField()
     results = ResultDistributionSerializer(many=True)
+    
+class MemberNicknameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'nickName']
+
+class TeamListSerializer(serializers.ModelSerializer):
+    competition_name = serializers.CharField(source='competition.name')
+    competition_status = serializers.CharField(source='competition.status')
+    members = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Team
+        fields = ['id', 'name', 'competition_name', 'competition_status', 'members']
+    
+    def get_members(self, obj):
+        # Получаем ники всех участников команды
+        members = obj.members.all().select_related('user')
+        return [{
+            'id': member.user.id,
+            'nickName': member.user.nickName
+        } for member in members]

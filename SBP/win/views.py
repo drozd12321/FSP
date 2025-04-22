@@ -8,7 +8,7 @@ RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationRespo
 FAQSerializer, NewsSerializer, UserApplicationSerializer, DisciplineSerializer, ApplicationDecisionSerializer,
 UserInfoSerializer, VacancyResponseSerializer, ResponseActionSerializer, UserProfileUpdateSerializer,
 UserInfoUpdateSerializer, UserUpdateSerializer, ParticipationHistorySerializer, OrganizerCompetitionSerializer,
-CompetitionResultsSerializer, UserApprovalSerializer)
+CompetitionResultsSerializer, UserApprovalSerializer, TeamListSerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -662,3 +662,23 @@ class DistributeResultsView(APIView):
             {"detail": "Места успешно распределены"},
             status=status.HTTP_200_OK
         )
+        
+class UserTeamsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        # Получаем UserInfo текущего пользователя
+        user_info = get_object_or_404(UserInfo, user=request.user.id)
+        
+        # Получаем все команды пользователя с оптимизацией запросов
+        teams = Team.objects.filter(
+            members__id=user_info.id  # Фильтруем по ID UserInfo в members
+        ).select_related('competition').prefetch_related(
+            'members__user'  # Оптимизация для загрузки участников
+        ).distinct()  # Убираем дубликаты если они есть
+        
+        serializer = TeamListSerializer(teams, many=True)
+        
+        return Response({
+            'teams': serializer.data
+        })

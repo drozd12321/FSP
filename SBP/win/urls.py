@@ -29,6 +29,7 @@ urlpatterns = [
     path('competitions/organized/', OrganizedCompetitionsView.as_view(), name='organized-competitions'),
     path('competitions/distribute-results/', DistributeResultsView.as_view(), name='distribute-results'),
     path('user-profile/',UserProfileView.as_view(), name='profile-actions'),
+    path('user/teams/', UserTeamsView.as_view(), name='user-teams'),
     
     
     
