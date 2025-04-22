@@ -8,7 +8,7 @@ RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationRespo
 FAQSerializer, NewsSerializer, UserApplicationSerializer, DisciplineSerializer, ApplicationDecisionSerializer,
 UserInfoSerializer, VacancyResponseSerializer, ResponseActionSerializer, UserProfileUpdateSerializer,
 UserInfoUpdateSerializer, UserUpdateSerializer, ParticipationHistorySerializer, OrganizerCompetitionSerializer,
-CompetitionResultsSerializer, ResultDistributionSerializer)
+CompetitionResultsSerializer, UserApprovalSerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -645,7 +645,7 @@ class DistributeResultsView(APIView):
             participant = get_object_or_404(
                 CompetitionParticipant,
                 competition=competition,
-                participant_id=result_data['user_id']
+                participant_id=result_data['user']
             )
             participant.result = result_data['result']
             participant.save()
