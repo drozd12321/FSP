@@ -298,7 +298,7 @@ class InvitationResponseSerializer(serializers.ModelSerializer):
 class RegionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Region
-        fields = '__all__'  # или конкретные поля, например ['id', 'name', 'code']
+        fields = ['id', 'name'] 
         
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -629,3 +629,30 @@ class ParticipationHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = CompetitionParticipant
         fields = ['competition', 'result']
+        
+class OrganizerCompetitionSerializer(serializers.ModelSerializer):
+    competition = serializers.SerializerMethodField()
+    rated = serializers.BooleanField(source='rated')
+    
+    class Meta:
+        model = CompetitionOrganizer
+        fields = ['competition', 'rated']
+    
+    def get_competition(self, obj):
+        competition = obj.competition
+        discipline_name = Discipline.objects.get(id = competition.discipline).name
+        return {
+            'id': competition.id,
+            'name': competition.name,
+            'discipline': discipline_name,
+            'type': competition.type,
+            'status': competition.status
+        }
+        
+class ResultDistributionSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    result = serializers.IntegerField(min_value=1)
+
+class CompetitionResultsSerializer(serializers.Serializer):
+    competition_id = serializers.IntegerField()
+    results = ResultDistributionSerializer(many=True)
