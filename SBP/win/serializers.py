@@ -449,10 +449,10 @@ class CompetitionSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         dates_data = validated_data.pop('dates')
-        regions = validated_data.pop('regions')
+        # regions = validated_data.pop('regions')
         
         competition = Competition.objects.create(**validated_data)
-        competition.regions.set(regions)
+        #competition.regions.set(regions)
         
         CompetitionDate.objects.create(
             competition=competition,
