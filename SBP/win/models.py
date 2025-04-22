@@ -155,20 +155,24 @@ class TeamApplication(models.Model):
         return f"Application from {self.team.name} - {self.status}"
 
 class UserApplication(models.Model):
-
+    STATUS_CHOICES = [
+        ('pending', 'На рассмотрении'),
+        ('approved', 'Одобрено'),
+        ('rejected', 'Отклонено'),
+    ]
+    
     user = models.ForeignKey('UserInfo', on_delete=models.CASCADE, related_name='applications')
-    status = models.CharField(max_length=25)
-    reason = models.TextField(blank=True, null=True)  # причина отказа или комментарий
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    competition = models.ForeignKey('Competition', on_delete=models.CASCADE, related_name='applications')
+    status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='pending')
+    reason = models.TextField(blank=True, null=True)
 
     class Meta:
+        unique_together = ['user', 'competition']  # Одна заявка от пользователя на соревнование
         verbose_name = "User Application"
         verbose_name_plural = "User Applications"
 
     def __str__(self):
-        return f"Application from {self.user.nickname} - {self.status}"
+        return f"Application from {self.user} to {self.competition} - {self.status}"
 
 class TeamRole(models.Model):
     name = models.CharField(max_length=100, unique=True)
