@@ -12,13 +12,13 @@
         <Loader />
       </div>
 
-      <div v-else-if="teams.length === 0" class="empty-state">
+      <!-- <div v-else-if="teams.length === 0" class="empty-state">
         <img src="@/assets/no-teams.svg" alt="Нет команд" class="empty-icon" />
         <p>У вас пока нет команд</p>
         <button class="primary-btn" @click="openCreateModal">
           Создать первую команду
         </button>
-      </div>
+      </div> -->
 
       <div v-else class="team-cards">
         <div
@@ -66,10 +66,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import Loader from "./Loader.vue";
-import CreateTeamModal from "./CreateTeamModal.vue";
-import defaultTeamAvatar from "@/assets/team-default.png";
+import { onMounted, ref } from "vue";
 
 const teams = ref([
   {
@@ -134,8 +131,7 @@ onMounted(() => {
 
 <style scoped>
 .teams-container {
-  max-width: 900px;
-  margin: 0 auto;
+  max-width: 1500px;
   padding: 2rem;
   background: #ffffff;
   border-radius: 12px;

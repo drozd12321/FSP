@@ -1,11 +1,14 @@
 <template>
   <div>
     <div v-if="loading" class="loader-overlay"><Loader /></div>
-    <div><InfoUser :data="userData" /></div>
+    <div class="containerInfo">
+      <InfoUser :data="userData" /> <InfoCommandUser />
+    </div>
   </div>
 </template>
 <script setup>
 import Loader from "@/components/Loader.vue";
+import InfoCommandUser from "@/components/user/infoCommandUser.vue";
 import InfoUser from "@/components/user/InfoUserPD.vue";
 import getUser from "@/use/useGetUser";
 import { onMounted, ref } from "vue";
@@ -39,5 +42,11 @@ onMounted(async () => {
   align-items: center;
   background-color: rgba(255, 255, 255, 0.9);
   z-index: 1000;
+}
+.containerInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 </style>

@@ -166,8 +166,8 @@ watch(() => props.data, updateUserFromProps);
   margin-top: 10px;
 }
 .profile-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 1500px;
+
   padding: 2rem;
   background: #ffffff;
   border-radius: 12px;
