@@ -322,7 +322,7 @@ class InvitationResponseSerializer(serializers.ModelSerializer):
 class RegionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Region
-        fields = '__all__'  # или конкретные поля, например ['id', 'name', 'code']
+        fields = ['id', 'name'] 
         
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -616,3 +616,67 @@ class VacancyResponseSerializer(serializers.ModelSerializer):
 class ResponseActionSerializer(serializers.Serializer):
     action = serializers.ChoiceField(choices=['accept', 'reject'])
     response_id = serializers.IntegerField()
+    
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'nickName']
+        extra_kwargs = {
+            'email': {'required': False},
+            'nickName': {'required': False}
+        }
+
+class UserInfoUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserInfo
+        fields = ['surname', 'name', 'patronymic', 'region', 'role', 'birthday']
+        extra_kwargs = {
+            'region': {'required': False},
+            'role': {'required': False},
+            'birthday': {'required': False}
+        }
+
+class UserProfileUpdateSerializer(serializers.Serializer):
+    user = UserUpdateSerializer(required=False)
+    info = UserInfoUpdateSerializer(required=False)
+    
+class CompetitionShortSerializer(serializers.ModelSerializer):
+    discipline = serializers.CharField(source='discipline.name')
+    
+    class Meta:
+        model = Competition
+        fields = ['id', 'name', 'discipline', 'type']
+
+class ParticipationHistorySerializer(serializers.ModelSerializer):
+    competition = CompetitionShortSerializer()
+    
+    class Meta:
+        model = CompetitionParticipant
+        fields = ['competition', 'result']
+        
+class OrganizerCompetitionSerializer(serializers.ModelSerializer):
+    competition = serializers.SerializerMethodField()
+    rated = serializers.BooleanField(source='rated')
+    
+    class Meta:
+        model = CompetitionOrganizer
+        fields = ['competition', 'rated']
+    
+    def get_competition(self, obj):
+        competition = obj.competition
+        discipline_name = Discipline.objects.get(id = competition.discipline).name
+        return {
+            'id': competition.id,
+            'name': competition.name,
+            'discipline': discipline_name,
+            'type': competition.type,
+            'status': competition.status
+        }
+        
+class ResultDistributionSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    result = serializers.IntegerField(min_value=1)
+
+class CompetitionResultsSerializer(serializers.Serializer):
+    competition_id = serializers.IntegerField()
+    results = ResultDistributionSerializer(many=True)

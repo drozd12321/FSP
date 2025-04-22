@@ -6,7 +6,9 @@ from .serializers import (RegisterSerializer, LoginSerializer, TeamCreateSeriali
 CompetitionSerializer, InvitationCreateSerializer, InvitationSerializer, InvitationResponseSerializer,
 RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationResponseSerializer,
 FAQSerializer, NewsSerializer, UserApplicationSerializer, DisciplineSerializer, ApplicationDecisionSerializer,
-UserInfoSerializer, VacancyResponseSerializer, ResponseActionSerializer)
+UserInfoSerializer, VacancyResponseSerializer, ResponseActionSerializer, UserProfileUpdateSerializer,
+UserInfoUpdateSerializer, UserUpdateSerializer, ParticipationHistorySerializer, OrganizerCompetitionSerializer,
+CompetitionResultsSerializer, ResultDistributionSerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -16,6 +18,7 @@ from rest_framework.generics import UpdateAPIView, ListAPIView, CreateAPIView
 from rest_framework.pagination import PageNumberPagination
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
+from django.db import transaction
 import logging
 from django.db.models import Count
 logger = logging.getLogger(__name__)
@@ -515,3 +518,173 @@ class ResponseActionView(APIView):
                 {"detail": "Заявка отклонена"},
                 status=status.HTTP_200_OK
             )
+            
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        user = request.user.id
+        user_info = get_object_or_404(UserInfo, user=user)
+        
+        # Сериализуем данные пользователя
+        user_serializer = UserUpdateSerializer(user)
+        
+        # Сериализуем данные профиля с регионом
+        info_serializer = UserInfoUpdateSerializer(user_info)
+        
+        # Получаем данные региона
+        region = user_info.region
+        region_serializer = RegionSerializer(region) if region else None
+        
+        response_data = {
+            'user': user_serializer.data,
+            'info': info_serializer.data
+        }
+        
+        # Добавляем название региона в ответ
+        if region_serializer:
+            response_data['info']['region_name'] = region_serializer.data['name']
+        
+        return Response(response_data)
+    
+    def patch(self, request):
+        # Получаем текущего пользователя и его профиль
+        user = request.user
+        user_info = get_object_or_404(UserInfo, user=user.id)
+        
+        # Сериализуем данные
+        serializer = UserProfileUpdateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Обновляем данные User
+        user_data = serializer.validated_data.get('user', {})
+        if user_data:
+            user_serializer = UserUpdateSerializer(user, data=user_data, partial=True)
+            if user_serializer.is_valid():
+                user_serializer.save()
+            else:
+                return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Обновляем данные UserInfo
+        info_data = serializer.validated_data.get('info', {})
+        if info_data:
+            info_serializer = UserInfoUpdateSerializer(user_info, data=info_data, partial=True)
+            if info_serializer.is_valid():
+                info_serializer.save()
+            else:
+                return Response(info_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(
+            {"detail": "Данные успешно обновлены"},
+            status=status.HTTP_200_OK
+        )
+        
+class ParticipationHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        # Получаем UserInfo текущего пользователя
+        try:
+            user_info = UserInfo.objects.get(user=request.user.id)
+        except UserInfo.DoesNotExist:
+            return Response(
+                {"detail": "Профиль пользователя не найден"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Получаем все участия пользователя
+        participations = CompetitionParticipant.objects.filter(
+            participant=user_info
+        )
+        
+        # Сериализуем данные
+        serializer = ParticipationHistorySerializer(participations, many=True)
+        
+        # Считаем статистику
+        stats = {
+            'total_participations': participations.count(),
+            'wins': participations.filter(result=1).count(),
+            'podiums': participations.filter(result__lte=3).count(),
+        }
+        
+        return Response({
+            'stats': stats,
+            'history': serializer.data
+        })
+        
+class OrganizedCompetitionsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        # Получаем UserInfo текущего пользователя
+        user_info = get_object_or_404(UserInfo, user=request.user)
+        
+        # Получаем все соревнования где пользователь организатор
+        organizers = CompetitionOrganizer.objects.filter(
+            user=user_info
+        ).select_related('competition', 'competition__discipline')
+        
+        serializer = OrganizerCompetitionSerializer(organizers, many=True)
+        
+        return Response({
+            'count': organizers.count(),
+            'competitions': serializer.data
+        })
+        
+class DistributeResultsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    @transaction.atomic
+    def post(self, request):
+        serializer = CompetitionResultsSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        competition_id = serializer.validated_data['competition_id']
+        results_data = serializer.validated_data['results']
+        
+        # Получаем соревнование
+        competition = get_object_or_404(Competition, id=competition_id)
+        
+        # Проверяем что соревнование завершено
+        if competition.status != 'completed':
+            return Response(
+                {"detail": "Нельзя распределить места для незавершенного соревнования"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Проверяем что пользователь организатор этого соревнования
+        user_info = get_object_or_404(UserInfo, user=request.user)
+        is_organizer = CompetitionOrganizer.objects.filter(
+            user=user_info,
+            competition=competition
+        ).exists()
+        
+        if not is_organizer:
+            return Response(
+                {"detail": "Только организатор может распределять места"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Обновляем результаты участников
+        for result_data in results_data:
+            participant = get_object_or_404(
+                CompetitionParticipant,
+                competition=competition,
+                participant_id=result_data['user_id']
+            )
+            participant.result = result_data['result']
+            participant.save()
+        
+        # Помечаем что организатор оценил соревнование
+        organizer = CompetitionOrganizer.objects.get(
+            user=user_info,
+            competition=competition
+        )
+        organizer.rated = True
+        organizer.save()
+        
+        return Response(
+            {"detail": "Места успешно распределены"},
+            status=status.HTTP_200_OK
+        )
