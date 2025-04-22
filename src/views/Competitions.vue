@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <AddCommand v-if="getCreating" @close="close" />
     <div v-if="dataLoad" class="loader-overlay"><Loader /></div>
     <div class="card" v-for="com in comp">
       <ListCard
@@ -21,8 +22,13 @@
 <script setup>
 import ListCard from "@/components/ListCard.vue";
 import Loader from "@/components/Loader.vue";
+import { commandStore } from "@/stores/storeCommand";
+import { storeToRefs } from "pinia";
 import axios from "axios";
 import { onMounted, ref } from "vue";
+import AddCommand from "@/components/AddCommand.vue";
+const { getCreating } = storeToRefs(commandStore());
+const comStore = commandStore();
 const comp = ref();
 const dataLoad = ref(false);
 const getCompititions = async () => {
@@ -38,6 +44,9 @@ const getCompititions = async () => {
     dataLoad.value = false;
     throw error;
   }
+};
+const close = () => {
+  comStore.setCreating(false);
 };
 onMounted(() => {
   getCompititions();

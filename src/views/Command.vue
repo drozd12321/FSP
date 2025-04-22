@@ -1,5 +1,5 @@
 <template>
-  <div><AddCommand /> <AddCompetition /></div>
+  <div></div>
 </template>
 <script setup>
 import AddCommand from "@/components/AddCommand.vue";

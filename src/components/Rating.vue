@@ -402,7 +402,7 @@ const getRatingClass = (rating) => {
 .pagination-btn:disabled {
   background-color: #95a5a6;
 }
-.pagination-btn:hover {
+.pagination-btn:hover :not(.pagination-btn:disabled) {
   background-color: #c0392b;
 }
 .pagination-btn.active {

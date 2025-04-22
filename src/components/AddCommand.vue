@@ -1,46 +1,45 @@
 <template>
-  {{ form }}
-  <div>
-    <div v-if="loading" class="loader-overlay"><Loader /></div>
-    <div class="competition-form">
-      <h2>Создание новой команды</h2>
-      <form @submit.prevent="createCommand">
-        <div class="form-group">
-          <label>Название команды</label>
-          <input
-            type="text"
-            v-model="form.name"
-            required
-            placeholder="Введите название команды"
-          />
-        </div>
-        <div class="form-group">
-          <label class="label" for="email">Вид команды</label>
-          <select name="comand" id="comand" v-model="comand">
-            <option value="0">Публичная</option>
-            <option value="1">Приватная</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="label" for="email">Описание</label>
-          <textarea v-model="form.description"></textarea>
-        </div>
-        <button type="submit" class="submit-btn" :disabled="loading">
-          Создать команду
-        </button>
-      </form>
+  <div class="modal-overlay" @click.self="closeModal">
+    <div class="modal-content">
+      <div v-if="loading" class="loader-overlay"><Loader /></div>
+      <div class="competition-form">
+        <button class="close-btn" @click="closeModal">×</button>
+        <h2>Создание новой команды</h2>
+        <form @submit.prevent="createCommand">
+          <div class="form-group">
+            <label>Название команды</label>
+            <input
+              type="text"
+              v-model="form.name"
+              required
+              placeholder="Введите название команды"
+            />
+          </div>
+          <div class="form-group">
+            <label class="label" for="email">Вид команды</label>
+            <select name="comand" id="comand" v-model="comand">
+              <option value="0">Публичная</option>
+              <option value="1">Приватная</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="label" for="email">Описание</label>
+            <textarea v-model="form.description"></textarea>
+          </div>
+          <button type="submit" class="submit-btn" :disabled="loading">
+            Создать команду
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import Loader from "./Loader.vue";
-import axios from "axios";
-import { useAuthStore } from "@/stores/useAuthStore";
-import { competitionStore } from "@/stores/storeComp";
-import { storeToRefs } from "pinia";
-const { getUser } = storeToRefs(useAuthStore());
+
+const emit = defineEmits(["close"]);
 const comand = ref("");
 const loading = ref(false);
 const form = ref({
@@ -49,6 +48,7 @@ const form = ref({
   is_prived: null,
   description: "",
 });
+
 const createCommand = () => {
   if (comand.value === "0") {
     form.value.is_prived = true;
@@ -56,8 +56,51 @@ const createCommand = () => {
     form.value.is_prived = false;
   }
 };
+
+const closeModal = () => {
+  emit("close");
+};
 </script>
+
 <style scoped>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  position: relative;
+  background: white;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.close-btn:hover {
+  color: #e74c3c;
+}
+
 textarea {
   width: 95%;
   padding: 0.75rem;
@@ -67,11 +110,14 @@ textarea {
   box-shadow: none;
   resize: none;
 }
+
 h2 {
   color: #e74c3c;
+  margin-top: 10px;
 }
+
 .loader-overlay {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
@@ -80,15 +126,11 @@ h2 {
   justify-content: center;
   align-items: center;
   background-color: rgba(255, 255, 255, 0.7);
-  z-index: 1000;
+  z-index: 10;
 }
 
 .competition-form {
-  max-width: 500px;
-  margin: 10px auto;
-  border-radius: 7px;
   padding: 2rem;
-  box-shadow: 0 0 12px rgba(3, 3, 3, 0.5);
 }
 
 .form-group {

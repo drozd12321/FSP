@@ -4,7 +4,6 @@
       <div class="card-image">
         <div class="image-placeholder"></div>
       </div>
-
       <div class="card-content-wide">
         <div class="card-header-wide">
           <h2 class="card-title-wide">Hack the Future 2024</h2>
@@ -55,18 +54,16 @@
 
 <script setup>
 import { ref } from "vue";
-import { competitionStore } from "@/stores/storeComp";
+import { commandStore } from "@/stores/storeCommand";
 import { storeToRefs } from "pinia";
-const compStore = competitionStore();
-const { getId } = storeToRefs(competitionStore());
-const isCreate = ref(false);
+import AddCommand from "./AddCommand.vue";
+const comStore = commandStore();
+
 const props = defineProps({
   id: Number,
 });
 const createCommand = () => {
-  isCreate.value = !isCreate.value;
-  compStore.setId(props.id);
-  console.log(getId);
+  comStore.setCreating(true);
 };
 </script>
 <style scoped>

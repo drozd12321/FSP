@@ -10,8 +10,8 @@ export const competitionStore = defineStore("comp", () => {
   function setError(err) {
     errorAddCompetition.value = err;
   }
-  function setId(id) {
-    id.value = id;
+  function setId(newid) {
+    id.value = newid;
   }
   const getId = computed(() => id.value);
   async function addCompetitions(formstate) {
