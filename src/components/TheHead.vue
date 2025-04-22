@@ -97,7 +97,7 @@ const logout = () => {
 </script>
 <style scoped>
 .header-container {
-  background: rgb(73, 73, 73);
+  background: rgb(34, 34, 34);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;

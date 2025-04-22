@@ -9,6 +9,8 @@ import FAQ from "@/views/FAQ.vue";
 import Rating from "@/views/Rating.vue";
 import News from "@/views/News.vue";
 import Cabinet from "@/views/Cabinet.vue";
+import CardInfoComp from "@/components/CardInfoComp.vue";
+import CompLayuot from "@/views/CompLayuot.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -43,11 +45,18 @@ const router = createRouter({
     {
       path: "/competitions",
       name: "competitions",
-      component: Competitions,
+      component: CompLayuot,
       meta: {
         layout: "Main",
         auth: false,
       },
+      children: [
+        {
+          path: "",
+          name: "list",
+          component: Competitions,
+        },
+      ],
     },
     {
       path: "/rating",

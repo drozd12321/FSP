@@ -1,51 +1,53 @@
 <template>
-  <div class="competition-card-wide">
-    <div class="card-image">
-      <!-- Можно добавить изображение или оставить цветной блок -->
-      <div class="image-placeholder"></div>
-    </div>
-
-    <div class="card-content-wide">
-      <div class="card-header-wide">
-        <h2 class="card-title-wide">Hack the Future 2024</h2>
-        <div class="card-tag-wide">Командный хакатон</div>
+  <div>
+    <div class="competition-card-wide">
+      <div class="card-image">
+        <!-- Можно добавить изображение или оставить цветной блок -->
+        <div class="image-placeholder"></div>
       </div>
 
-      <div class="card-details-wide">
-        <div class="detail-column">
-          <div class="detail-item">
-            <span class="detail-label">Тип:</span>
-            <span class="detail-value">Онлайн-соревнование</span>
+      <div class="card-content-wide">
+        <div class="card-header-wide">
+          <h2 class="card-title-wide">Hack the Future 2024</h2>
+          <div class="card-tag-wide">Командный хакатон</div>
+        </div>
+
+        <div class="card-details-wide">
+          <div class="detail-column">
+            <div class="detail-item">
+              <span class="detail-label">Тип:</span>
+              <span class="detail-value">Онлайн-соревнование</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Дата:</span>
+              <span class="detail-value highlight">15-17 ноября 2024</span>
+            </div>
           </div>
-          <div class="detail-item">
-            <span class="detail-label">Дата:</span>
-            <span class="detail-value highlight">15-17 ноября 2024</span>
+
+          <div class="detail-column">
+            <div class="detail-item">
+              <span class="detail-label">Уровень:</span>
+              <span class="detail-value">Профессиональный</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Призы:</span>
+              <span class="detail-value">$10,000</span>
+            </div>
           </div>
         </div>
 
-        <div class="detail-column">
-          <div class="detail-item">
-            <span class="detail-label">Уровень:</span>
-            <span class="detail-value">Профессиональный</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Призы:</span>
-            <span class="detail-value">$10,000</span>
-          </div>
+        <div class="card-description-wide">
+          <p>
+            48-часовое соревнование по разработке инновационных решений в
+            области искусственного интеллекта и анализа данных. Участвуйте в
+            составе команды до 5 человек.
+          </p>
         </div>
-      </div>
 
-      <div class="card-description-wide">
-        <p>
-          48-часовое соревнование по разработке инновационных решений в области
-          искусственного интеллекта и анализа данных. Участвуйте в составе
-          команды до 5 человек.
-        </p>
-      </div>
-
-      <div class="card-footer-wide">
-        <button class="register-btn-wide">Зарегистрироваться</button>
-        <button class="details-btn-wide">Подробнее</button>
+        <div class="card-footer-wide">
+          <button class="register-btn-wide">Зарегистрироваться</button>
+          <button class="details-btn-wide">Подробнее</button>
+        </div>
       </div>
     </div>
   </div>
