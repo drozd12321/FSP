@@ -192,23 +192,33 @@ class InvitationCreateSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, data):
-        # Проверка что пользователь не уже в команде
-        if data['user'] in data['team'].members.all():
+        team = data['team']
+        user = data['user']
+        request = self.context['request']
+
+        # Проверка что пользователь не капитан
+        if team.captain == user:
             raise serializers.ValidationError(
-                "Пользователь уже является членом этой команды"
+                "Нельзя приглашать капитана команды"
             )
 
-        # Проверка что приглашение уже не существует
-        if Invitation.objects.filter(
-            team=data['team'],
-            user=data['user'],
-            status='Ожидает'
-        ).exists():
+        # Проверка что пользователь не уже в команде
+        if team.members.filter(id=user.id).exists():
             raise serializers.ValidationError(
-                "Приглашение этому пользователю уже отправлено"
+                "Пользователь уже в команде"
             )
-        if data['user'].user == self.context['request'].user:
-            raise serializers.ValidationError("Нельзя приглашать самого себя")
+
+        # Проверка существующих приглашений
+        if Invitation.objects.filter(team=team, user=user, status='Ожидает').exists():
+            raise serializers.ValidationError(
+                "Приглашение уже отправлено"
+            )
+
+        # Проверка что не приглашаем себя
+        if user.user == request.user:
+            raise serializers.ValidationError(
+                "Нельзя приглашать самого себя"
+            )
 
         return data
 

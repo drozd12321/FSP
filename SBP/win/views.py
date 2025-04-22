@@ -146,7 +146,7 @@ class TeamCreateView(APIView):
             )
 
 class InvitationCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = InvitationCreateSerializer(

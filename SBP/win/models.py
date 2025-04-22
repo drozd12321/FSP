@@ -130,13 +130,16 @@ class Team(models.Model):
         return f"{self.name} ({self.competition})"
 
 class Invitation(models.Model):
-
+    STATUS_CHOICES = [
+        ('Ожидает', 'Ожидает'),
+        ('Принято', 'Принято'),
+        ('Отклонено', 'Отклонено')
+    ]
+    
     team = models.ForeignKey('Team', on_delete=models.CASCADE, related_name='invitations')
     user = models.ForeignKey('UserInfo', on_delete=models.CASCADE, related_name='invitations')
-    status = models.CharField(max_length=25)
+    status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='Ожидает')
 
-    def __str__(self):
-        return f"Invitation of {self.user} to {self.team} - {self.status}"
     
 class TeamApplication(models.Model):
 
