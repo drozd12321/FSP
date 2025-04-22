@@ -541,3 +541,7 @@ class UserApplicationSerializer(serializers.ModelSerializer):
             user=user_info,
             **validated_data
         )
+        
+class ApplicationDecisionSerializer(serializers.Serializer):
+    action = serializers.ChoiceField(choices=['approve', 'reject'], required=True)
+    reason = serializers.CharField(required=False, allow_blank=True)

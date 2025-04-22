@@ -5,7 +5,7 @@ from rest_framework import status
 from .serializers import (RegisterSerializer, LoginSerializer, TeamCreateSerializer,
 CompetitionSerializer, InvitationCreateSerializer, InvitationSerializer, InvitationResponseSerializer,
 RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationResponseSerializer,
-FAQSerializer, NewsSerializer, UserApplicationSerializer, DisciplineSerializer)
+FAQSerializer, NewsSerializer, UserApplicationSerializer, DisciplineSerializer, ApplicationDecisionSerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -14,6 +14,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import UpdateAPIView, ListAPIView, CreateAPIView
 from rest_framework.pagination import PageNumberPagination
 from django.db import IntegrityError
+from django.shortcuts import get_object_or_404
 
 
 
@@ -284,3 +285,60 @@ class DisciplineListView(ListAPIView):
     queryset = Discipline.objects.all().order_by('id')
     serializer_class = DisciplineSerializer
     permission_classes = [AllowAny]
+    
+class ApplicationDecisionView(UpdateAPIView):
+    serializer_class = ApplicationDecisionSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = UserApplication.objects.all()
+
+    def get_object(self):
+        application = get_object_or_404(UserApplication, pk=self.kwargs['pk'])
+        user_info = self.request.user.info
+        
+        # Проверяем что пользователь организатор этого соревнования
+        if not CompetitionOrganizer.objects.filter(
+            user=user_info,
+            competition=application.competition
+        ).exists():
+            raise PermissionDenied("Вы не являетесь организатором этого соревнования")
+        
+        return application
+
+    def perform_update(self, serializer):
+        application = self.get_object()
+        action = serializer.validated_data['action']
+        reason = serializer.validated_data.get('reason', '')
+
+        if action == 'approve':
+            if application.competition.participants.count() >= application.competition.max_participants:
+                raise ValidationError("Достигнуто максимальное количество участников")
+            
+        if action == 'approve':
+            application.status = 'approved'
+            application.reason = None
+            # Создаем запись об участии
+            CompetitionParticipant.objects.get_or_create(
+                competition=application.competition,
+                participant=application.user
+            )
+        else:
+            application.status = 'rejected'
+            application.reason = reason
+        
+        application.save()
+        
+class OrganizerApplicationsListView(ListAPIView):
+    serializer_class = UserApplicationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user_info = self.request.user.info
+        # Получаем соревнования, где пользователь организатор
+        organized_competitions = CompetitionOrganizer.objects.filter(
+            user=user_info
+        ).values_list('competition_id', flat=True)
+        
+        return UserApplication.objects.filter(
+            competition_id__in=organized_competitions,
+            status='pending'
+        ).select_related('user', 'user__user', 'user__region', 'competition')
