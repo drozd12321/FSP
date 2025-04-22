@@ -107,7 +107,7 @@ const toggle = () => {
 }
 
 .card-tag {
-  background: #e74c3c;
+  background: var(--sin);
   color: white;
   padding: 6px 12px;
   border-radius: 20px;
@@ -166,7 +166,9 @@ const toggle = () => {
   min-width: 120px;
   height: 40px;
 }
-
+.toggle-btn .sin {
+  background-color: var(--sin);
+}
 .toggle-btn:hover {
   background: #c0392b;
   transform: translateY(-2px);

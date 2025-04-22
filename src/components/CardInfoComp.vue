@@ -2,7 +2,6 @@
   <div>
     <div class="competition-card-wide">
       <div class="card-image">
-        <!-- Можно добавить изображение или оставить цветной блок -->
         <div class="image-placeholder"></div>
       </div>
 
@@ -53,9 +52,7 @@
   </div>
 </template>
 
-<script setup>
-// Логика карточки может быть добавлена здесь
-</script>
+<script setup></script>
 
 <style scoped>
 .competition-card-wide {
@@ -109,7 +106,7 @@
 }
 
 .card-tag-wide {
-  background: #e74c3c;
+  background: var(--sin);
   color: white;
   padding: 6px 15px;
   border-radius: 20px;
