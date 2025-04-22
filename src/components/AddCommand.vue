@@ -39,7 +39,6 @@
 import { computed, onMounted, ref } from "vue";
 import Loader from "./Loader.vue";
 import { useCommandStore } from "@/stores/storeCommand";
-import { competitionStore } from "@/stores/storeComp";
 import { storeToRefs } from "pinia";
 const { getLoading, getId } = storeToRefs(useCommandStore());
 const comStore = useCommandStore();

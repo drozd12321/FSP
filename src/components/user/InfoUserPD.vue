@@ -2,16 +2,13 @@
   <div class="profile-container">
     <div class="profile-header">
       <h2>Личный кабинет</h2>
+      <div class="id">Уникальный номер:</div>
     </div>
 
     <div class="profile-content">
       <div class="avatar-section">
         <div class="avatar-wrapper">
-          <img
-            :src="user.avatar || 'https://via.placeholder.com/150'"
-            alt="Аватар"
-            class="avatar-image"
-          />
+          <img src="../assets/user.png" alt="Аватар" class="avatar-image" />
           <button class="avatar-upload-btn" @click="triggerFileInput">
             <i class="upload-icon">↑</i> Сменить фото
           </button>
@@ -28,12 +25,39 @@
         <h3 class="section-title">Личные данные</h3>
         <form @submit.prevent="saveProfile" class="profile-form">
           <div class="form-group">
-            <label for="fullName">ФИО</label>
+            <label for="fullName">Фамилия</label>
             <input
               type="text"
-              id="fullName"
-              v-model="user.fullName"
-              placeholder="Иванов Иван Иванович"
+              id="surname"
+              v-model="data.info.surname"
+              placeholder="Иванов"
+            />
+          </div>
+          <div class="form-group">
+            <label for="fullName">Имя</label>
+            <input
+              type="text"
+              id="name"
+              v-model="data.info.name"
+              placeholder="Иван"
+            />
+          </div>
+          <div class="form-group">
+            <label for="fullName">Отчество</label>
+            <input
+              type="text"
+              id="patronymic"
+              v-model="data.info.patronymic"
+              placeholder="Иванович"
+            />
+          </div>
+          <div class="form-group">
+            <label for="email">Регион</label>
+            <input
+              type="text"
+              id="region"
+              v-model="data.info.region_name"
+              placeholder="Новгородская область"
             />
           </div>
           <div class="form-group">
@@ -41,22 +65,22 @@
             <input
               type="email"
               id="email"
-              v-model="user.email"
+              v-model="data.user.email"
               placeholder="example@mail.com"
             />
           </div>
           <div class="form-group">
-            <label for="phone">Телефон</label>
+            <label for="email">Роль</label>
             <input
-              type="tel"
-              id="phone"
-              v-model="user.phone"
-              placeholder="+7 (999) 123-45-67"
+              type="text"
+              id="role"
+              v-model="data.info.role"
+              placeholder="example@mail.com"
             />
           </div>
           <div class="form-group">
             <label for="birthDate">Дата рождения</label>
-            <input type="date" id="birthDate" v-model="user.birthDate" />
+            <input type="date" id="birthDate" v-model="data.info.birthday" />
           </div>
           <div class="form-actions">
             <button type="submit" class="save-btn">Сохранить изменения</button>
@@ -71,12 +95,18 @@
 </template>
 <script setup>
 import { ref } from "vue";
+const props = defineProps({
+  data: Object,
+});
 const user = ref({
   avatar: "",
-  fullName: "Петров Алексей Сергеевич",
+  name: "Алексей",
+  surname: "Петров",
+  patronymic: "Сергеевич",
   email: "alexey.petrov@example.com",
-  phone: "+7 (912) 345-67-89",
   birthDate: "1990-01-15",
+  region: "Великий Новгород",
+  role: "Роль",
 });
 const fileInput = ref(null);
 const triggerFileInput = () => {
@@ -97,7 +127,6 @@ const saveProfile = () => {
 };
 
 const resetForm = () => {
-  // Здесь логика сброса к исходным значениям
   user.value = {
     avatar: "",
     fullName: "Петров Алексей Сергеевич",
@@ -109,6 +138,9 @@ const resetForm = () => {
 </script>
 
 <style scoped>
+.id {
+  margin-top: 10px;
+}
 .profile-container {
   max-width: 900px;
   margin: 0 auto;

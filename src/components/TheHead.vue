@@ -6,7 +6,9 @@
         alt="Федерация спортивного программирования"
         class="logo-img"
       />
-      <span class="logo-text">Федерация СП</span>
+      <span class="logo-text"
+        ><RouterLink class="nav-link h2" to="/">Федерация СП</RouterLink>
+      </span>
 
       <nav class="head">
         <div class="nav-item">
@@ -138,13 +140,20 @@ const logout = () => {
   align-items: center;
   flex-grow: 1;
 }
-
+a {
+  list-style: none;
+  text-decoration: none;
+  color: white;
+}
 .nav-item {
   position: relative;
   padding: 0 15px;
   transition: all 0.3s ease;
 }
-
+.nav-link.h2 {
+  font-size: 25px;
+  font-weight: 600;
+}
 .nav-link {
   color: white;
   text-decoration: none;
