@@ -1,4 +1,5 @@
 <template>
+  <div v-if="loading" class="loader-overlay"><Loader /></div>
   <div class="competition-form">
     <h2>Создание нового соревнования</h2>
 
@@ -119,7 +120,6 @@
           />
         </div>
       </div>
-
       <button type="submit" class="submit-btn">Создать соревнование</button>
     </form>
   </div>
@@ -128,13 +128,18 @@
 <script setup>
 import { computed, ref } from "vue";
 import Multiselect from "vue-multiselect";
-
+import Loader from "./Loader.vue";
+import { competitionStore } from "@/stores/storeComp";
+import { storeToRefs } from "pinia";
+const compStore = competitionStore();
+const { loading } = storeToRefs(competitionStore());
 const russianRegions = ref([
   { code: "RU-MOW", name: "Москва" },
   { code: "RU-SPE", name: "Санкт-Петербург" },
   { code: "RU-MOS", name: "Московская область" },
 ]);
 
+const loader = ref(false);
 const form = ref({
   name: "",
   discipline: { name: "" },
@@ -155,7 +160,7 @@ const form = ref({
   },
 });
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   const formattedData = {
     ...form.value,
     dates: {
@@ -169,8 +174,10 @@ const handleSubmit = () => {
       ).toISOString(),
     },
   };
-
   console.log("Отправка данных:", formattedData);
+  const response = await compStore.addCompetitions(formattedData);
+  console.log("Отправка данных:", formattedData);
+  console.log("Отправка данных:", response);
 };
 const allRegionsSelected = computed(() => {
   return form.value.permissions.length === russianRegions.value.length;
@@ -182,29 +189,47 @@ const toggleAllRegions = () => {
     form.value.permissions = [...russianRegions.value];
   }
 };
-const isRegionSelected = (code) => {
-  return form.value.permissions.some((region) => region.code === code);
-};
 </script>
 
 <style scoped>
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.7);
+  z-index: 1000;
+}
+.select-all-btn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 0.9rem;
+}
+.select-all-btn:hover {
+  text-decoration: underline;
+}
 .competition-form {
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
 }
-
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
-
 .form-row {
   display: flex;
-  gap: 1rem;
+  gap: 2.5rem;
 }
 
 .form-row .form-group {
-  flex: 1;
+  flex: 0.7;
 }
 
 label {
@@ -220,12 +245,19 @@ select {
   padding: 0.75rem;
   border: 1px solid #ddd;
   border-radius: 4px;
+  outline: none;
+  box-shadow: none;
 }
-
-.date-inputs {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+select {
+  background-color: white;
+}
+textarea {
+  resize: none;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border: 2px solid #3b82f6;
 }
 
 .date-inputs input {

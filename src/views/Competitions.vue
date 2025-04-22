@@ -1,6 +1,6 @@
 <template>
   <!-- <div><CardInfoComp /></div> -->
-  <div class="card"><ListCard /></div>
+  <!-- <div class="card"><ListCard /></div> -->
   <AddCompetition />
 </template>
 <script setup>
