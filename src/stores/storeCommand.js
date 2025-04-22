@@ -8,13 +8,23 @@ export const useCommandStore = defineStore("command", () => {
   const type = ref();
   const loading = ref(false);
   const errorAddCommand = ref(null);
+  const msg = ref({
+    show: false,
+    type: "",
+    title: "",
+  });
   const Id = ref();
   function setError(err) {
     errorAddCommand.value = err;
   }
   function setCreating(newVal) {
     isCreating.value = newVal;
-    console.log(isCreating.value);
+  }
+  function setMesg(newVal) {
+    msg.value.show = newVal.show;
+    msg.value.title = newVal.title;
+    msg.value.type = newVal.type;
+    console.log(msg.value);
   }
   function setId(newId) {
     Id.value = newId;
@@ -25,6 +35,7 @@ export const useCommandStore = defineStore("command", () => {
   async function addCommand(formstate, token) {
     try {
       loading.value = true;
+      console.log("form", formstate, token);
       if (!token) {
         throw new Error("No authentication token available");
       }
@@ -38,11 +49,20 @@ export const useCommandStore = defineStore("command", () => {
           },
         }
       );
-
-      console.log(response.data);
+      setMesg({
+        show: true,
+        title: "Вы успешно создали команду",
+        type: "succses",
+      });
       loading.value = false;
+      setCreating(false);
       return true;
     } catch (err) {
+      setMesg({
+        show: false,
+        title: "",
+        type: "",
+      });
       setError(err.response?.data || err.message);
       loading.value = false;
       return false;
@@ -52,11 +72,14 @@ export const useCommandStore = defineStore("command", () => {
   }
 
   const getCreating = computed(() => isCreating.value);
+  const getMsg = computed(() => msg.value);
   const getLoading = computed(() => loading.value);
   const getError = computed(() => errorAddCommand.value);
   const getId = computed(() => Id.value);
   const getType = computed(() => type.value);
   return {
+    setMesg,
+    getMsg,
     setError,
     getType,
     setType,

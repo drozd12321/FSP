@@ -129,6 +129,7 @@ onMounted(() => {
 
 <style scoped>
 .teams-container {
+  margin-top: 20px;
   max-width: 1500px;
   padding: 2rem;
   background: #ffffff;

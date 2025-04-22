@@ -1,5 +1,4 @@
 <template>
-  {{ type }}
   <div class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
       <div v-if="getLoading" class="loader-overlay"><Loader /></div>
@@ -85,14 +84,22 @@ const type = computed(() => {
   return getType.value;
 });
 const token = ref();
+const user = ref();
 const createCommand = async () => {
   console.log(token.value);
-  if (comand.value === "0") {
-    form.value.is_private = true;
+  if (type === "Командное") {
+    if (comand.value === "0") {
+      form.value.is_private = true;
+    } else {
+      form.value.is_private = false;
+    }
   } else {
-    form.value.is_private = false;
+    form.value.is_private = true;
+    form.value.name = user.value.email;
+    console.log(user);
   }
   form.value.competition = idd.value;
+  console.log(form.value);
   await comStore.addCommand(form.value, token.value);
   resetForm();
 };
@@ -109,6 +116,7 @@ const closeModal = () => {
 };
 onMounted(() => {
   token.value = localStorage.getItem("jwtToken");
+  user.value = JSON.parse(localStorage.getItem("user"));
 });
 </script>
 

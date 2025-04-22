@@ -1,6 +1,9 @@
 <template>
   <div class="container">
-    <AddCommand v-if="getCreating" @close="close" />
+    <AppMsg v-if="act" :act="act" />
+    <div v-if="create" class="loader-overlay">
+      <AddCommand @close="close" />
+    </div>
     <div v-if="dataLoad" class="loader-overlay"><Loader /></div>
     <div class="card" v-for="com in comp">
       <ListCard
@@ -25,9 +28,10 @@ import Loader from "@/components/Loader.vue";
 import { useCommandStore } from "@/stores/storeCommand";
 import { storeToRefs } from "pinia";
 import axios from "axios";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import AddCommand from "@/components/AddCommand.vue";
-const { getCreating } = storeToRefs(useCommandStore());
+import AppMsg from "@/components/message/AppMsg.vue";
+const { getCreating, getMsg } = storeToRefs(useCommandStore());
 const comStore = useCommandStore();
 const comp = ref();
 const dataLoad = ref(false);
@@ -48,6 +52,12 @@ const getCompititions = async () => {
 const close = () => {
   comStore.setCreating(false);
 };
+const act = computed(() => {
+  return getMsg.value;
+});
+const create = computed(() => {
+  return getCreating.value;
+});
 onMounted(() => {
   getCompititions();
 });
@@ -77,8 +87,8 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.7);
-  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 100;
 }
 .card:hover {
   transform: translateY(-7px);
