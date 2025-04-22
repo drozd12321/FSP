@@ -1,3 +1,7 @@
-<template><div>commsnds</div></template>
-<script setup></script>
+<template>
+  <div><AddCommand /> <AddCompetition /></div>
+</template>
+<script setup>
+import AddCommand from "@/components/AddCommand.vue";
+</script>
 <style scoped></style>

@@ -1,29 +1,51 @@
 <template>
   <div class="ultra-wide-card">
     <div class="wide-card-header">
-      <h3 class="wide-card-title">Hackathon Pro 2024</h3>
-      <span class="wide-card-tag">Хакатон</span>
+      <h3 class="wide-card-title">{{ name }}</h3>
+      <span class="wide-card-tag">{{ disciplName }}</span>
     </div>
 
     <div class="wide-card-content">
       <div class="wide-card-details">
         <div class="wide-detail">
-          <span class="wide-label">Дата:</span>
-          <span class="wide-value">15-17 ноя</span>
+          <span class="wide-label">Дата регистрации:</span>
+          <span class="wide-value">{{
+            formatDateRange(dataregStart, dataregEnd)
+          }}</span>
         </div>
         <div class="wide-detail">
-          <span class="wide-label">Формат:</span>
-          <span class="wide-value">Онлайн</span>
+          <span class="wide-label">Дата участия:</span>
+          <span class="wide-value">{{
+            formatDateRange(dataStart, dataEnd)
+          }}</span>
+        </div>
+        <div class="wide-detail">
+          <span class="wide-label">Формат проведения:</span>
+          <span class="wide-value">{{ typeComp }}</span>
+        </div>
+        <div class="wide-detail">
+          <span class="wide-label">Формат участия:</span>
+          <span class="wide-value">{{ typeCommand }}</span>
         </div>
       </div>
-
-      <button class="wide-card-btn">Участвовать</button>
+      <button class="wide-card-btn">Подробнее</button>
     </div>
   </div>
 </template>
 
 <script setup>
-// Логика карточки может быть добавлена здесь
+import formatDateRange from "@/use/useFilterData";
+const props = defineProps({
+  name: String,
+  typeComp: String,
+  typeCommand: String,
+  status: String,
+  dataregStart: String,
+  dataregEnd: String,
+  dataStart: String,
+  dataEnd: String,
+  disciplName: String,
+});
 </script>
 
 <style scoped>
