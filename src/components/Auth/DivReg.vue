@@ -64,9 +64,7 @@
       :value="statusVal"
       @input="$emit('update:statusVal', $event.target.value)"
     >
-      <option :value="2">Представитель ФСП</option>
-      <option :value="1">Региональный представитель ФСП</option>
-      <option :value="0">Участник</option>
+      <option v-for="rol in roles" :value="rol.id">{{ rol.name }}</option>
     </select>
   </div>
   <div class="inpdiv">
@@ -77,7 +75,7 @@
       :value="regionVal"
       @input="$emit('update:regionVal', $event.target.value)"
     >
-      <option v-for="reg in region" :value="reg.value">{{ reg.name }}</option>
+      <option v-for="reg in regions" :value="reg.id">{{ reg.name }}</option>
     </select>
   </div>
   <div class="inpdiv">
@@ -92,6 +90,8 @@
 </template>
 <script setup>
 import region from "@/data/region";
+import axios from "axios";
+import { onMounted, ref } from "vue";
 const emit = defineEmits([
   "update:emailVal",
   "update:passwordVal",
@@ -117,6 +117,34 @@ const props = defineProps({
   statusVal: String,
   isSubmitting: Boolean,
   istomanyAttemots: Boolean,
+});
+const regions = ref();
+const roles = ref();
+const getRegion = async () => {
+  try {
+    const response = await axios.get("http://10.8.0.23:8000/regions/");
+
+    regions.value = response.data;
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching regions:", error);
+    throw error;
+  }
+};
+const getRoles = async () => {
+  try {
+    const response = await axios.get("http://10.8.0.23:8000/roles/");
+
+    roles.value = response.data;
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching regions:", error);
+    throw error;
+  }
+};
+onMounted(() => {
+  getRegion();
+  getRoles();
 });
 </script>
 <style scoped>

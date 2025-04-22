@@ -32,17 +32,14 @@ export const useAuthStore = defineStore("auth", () => {
   async function login(url, formstate) {
     try {
       isLoading.value = true;
-      console.log("gg");
       error.value = null;
       const response = await axios.post(url, formstate);
       if (!response.data?.token) {
         throw new Error("Сервер не вернул токен");
       }
-      console.log(response);
-      setToken(response.data.token);
-      setRole(response.data.role);
+      const tk = response.data.token;
+      setToken(tk);
       isLoading.value = false;
-
       console.log(isLoading);
       return true;
     } catch (err) {

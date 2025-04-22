@@ -1,4 +1,4 @@
-<template>главная</template>
+<template><div>Home</div></template>
 <script setup>
 import TheHead from "@/components/TheHead.vue";
 import { useAuthStore } from "@/stores/useAuthStore";

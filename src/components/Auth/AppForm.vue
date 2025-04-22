@@ -40,12 +40,13 @@ import DivLogin from "./DivLogin.vue";
 import useLoginForm from "@/use/useLoginForm";
 import { useAuthStore } from "@/stores/useAuthStore";
 import router from "@/router";
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import Loader from "../Loader.vue";
 import { storeToRefs } from "pinia";
 import AppErrorMsg from "../AppErrorMsg.vue";
+import axios from "axios";
 const authStore = useAuthStore();
-const { isLoading, getError } = storeToRefs(useAuthStore());
+const { isLoading, getError, isAuth } = storeToRefs(useAuthStore());
 const isLoad = computed(() => {
   authStore.isLoading;
 });
@@ -75,7 +76,7 @@ const login = async () => {
           name: name.value,
           surname: firstname.value,
           patronymic: lastname.value,
-          role: status.value,
+          role: { id: status.value },
           region: region.value,
           birthday: dt.value,
         },
@@ -100,7 +101,8 @@ const login = async () => {
         "http://10.8.0.23:8000/api/auth/login/",
         formstate
       );
-      if (response.success) {
+      console.log("log1", response);
+      if (isAuth) {
         router.push("/");
       } else {
         console.error("Login failed", response.error);
@@ -118,15 +120,15 @@ const login = async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.9); /* Полупрозрачный белый фон */
+  background-color: rgba(255, 255, 255, 0.9);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999; /* Очень высокий z-index чтобы быть поверх всего */
-  backdrop-filter: blur(2px); /* Легкое размытие фона */
+  z-index: 9999;
+  backdrop-filter: blur(2px);
 }
 .loader-overlay {
-  position: fixed; /* Или absolute, в зависимости от ваших нужд */
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -134,8 +136,8 @@ const login = async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.7); /* Полупрозрачный фон */
-  z-index: 1000; /* Убедитесь, что это значение выше, чем у других элементов */
+  background-color: rgba(255, 255, 255, 0.7);
+  z-index: 1000;
 }
 button {
   padding: 10px;

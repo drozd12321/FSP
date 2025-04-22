@@ -1,14 +1,13 @@
 <template>
   <header class="header-container">
-    <div class="header-content">
-      <RouterLink to="/" class="logo">
-        <img
-          src="../assets/photo_2025-04-21_20-08-46.png"
-          alt="Федерация спортивного программирования"
-          class="logo-img"
-        />
-        <span class="logo-text">Федерация СП</span>
-      </RouterLink>
+    <div class="header-content logo">
+      <img
+        src="../assets/photo_2025-04-21_20-08-46.png"
+        alt="Федерация спортивного программирования"
+        class="logo-img"
+      />
+      <span class="logo-text">Федерация СП</span>
+
       <nav class="head">
         <div class="nav-item">
           <RouterLink to="/competitions" class="nav-link"
@@ -122,10 +121,6 @@ const logout = () => {
   font-weight: 600;
   font-size: 20px;
   transition: transform 0.3s ease;
-}
-
-.logo:hover {
-  transform: scale(1.03);
 }
 
 .logo-img {

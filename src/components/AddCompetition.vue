@@ -1,125 +1,131 @@
 <template>
-  <div v-if="loading" class="loader-overlay"><Loader /></div>
-  <div class="competition-form">
-    <h2>Создание нового соревнования</h2>
+  <div>
+    <div v-if="loading" class="loader-overlay"><Loader /></div>
+    <div class="competition-form">
+      <h2>Создание нового соревнования</h2>
 
-    <form @submit.prevent="handleSubmit">
-      <div class="form-group">
-        <label>Название соревнования</label>
-        <input v-model="form.name" required />
-      </div>
-
-      <div class="form-group">
-        <label>Дисциплина</label>
-        <input v-model="form.discipline" required />
-      </div>
-      <div class="form-group">
-        <label>Описание</label>
-        <textarea v-model="form.description"></textarea>
-      </div>
-      <div class="form-row">
+      <form @submit.prevent="handleSubmit">
         <div class="form-group">
-          <label>Макс. участников*</label>
-          <input
-            type="number"
-            v-model.number="form.max_participants"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <label>Макс. в команде</label>
-          <input
-            type="number"
-            v-model.number="form.max_participants_in_team"
-            required
-          />
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Минимальный возраст*</label>
-          <input type="number" v-model.number="form.min_age" required />
+          <label>Название соревнования</label>
+          <input v-model="form.name" required />
         </div>
 
         <div class="form-group">
-          <label>Максимальный возраст</label>
-          <input type="number" v-model.number="form.max_age" required />
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Тип проведения</label>
-          <select v-model="form.competition_type" required>
-            <option value="offline">Оффлайн</option>
-            <option value="online">Онлайн</option>
-            <option value="hybrid">Гибрид</option>
-          </select>
+          <label>Дисциплина</label>
+          <input v-model="form.discipline" required />
         </div>
         <div class="form-group">
-          <label>Формат*</label>
-          <select v-model="form.type" required>
-            <option value="individual">Индивидуальный</option>
-            <option value="team">Командный</option>
-          </select>
+          <label>Описание</label>
+          <textarea v-model="form.description"></textarea>
         </div>
-      </div>
-      <div class="form-group">
-        <label>Доступные регионы</label>
-        <div class="regions-controls">
-          <button
-            type="button"
-            @click="toggleAllRegions"
-            class="select-all-btn"
-          >
-            {{ allRegionsSelected ? "Снять все" : "Выбрать все" }}
-          </button>
-          <span class="selected-count">
-            Выбрано: {{ form.permissions.length }} из
-            {{ russianRegions.length }}
-          </span>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Макс. участников*</label>
+            <input
+              type="number"
+              v-model.number="form.max_participants"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Макс. в команде</label>
+            <input
+              type="number"
+              v-model.number="form.max_participants_in_team"
+              required
+            />
+          </div>
         </div>
-        <multiselect
-          v-model="form.permissions"
-          :options="russianRegions"
-          :multiple="true"
-          :close-on-select="false"
-          placeholder="Выберите регионы"
-          label="name"
-          track-by="code"
-        ></multiselect>
-      </div>
-      <div class="form-group">
-        <label>Даты проведения</label>
-        <div class="date-inputs">
-          <input
-            type="datetime-local"
-            v-model="form.dates.start_date"
-            required
-          />
-          <span>до</span>
-          <input type="datetime-local" v-model="form.dates.end_date" required />
+        <div class="form-row">
+          <div class="form-group">
+            <label>Минимальный возраст*</label>
+            <input type="number" v-model.number="form.min_age" required />
+          </div>
+
+          <div class="form-group">
+            <label>Максимальный возраст</label>
+            <input type="number" v-model.number="form.max_age" required />
+          </div>
         </div>
-      </div>
-      <div class="form-group">
-        <label>Даты регистрации*</label>
-        <div class="date-inputs">
-          <input
-            type="datetime-local"
-            v-model="form.dates.registration_start"
-            required
-          />
-          <span>до</span>
-          <input
-            type="datetime-local"
-            v-model="form.dates.registration_end"
-            required
-          />
+        <div class="form-row">
+          <div class="form-group">
+            <label>Тип проведения</label>
+            <select v-model="form.competition_type" required>
+              <option value="offline">Оффлайн</option>
+              <option value="online">Онлайн</option>
+              <option value="hybrid">Гибрид</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Формат*</label>
+            <select v-model="form.type" required>
+              <option value="individual">Индивидуальный</option>
+              <option value="team">Командный</option>
+            </select>
+          </div>
         </div>
-      </div>
-      <button type="submit" class="submit-btn" :disabled="loading">
-        Создать соревнование
-      </button>
-    </form>
+        <div class="form-group">
+          <label>Доступные регионы</label>
+          <div class="regions-controls">
+            <button
+              type="button"
+              @click="toggleAllRegions"
+              class="select-all-btn"
+            >
+              {{ allRegionsSelected ? "Снять все" : "Выбрать все" }}
+            </button>
+            <span class="selected-count">
+              Выбрано: {{ form.permissions.length }} из
+              {{ russianRegions.length }}
+            </span>
+          </div>
+          <multiselect
+            v-model="form.permissions"
+            :options="russianRegions"
+            :multiple="true"
+            :close-on-select="false"
+            placeholder="Выберите регионы"
+            label="name"
+            track-by="code"
+          ></multiselect>
+        </div>
+        <div class="form-group">
+          <label>Даты проведения</label>
+          <div class="date-inputs">
+            <input
+              type="datetime-local"
+              v-model="form.dates.start_date"
+              required
+            />
+            <span>до</span>
+            <input
+              type="datetime-local"
+              v-model="form.dates.end_date"
+              required
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Даты регистрации*</label>
+          <div class="date-inputs">
+            <input
+              type="datetime-local"
+              v-model="form.dates.registration_start"
+              required
+            />
+            <span>до</span>
+            <input
+              type="datetime-local"
+              v-model="form.dates.registration_end"
+              required
+            />
+          </div>
+        </div>
+        <button type="submit" class="submit-btn" :disabled="loading">
+          Создать соревнование
+        </button>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -213,8 +219,10 @@ const toggleAllRegions = () => {
 }
 .competition-form {
   max-width: 800px;
-  margin: 0 auto;
+  margin: 10px auto;
+  border-radius: 7px;
   padding: 2rem;
+  box-shadow: 0 0 12px rgba(3, 3, 3, 0.5);
 }
 .form-group {
   margin-bottom: 1rem;
@@ -234,6 +242,7 @@ label {
   margin-bottom: 0.5rem;
   font-weight: 500;
 }
+
 input,
 textarea,
 select {
