@@ -53,17 +53,14 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { commandStore } from "@/stores/storeCommand";
-import { storeToRefs } from "pinia";
-import AddCommand from "./AddCommand.vue";
-const comStore = commandStore();
-
+import { useCommandStore } from "@/stores/storeCommand";
+const comStore = useCommandStore();
 const props = defineProps({
   id: Number,
 });
 const createCommand = () => {
   comStore.setCreating(true);
+  comStore.setId(props.id);
 };
 </script>
 <style scoped>

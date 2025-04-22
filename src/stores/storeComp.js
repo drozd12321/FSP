@@ -1,9 +1,9 @@
 import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import axios from "axios";
+import { useAuthStore } from "./useAuthStore";
 
 export const competitionStore = defineStore("comp", () => {
-  const token = ref(localStorage.getItem("jwtToken"));
   const errorAddCompetition = ref(null);
   const loading = ref(false);
   const id = ref(null);
@@ -17,6 +17,7 @@ export const competitionStore = defineStore("comp", () => {
   async function addCompetitions(formstate) {
     try {
       loading.value = true;
+      const dt = { ...formstate };
       const response = await axios.post(
         "http://10.8.0.23:8000/competitions/create/",
         formstate
@@ -33,7 +34,6 @@ export const competitionStore = defineStore("comp", () => {
     }
   }
   return {
-    token,
     errorAddCompetition,
     loading,
     addCompetitions,

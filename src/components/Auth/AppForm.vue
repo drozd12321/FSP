@@ -44,7 +44,6 @@ import { computed, onMounted } from "vue";
 import Loader from "../Loader.vue";
 import { storeToRefs } from "pinia";
 import AppErrorMsg from "../AppErrorMsg.vue";
-import axios from "axios";
 const authStore = useAuthStore();
 const { isLoading, getError, isAuth } = storeToRefs(useAuthStore());
 const isLoad = computed(() => {

@@ -1,7 +1,7 @@
 <template>
   <div class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
-      <div v-if="loading" class="loader-overlay"><Loader /></div>
+      <div v-if="getLoading" class="loader-overlay"><Loader /></div>
       <div class="competition-form">
         <button class="close-btn" @click="closeModal">×</button>
         <h2>Создание новой команды</h2>
@@ -36,30 +36,42 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import Loader from "./Loader.vue";
-
+import { useCommandStore } from "@/stores/storeCommand";
+import { competitionStore } from "@/stores/storeComp";
+import { storeToRefs } from "pinia";
+const { getLoading, getId } = storeToRefs(useCommandStore());
+const comStore = useCommandStore();
 const emit = defineEmits(["close"]);
 const comand = ref("");
-const loading = ref(false);
 const form = ref({
   competition: null,
   name: "",
-  is_prived: null,
+  is_private: null,
   description: "",
 });
-
-const createCommand = () => {
+const idd = computed(() => {
+  return getId.value;
+});
+const token = ref();
+const createCommand = async () => {
+  console.log(token.value);
   if (comand.value === "0") {
-    form.value.is_prived = true;
+    form.value.is_private = true;
   } else {
-    form.value.is_prived = false;
+    form.value.is_private = false;
   }
+  form.value.competition = idd.value;
+  await comStore.addCommand(form.value, token.value);
 };
 
 const closeModal = () => {
   emit("close");
 };
+onMounted(() => {
+  token.value = localStorage.getItem("jwtToken");
+});
 </script>
 
 <style scoped>

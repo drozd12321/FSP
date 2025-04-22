@@ -22,13 +22,13 @@
 <script setup>
 import ListCard from "@/components/ListCard.vue";
 import Loader from "@/components/Loader.vue";
-import { commandStore } from "@/stores/storeCommand";
+import { useCommandStore } from "@/stores/storeCommand";
 import { storeToRefs } from "pinia";
 import axios from "axios";
 import { onMounted, ref } from "vue";
 import AddCommand from "@/components/AddCommand.vue";
-const { getCreating } = storeToRefs(commandStore());
-const comStore = commandStore();
+const { getCreating } = storeToRefs(useCommandStore());
+const comStore = useCommandStore();
 const comp = ref();
 const dataLoad = ref(false);
 const getCompititions = async () => {
