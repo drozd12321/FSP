@@ -1,9 +1,10 @@
 <template>
   <!-- <div><CardInfoComp /></div> -->
   <div class="card"><ListCard /></div>
-  {{ getError }}
+  <AddCompetition />
 </template>
 <script setup>
+import AddCompetition from "@/components/AddCompetition.vue";
 import AppErrorMsg from "@/components/AppErrorMsg.vue";
 import ListCard from "@/components/ListCard.vue";
 import { useAuthStore } from "@/stores/useAuthStore";
