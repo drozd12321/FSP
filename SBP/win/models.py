@@ -125,10 +125,11 @@ class Team(models.Model):
     name = models.CharField(max_length=100)
     members = models.ManyToManyField(UserInfo, related_name='teams')
     captain = models.ForeignKey(UserInfo, on_delete=models.SET_NULL, null=True, related_name='captain_teams')
+    is_private = models.BooleanField(default=False)  # Новое поле
 
     def __str__(self):
         return f"{self.name} ({self.competition})"
-
+    
 class Invitation(models.Model):
     STATUS_CHOICES = [
         ('Ожидает', 'Ожидает'),
@@ -156,9 +157,9 @@ class TeamApplication(models.Model):
 
 class UserApplication(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'На рассмотрении'),
-        ('approved', 'Одобрено'),
-        ('rejected', 'Отклонено'),
+        ('pending', 'На модерации'),
+        ('approved', 'Одобрена'),
+        ('rejected', 'Отклонена'),
     ]
     
     user = models.ForeignKey('UserInfo', on_delete=models.CASCADE, related_name='applications')

@@ -114,25 +114,25 @@ class CompetitionDateSerializer(serializers.ModelSerializer):
     
     
 class TeamCreateSerializer(serializers.ModelSerializer):
-    competition_id = serializers.PrimaryKeyRelatedField(
+    competition = serializers.PrimaryKeyRelatedField(
         queryset=Competition.objects.filter(type='team'),
         source='competition',
         write_only=True
     )
     captain_id = serializers.IntegerField(
         write_only=True,
-        required=False  # Не обязательно, так как может браться из контекста
+        required=False
     )
 
     class Meta:
         model = Team
-        fields = ['competition_id', 'name', 'captain_id']
+        fields = ['competition', 'name', 'captain', 'is_private']  # Добавлено is_private
         extra_kwargs = {
-            'name': {'required': True, 'max_length': 100}
+            'name': {'required': True, 'max_length': 100},
+            'is_private': {'required': False}  # Необязательное поле, по умолчанию False
         }
 
     def validate(self, data):
-        # Проверка максимального количества команд
         competition = data['competition']
         if competition.participant.count() >= competition.max_participants:
             raise serializers.ValidationError(
@@ -148,7 +148,8 @@ class TeamCreateSerializer(serializers.ModelSerializer):
         team = Team.objects.create(
             captain=captain,
             competition=validated_data['competition'],
-            name=validated_data['name']
+            name=validated_data['name'],
+            is_private=validated_data.get('is_private', False)  # Учитываем is_private
         )
         team.members.add(captain)
         return team
@@ -356,6 +357,13 @@ class TeamApplicationResponseSerializer(serializers.ModelSerializer):
         action = validated_data['action']
         
         if action == 'approve':
+            # Добавляем всех участников команды в соревнование
+            for member in instance.team.members.all():
+                CompetitionParticipant.objects.get_or_create(
+                    competition=instance.team.competition,
+                    participant=member
+                )
+            
             instance.status = 'Одобрено'
             instance.reason = None
             instance.team.save()
@@ -477,13 +485,12 @@ class UserApplicationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = UserApplication
-        fields = ['id', 'competition_id', 'status', 'reason', 'created_at']
-        read_only_fields = ['status', 'reason', 'created_at']
+        fields = ['id', 'competition_id', 'status', 'reason']
 
     def validate(self, data):
         competition = data['competition']
-        user_info = self.context['request'].user.info
-        user_region_id = user_info.region.id
+        user_info = self.context['request'].user
+        user_region = UserInfo.objects.filter(id = user_info.id).region
 
         # 1. Проверка возрастных ограничений
         today = date.today()
@@ -496,7 +503,7 @@ class UserApplicationSerializer(serializers.ModelSerializer):
 
         # 2. Проверка региональных ограничений
         if hasattr(competition, 'permissions') and isinstance(competition.permissions, list):
-            if user_region_id not in competition.permissions:
+            if user_region not in competition.permissions:
                 allowed_regions = Region.objects.filter(
                     id__in=competition.permissions
                 ).values_list('name', flat=True)
@@ -504,13 +511,13 @@ class UserApplicationSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     "regional_restriction": {
                         "message": "Ваш регион не участвует в этом соревновании",
-                        "user_region": user_info.region.name,
+                        "user_region": user_region,
                         "allowed_regions": list(allowed_regions)
                     }
                 })
 
         # 3. Проверка существующей заявки
-        if UserApplication.objects.filter(user=user_info, competition=competition).exists():
+        if UserApplication.objects.filter(user=user_info.id, competition=competition.id).exists():
             raise serializers.ValidationError(
                 "Вы уже подавали заявку на это соревнование"
             )
@@ -524,9 +531,9 @@ class UserApplicationSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        user_info = self.context['request'].user.info
+        user_id = self.context['request'].user.id
         return UserApplication.objects.create(
-            user=user_info,
+            user=user_id,
             **validated_data
         )
         

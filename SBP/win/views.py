@@ -93,11 +93,11 @@ class CompetitionCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class TeamCreateView(APIView):
-    permission_classes = [AllowAny]  # Разрешаем доступ без авторизации
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
-            captain = UserInfo.objects.filter(id= request.user.id)
+            captain = UserInfo.objects.get(id=request.user.id) 
         except UserInfo.DoesNotExist:
             return Response(
                 {"error": "user_profile_incomplete", "detail": "Профиль пользователя не заполнен"},
@@ -106,13 +106,12 @@ class TeamCreateView(APIView):
 
         serializer = TeamCreateSerializer(
             data=request.data,
-            context={'captain': captain}  # Передаем капитана в сериализатор
+            context={'captain': captain}
         )
         
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Остальная логика (проверка регионов и т.д.)
         competition = serializer.validated_data['competition']
         captain_region_id = captain.region
 
@@ -138,14 +137,15 @@ class TeamCreateView(APIView):
                 "name": team.name,
                 "competition_id": team.competition.id,
                 "captain_id": team.captain.id,
-                "region": team.captain.region
+                "region": team.captain.region,
+                "is_private": team.is_private  # Добавлено в ответ
             }, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response(
                 {"error": "creation_error", "detail": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
+            
 class InvitationCreateView(APIView):
     permission_classes = [AllowAny]
 
@@ -292,11 +292,11 @@ class ApplicationDecisionView(UpdateAPIView):
 
     def get_object(self):
         application = get_object_or_404(UserApplication, pk=self.kwargs['pk'])
-        user_info = self.request.user.info
+        user_info = self.request.user
         
         # Проверяем что пользователь организатор этого соревнования
         if not CompetitionOrganizer.objects.filter(
-            user=user_info,
+            user=user_info.id,
             competition=application.competition
         ).exists():
             raise PermissionDenied("Вы не являетесь организатором этого соревнования")
@@ -331,16 +331,16 @@ class OrganizerApplicationsListView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user_info = self.request.user.info
+        user_info = self.request.user
         # Получаем соревнования, где пользователь организатор
         organized_competitions = CompetitionOrganizer.objects.filter(
-            user=user_info
-        ).values_list('competition_id', flat=True)
+            user=user_info.id
+        ).values_list('competition', flat=True)
         
         return UserApplication.objects.filter(
-            competition_id__in=organized_competitions,
+            competition__in=organized_competitions,
             status='pending'
-        ).select_related('user', 'user__user', 'user__region', 'competition')
+        ).select_related('user','competition')
 
 class UserListView(ListAPIView):
     queryset = UserInfo.objects.filter(role_id=0).order_by('id')  # Фильтр по role_id=0
