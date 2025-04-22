@@ -112,15 +112,13 @@ const handleTeamCreated = (newTeam) => {
 
 const openTeamDetails = (teamId) => {
   console.log("Открываем детали команды", teamId);
-  // Навигация к детальной странице команды
+  ды;
 };
 
 const editTeam = (team) => {
   console.log("Редактируем команду", team);
-  // Открытие модального окна редактирования
 };
 
-// Загрузка данных команд (заглушка)
 onMounted(() => {
   loading.value = true;
   setTimeout(() => {

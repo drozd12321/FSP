@@ -5,6 +5,7 @@ import { useAuthStore } from "./useAuthStore";
 
 export const useCommandStore = defineStore("command", () => {
   const isCreating = ref(false);
+  const type = ref();
   const loading = ref(false);
   const errorAddCommand = ref(null);
   const Id = ref();
@@ -17,6 +18,9 @@ export const useCommandStore = defineStore("command", () => {
   }
   function setId(newId) {
     Id.value = newId;
+  }
+  function setType(newType) {
+    type.value = newType;
   }
   async function addCommand(formstate, token) {
     try {
@@ -51,8 +55,11 @@ export const useCommandStore = defineStore("command", () => {
   const getLoading = computed(() => loading.value);
   const getError = computed(() => errorAddCommand.value);
   const getId = computed(() => Id.value);
+  const getType = computed(() => type.value);
   return {
     setError,
+    getType,
+    setType,
     setId,
     getId,
     getLoading,

@@ -1,12 +1,17 @@
 <template>
+  {{ type }}
   <div class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
       <div v-if="getLoading" class="loader-overlay"><Loader /></div>
       <div class="competition-form">
         <button class="close-btn" @click="closeModal">×</button>
-        <h2>Создание новой команды</h2>
+        <h2>
+          {{
+            type === "Командное" ? "Создание новой команды" : "Подтверждение"
+          }}
+        </h2>
         <form @submit.prevent="createCommand">
-          <div class="form-group">
+          <div v-if="type === 'Командное'" class="form-group">
             <label>Название команды</label>
             <input
               type="text"
@@ -15,20 +20,43 @@
               placeholder="Введите название команды"
             />
           </div>
-          <div class="form-group">
+          <div v-if="type === 'Командное'" class="form-group">
             <label class="label" for="email">Вид команды</label>
             <select name="comand" id="comand" v-model="comand">
               <option value="0">Публичная</option>
               <option value="1">Приватная</option>
             </select>
           </div>
-          <div class="form-group">
+          <div v-if="type === 'Командное'" class="form-group">
             <label class="label" for="email">Описание</label>
             <textarea v-model="form.description"></textarea>
           </div>
-          <button type="submit" class="submit-btn" :disabled="loading">
-            Создать команду
+          <button
+            v-if="type === 'Командное'"
+            type="submit"
+            class="submit-btn"
+            :disabled="loading"
+          >
+            Регистрация новой команды
           </button>
+          <div v-if="type">
+            <button
+              v-if="type === 'Личное'"
+              type="submit"
+              class="submit-btn"
+              :disabled="loading"
+            >
+              Подтвердить
+            </button>
+            <button
+              v-if="type === 'Личное'"
+              type="submit"
+              class="submit-btn"
+              :disabled="loading"
+            >
+              Отклонить
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -40,7 +68,7 @@ import { computed, onMounted, ref } from "vue";
 import Loader from "./Loader.vue";
 import { useCommandStore } from "@/stores/storeCommand";
 import { storeToRefs } from "pinia";
-const { getLoading, getId } = storeToRefs(useCommandStore());
+const { getLoading, getId, getType } = storeToRefs(useCommandStore());
 const comStore = useCommandStore();
 const emit = defineEmits(["close"]);
 const comand = ref("");
@@ -53,6 +81,9 @@ const form = ref({
 const idd = computed(() => {
   return getId.value;
 });
+const type = computed(() => {
+  return getType.value;
+});
 const token = ref();
 const createCommand = async () => {
   console.log(token.value);
@@ -63,8 +94,16 @@ const createCommand = async () => {
   }
   form.value.competition = idd.value;
   await comStore.addCommand(form.value, token.value);
+  resetForm();
 };
-
+const resetForm = () => {
+  form.value = {
+    competition: null,
+    name: "",
+    is_private: null,
+    description: "",
+  };
+};
 const closeModal = () => {
   emit("close");
 };

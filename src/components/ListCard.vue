@@ -42,7 +42,7 @@
     <transition name="expand">
       <div v-if="allInfo" class="card-expanded-content">
         <slot name="expanded">
-          <CardInfoComp :id="id" />
+          <CardInfoComp :id="id" :typeCommand="typeCommand" />
         </slot>
       </div>
     </transition>

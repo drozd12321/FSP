@@ -44,7 +44,11 @@
 
         <div class="card-footer-wide">
           <button class="register-btn-wide" @click="createCommand">
-            Зарегистрироваться
+            {{
+              typeCommand === "Командное"
+                ? "Зарегестрировать команду"
+                : "Зарегестрироваться"
+            }}
           </button>
         </div>
       </div>
@@ -57,10 +61,12 @@ import { useCommandStore } from "@/stores/storeCommand";
 const comStore = useCommandStore();
 const props = defineProps({
   id: Number,
+  typeCommand: String,
 });
 const createCommand = () => {
   comStore.setCreating(true);
   comStore.setId(props.id);
+  comStore.setType(props.typeCommand);
 };
 </script>
 <style scoped>
