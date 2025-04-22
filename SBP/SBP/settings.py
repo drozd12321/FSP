@@ -152,3 +152,35 @@ REST_FRAMEWORK = {
     )
 }
 
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        # Логгер твоего приложения
+        'win': {
+            'handlers': ['console'],
+            'level': 'DEBUG',  # или INFO, если хочешь меньше логов
+            'propagate': False,
+        },
+        # Логгер для всего Django
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}

@@ -13,7 +13,8 @@ from .models import *
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import UpdateAPIView, ListAPIView
 from rest_framework.pagination import PageNumberPagination
-
+import logging
+logger = logging.getLogger(__name__)
 
 
 class RegisterView(APIView):
@@ -59,8 +60,11 @@ class CompetitionCreateView(APIView):
     def post(self, request):
         # Преобразуем название дисциплины в ID если нужно
         if 'discipline' in request.data and isinstance(request.data['discipline'], str):
+            logger.debug('1')
             try:
                 discipline = Discipline.objects.get(name=request.data['discipline'])
+                logger.info(f'Discipline found: {discipline}')
+
                 request.data['discipline'] = discipline.id
             except Discipline.DoesNotExist:
                 return Response(
