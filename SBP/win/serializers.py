@@ -112,46 +112,6 @@ class CompetitionDateSerializer(serializers.ModelSerializer):
         
         return data
     
-class CompetitionSerializer(serializers.ModelSerializer):
-    dates = CompetitionDateSerializer()
-    regions = serializers.PrimaryKeyRelatedField(
-        queryset=Region.objects.all(),
-        many=True,
-        required=True
-    )
-    discipline = serializers.PrimaryKeyRelatedField(
-        queryset=Discipline.objects.all()
-    )
-
-    class Meta:
-        model = Competition
-        fields = [
-            'name',
-            'regions',
-            'discipline',
-            'description',
-            'max_participants',
-            'max_participants_in_team',
-            'min_age',
-            'max_age',
-            'competition_type',
-            'type',
-            'dates',
-        ]
-
-    def create(self, validated_data):
-        dates_data = validated_data.pop('dates')
-        regions = validated_data.pop('regions')
-        
-        competition = Competition.objects.create(**validated_data)
-        competition.regions.set(regions)
-        
-        CompetitionDate.objects.create(
-            competition=competition,
-            **dates_data
-        )
-        
-        return competition
     
 class TeamCreateSerializer(serializers.ModelSerializer):
     competition_id = serializers.PrimaryKeyRelatedField(
@@ -412,10 +372,6 @@ class DisciplineSerializer(serializers.ModelSerializer):
         model = Discipline
         fields = ['id', 'name']
 
-class CompetitionDateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CompetitionDate
-        fields = ['start_date', 'end_date', 'registration_start', 'registration_end']
         
 class CompetitionSerializer(serializers.ModelSerializer):
     dates = CompetitionDateSerializer()
