@@ -6,7 +6,7 @@ from .serializers import (RegisterSerializer, LoginSerializer, TeamCreateSeriali
 CompetitionSerializer, InvitationCreateSerializer, InvitationSerializer, InvitationResponseSerializer,
 RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationResponseSerializer,
 FAQSerializer, NewsSerializer, UserApplicationSerializer, DisciplineSerializer, ApplicationDecisionSerializer,
-UserInfoSerializer)
+UserInfoSerializer, VacancyResponseSerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -17,7 +17,10 @@ from rest_framework.pagination import PageNumberPagination
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 import logging
+from django.db.models import Count
 logger = logging.getLogger(__name__)
+
+
 class RegisterView(APIView):
     permission_classes = [AllowAny] 
     
@@ -348,3 +351,68 @@ class UserListView(ListAPIView):
     queryset = UserInfo.objects.filter(role_id=0).order_by('id')  # Фильтр по role_id=0
     serializer_class = UserInfoSerializer
     permission_classes = [AllowAny]
+    
+class PublicTeamsView(APIView):
+    def get(self, request):
+        teams = Team.objects.filter(is_private=False).select_related(
+            'competition', 
+            'captain'
+        ).prefetch_related(
+            'members'
+        ).annotate(
+            members_count=Count('members')
+        ).order_by('-created_at')
+        
+        data = []
+        for team in teams:
+            team_data = {
+                'id': team.id,
+                'name': team.name,
+                'description': team.description,
+                'competition': team.competition,
+                'captain': team.captain,
+                'max_members': team.max_members,
+                'current_members': team.current_members,
+            }
+            data.append(team_data)
+        
+        return Response({
+            'count': len(data),
+            'teams': data
+        }, status=status.HTTP_200_OK)
+        
+class CaptainVacancyResponsesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Проверяем, является ли пользователь капитаном какой-либо команды
+        user_teams = Team.objects.filter(captain=request.user.id)
+        
+        if not user_teams.exists():
+            return Response(
+                {"error": "not_a_captain", "detail": "Вы не являетесь капитаном ни одной команды"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Получаем все отклики для команд пользователя-капитана
+        responses = VacancyResponse.objects.filter(
+            team__in=user_teams.values_list('id', flat=True)
+        ).select_related('team')  # Оптимизация запросов к БД
+
+        serializer = VacancyResponseSerializer(responses, many=True)
+        
+        return Response({
+            'count': responses.count(),
+            'responses': serializer.data
+        }, status=status.HTTP_200_OK)
+        
+class ResponseToPublicView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        serializer = VacancyResponseSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            # Автоматически подставляем текущего пользователя
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

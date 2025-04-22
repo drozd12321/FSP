@@ -449,10 +449,8 @@ class CompetitionSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         dates_data = validated_data.pop('dates')
-        regions = validated_data.pop('regions')
         
         competition = Competition.objects.create(**validated_data)
-        competition.regions.set(regions)
         
         CompetitionDate.objects.create(
             competition=competition,
@@ -567,3 +565,24 @@ class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserInfo
         fields = ['surname', 'name', 'nickName']
+        
+class VacancyResponseSerializer(serializers.ModelSerializer):
+    team_name = serializers.CharField(source=Team.name, read_only=True)
+    user_surname = serializers.CharField(source=UserInfo.surname, read_only=True)
+    user_name = serializers.CharField(source=UserInfo.name, read_only=True)
+    user_nickname = serializers.CharField(source=User.nickName, read_only=True)
+
+    class Meta:
+        model = VacancyResponse
+        fields = [
+            'id', 
+            'text', 
+            'status', 
+            'team', 
+            'team_name', 
+            'user',
+            'user_surname',
+            'user_name',
+            'user_nickname'
+        ]
+        read_only_fields = fields

@@ -183,34 +183,33 @@ class UserApplication(models.Model):
 
     def __str__(self):
         return f"Application from {self.user} to {self.competition} - {self.status}"
-
-class TeamRole(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-
-    def __str__(self):
-        return self.name
-    
-class Vacancy(models.Model):
-
-    team = models.ForeignKey('Team', on_delete=models.CASCADE, related_name='vacancies')
-    role = models.ForeignKey(TeamRole, on_delete=models.PROTECT, related_name='vacancies')
-    status = models.CharField(max_length=10)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Vacancy '{self.role}' in {self.team.name} - {self.status}"
-    
+       
 class VacancyResponse(models.Model):
+    PENDING = 'pending'
+    ACCEPTED = 'accepted'
+    REJECTED = 'rejected'
+    
+    STATUS_CHOICES = [
+        (PENDING, 'В рассмотрении'),
+        (ACCEPTED, 'Принято'),
+        (REJECTED, 'Отклонено'),
+    ]
 
     text = models.TextField()
-    status = models.CharField(max_length=25)
-    vacancy = models.ForeignKey('Vacancy', on_delete=models.CASCADE, related_name='responses')
-    user = models.ForeignKey('UserInfo', on_delete=models.CASCADE, related_name='responses')
+    status = models.CharField(
+        max_length=25,
+        choices=STATUS_CHOICES,
+        default=PENDING
+    )
+    team = models.ForeignKey('Team', on_delete=models.CASCADE, related_name='responses')
+    user = models.ForeignKey(
+        UserInfo,  # Или 'UserInfo' если используете эту модель
+        on_delete=models.CASCADE,
+        related_name='responses'
+    )
 
     def __str__(self):
-        return f"Response by {self.user.nickname} to {self.vacancy.role.name} - {self.status}"
+        return f"Отклик от {self.user.username} в команду {self.team.name}"
     
 class PrizePoints(models.Model):
 
