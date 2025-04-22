@@ -116,10 +116,6 @@ class CompetitionDate(models.Model):
     def __str__(self):
         return f"Dates for {self.competition}"
    
-class CompetitionHistory(models.Model):
-    user = models.ForeignKey(UserInfo, on_delete=models.CASCADE, related_name='competition_histories')
-    competition = models.ForeignKey(Competition, on_delete=models.CASCADE, related_name='competition_histories')
-
 class Team(models.Model):
     competition = models.ForeignKey(Competition, on_delete=models.CASCADE, related_name='teams')
     name = models.CharField(max_length=100)
@@ -228,6 +224,7 @@ class PrizePoints(models.Model):
 class CompetitionParticipant(models.Model):
     competition = models.ForeignKey('Competition', on_delete=models.CASCADE, related_name='participants')
     participant = models.ForeignKey('UserInfo', on_delete=models.CASCADE, related_name='competition_participations')
+    result = models.PositiveIntegerField(MinValueValidator=1)
     
 class CompetitionOrganizer(models.Model):
     user = models.ForeignKey(UserInfo, on_delete=models.CASCADE, related_name='organized_competitions')

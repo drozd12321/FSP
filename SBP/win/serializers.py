@@ -592,3 +592,40 @@ class VacancyResponseSerializer(serializers.ModelSerializer):
 class ResponseActionSerializer(serializers.Serializer):
     action = serializers.ChoiceField(choices=['accept', 'reject'])
     response_id = serializers.IntegerField()
+    
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'nickName']
+        extra_kwargs = {
+            'email': {'required': False},
+            'nickName': {'required': False}
+        }
+
+class UserInfoUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserInfo
+        fields = ['surname', 'name', 'patronymic', 'region', 'role', 'birthday']
+        extra_kwargs = {
+            'region': {'required': False},
+            'role': {'required': False},
+            'birthday': {'required': False}
+        }
+
+class UserProfileUpdateSerializer(serializers.Serializer):
+    user = UserUpdateSerializer(required=False)
+    info = UserInfoUpdateSerializer(required=False)
+    
+class CompetitionShortSerializer(serializers.ModelSerializer):
+    discipline = serializers.CharField(source='discipline.name')
+    
+    class Meta:
+        model = Competition
+        fields = ['id', 'name', 'discipline', 'type']
+
+class ParticipationHistorySerializer(serializers.ModelSerializer):
+    competition = CompetitionShortSerializer()
+    
+    class Meta:
+        model = CompetitionParticipant
+        fields = ['competition', 'result']

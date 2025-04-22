@@ -6,7 +6,8 @@ from .serializers import (RegisterSerializer, LoginSerializer, TeamCreateSeriali
 CompetitionSerializer, InvitationCreateSerializer, InvitationSerializer, InvitationResponseSerializer,
 RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationResponseSerializer,
 FAQSerializer, NewsSerializer, UserApplicationSerializer, DisciplineSerializer, ApplicationDecisionSerializer,
-UserInfoSerializer, VacancyResponseSerializer, ResponseActionSerializer)
+UserInfoSerializer, VacancyResponseSerializer, ResponseActionSerializer, UserProfileUpdateSerializer,
+UserInfoUpdateSerializer, UserUpdateSerializer, ParticipationHistorySerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -467,3 +468,72 @@ class ResponseActionView(APIView):
                 {"detail": "Заявка отклонена"},
                 status=status.HTTP_200_OK
             )
+            
+class UserProfileUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def patch(self, request):
+        # Получаем текущего пользователя и его профиль
+        user = request.user
+        user_info = get_object_or_404(UserInfo, user=user.id)
+        
+        # Сериализуем данные
+        serializer = UserProfileUpdateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Обновляем данные User
+        user_data = serializer.validated_data.get('user', {})
+        if user_data:
+            user_serializer = UserUpdateSerializer(user, data=user_data, partial=True)
+            if user_serializer.is_valid():
+                user_serializer.save()
+            else:
+                return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Обновляем данные UserInfo
+        info_data = serializer.validated_data.get('info', {})
+        if info_data:
+            info_serializer = UserInfoUpdateSerializer(user_info, data=info_data, partial=True)
+            if info_serializer.is_valid():
+                info_serializer.save()
+            else:
+                return Response(info_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(
+            {"detail": "Данные успешно обновлены"},
+            status=status.HTTP_200_OK
+        )
+        
+class ParticipationHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        # Получаем UserInfo текущего пользователя
+        try:
+            user_info = UserInfo.objects.get(user=request.user.id)
+        except UserInfo.DoesNotExist:
+            return Response(
+                {"detail": "Профиль пользователя не найден"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Получаем все участия пользователя
+        participations = CompetitionParticipant.objects.filter(
+            participant=user_info
+        )
+        
+        # Сериализуем данные
+        serializer = ParticipationHistorySerializer(participations, many=True)
+        
+        # Считаем статистику
+        stats = {
+            'total_participations': participations.count(),
+            'wins': participations.filter(result=1).count(),
+            'podiums': participations.filter(result__lte=3).count(),
+        }
+        
+        return Response({
+            'stats': stats,
+            'history': serializer.data
+        })
