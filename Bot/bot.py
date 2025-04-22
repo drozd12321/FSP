@@ -328,7 +328,21 @@ async def get_user_competitions(user_id: int):
     try:
         # Здесь ваша логика запроса к базе данных
         competitions = await conn.fetch(
-            "SELECT * FROM win_competition WHERE id = $1", 
+            '''
+SELECT wt.name, wc.name, wc.description,
+win_competitiondate.start_date, win_competitiondate.end_date,
+win_competitiondate.registration_start, win_competitiondate.registration_end, wu.tg_username
+from win_team wt
+left join win_competition wc
+on wt.competition_id = wc.id
+LEFT JOIN win_competitiondate
+ON wc.id = win_competitiondate.competition_id
+left join win_team_members wb
+on wt.id = wb.team_id
+left join win_userinfo wu
+on wb.userinfo_id = wu.id
+where wu.tg_username = (select username from tg_acc where user_id = $1);
+''', 
             user_id
         )
         return competitions if competitions else None
@@ -343,17 +357,13 @@ async def handle_competitions(update: Update, context: ContextTypes.DEFAULT_TYPE
     try:
         # Получаем user_id из вашей основной таблицы пользователей
         conn = await asyncpg.connect(**DB_CONFIG)
-        user_id = await conn.fetchval(
-            "SELECT user_id FROM tg_acc WHERE user_id = $1", 
-            user.id
-        )
-        
+        user_id = user.id 
         if user_id:
             competitions = await get_user_competitions(user_id)
             
             if competitions:
                 response = "🏆 Твои соревнования:\n\n" + "\n".join(
-                    f"• {comp['name']} ({comp['date']})" 
+                    f"• {comp['name']} ({comp['description']})" 
                     for comp in competitions
                 )
             else:
