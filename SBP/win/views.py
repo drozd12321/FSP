@@ -15,9 +15,8 @@ from rest_framework.generics import UpdateAPIView, ListAPIView, CreateAPIView
 from rest_framework.pagination import PageNumberPagination
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
-
-
-
+import logging
+logger = logging.getLogger(__name__)
 class RegisterView(APIView):
     permission_classes = [AllowAny] 
     def post(self, request):
@@ -61,8 +60,11 @@ class CompetitionCreateView(APIView):
     def post(self, request):
         # Преобразуем название дисциплины в ID если нужно
         if 'discipline' in request.data and isinstance(request.data['discipline'], str):
+            logger.debug('1')
             try:
                 discipline = Discipline.objects.get(name=request.data['discipline'])
+                logger.info(f'Discipline found: {discipline}')
+
                 request.data['discipline'] = discipline.id
             except Discipline.DoesNotExist:
                 return Response(
