@@ -406,7 +406,7 @@ class CompetitionSerializer(serializers.ModelSerializer):
     dates = CompetitionDateSerializer()
     discipline = serializers.PrimaryKeyRelatedField(queryset=Discipline.objects.all())
     discipline_name = serializers.CharField(source='discipline.name', read_only=True)
-    
+    permissions_status = serializers.SerializerMethodField()  # Новое поле
     # остальные поля остаются без изменений
     competition_type_display = serializers.CharField(
         source='get_competition_type_display',
@@ -435,20 +435,31 @@ class CompetitionSerializer(serializers.ModelSerializer):
             'type_display',
             'status',
             'permissions',
-            'dates'
+            'dates',
+            'permissions_status',  # Добавляем новое поле
         ]
+
+    def get_permissions_status(self, obj):
+        if not obj.permissions:  # Если permissions пустое
+            return 0
+        elif len(obj.permissions) != 89:  # Если длина permissions не равна 89
+            return 1
+        else:  # Если длина permissions равна 89
+            return 2
 
     def create(self, validated_data):
         dates_data = validated_data.pop('dates')
+        regions = validated_data.pop('regions')
         
-        # discipline уже будет объектом, так как использовали PrimaryKeyRelatedField
         competition = Competition.objects.create(**validated_data)
+        competition.regions.set(regions)
         
-        # Создаем даты для соревнования
-        CompetitionDate.objects.create(competition=competition, **dates_data)
+        CompetitionDate.objects.create(
+            competition=competition,
+            **dates_data
+        )
         
         return competition
-        
 class FAQSerializer(serializers.ModelSerializer):
     class Meta:
         model = FAQ
