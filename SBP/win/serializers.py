@@ -230,27 +230,11 @@ class InvitationCreateSerializer(serializers.ModelSerializer):
         )
         
 class InvitationSerializer(serializers.ModelSerializer):
-    team_id = serializers.PrimaryKeyRelatedField(
-        source='team',
-        read_only=True
-    )
-    team_name = serializers.CharField(
-        source='team.name',
-        read_only=True
-    )
-    competition_name = serializers.CharField(
-        source='team.competition.name',
-        read_only=True
-    )
-    user_id = serializers.PrimaryKeyRelatedField(
-        source='user',
-        read_only=True
-    )
-    username = serializers.CharField(
-        source='user.user.username',
-        read_only=True
-    )
-
+    team_id = serializers.IntegerField(source='team.id')
+    team_name = serializers.CharField(source='team.name')
+    competition_name = serializers.CharField(source='team.competition.name')
+    user_nickname = serializers.CharField(source='user.user.nickName')  # Исправлено на nickName
+    
     class Meta:
         model = Invitation
         fields = [
@@ -258,10 +242,8 @@ class InvitationSerializer(serializers.ModelSerializer):
             'team_id',
             'team_name',
             'competition_name',
-            'user_id',
-            'username',
+            'user_nickname',
             'status',
-            'created_at'
         ]
         read_only_fields = fields
     

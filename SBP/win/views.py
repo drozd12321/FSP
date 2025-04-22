@@ -186,25 +186,19 @@ class UserInvitationsView(APIView):
     
 class InvitationResponseView(UpdateAPIView):
     serializer_class = InvitationResponseSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # Только для авторизованных пользователей
     queryset = Invitation.objects.all()
     http_method_names = ['patch']
 
     def get_object(self):
-        invitation = super().get_object()
-        # Проверяем, что текущий пользователь - получатель приглашения
-        if invitation.user.user != self.request.user:
-            raise PermissionDenied("Вы можете отвечать только на свои приглашения")
-        return invitation
-
-    def perform_update(self, serializer):
         try:
-            serializer.save()
-        except ValidationError as e:
-            return Response(
-                {'detail': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            invitation = super().get_object()
+            # Проверяем что пользователь отвечает на свое приглашение
+            if invitation.user.user != self.request.user:
+                raise PermissionDenied("Вы можете отвечать только на свои приглашения")
+            return invitation
+        except Invitation.DoesNotExist:
+            raise status.HTTP_404_NOT_FOUND("Приглашение не найдено")
 
 class RegionListView(ListAPIView):
     queryset = Region.objects.all()
