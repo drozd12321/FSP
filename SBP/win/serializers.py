@@ -4,19 +4,38 @@ from .models import *
 from rest_framework.exceptions import ValidationError
 from datetime import date
 
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['id', 'name']
+
 class UserInfoSerializer(serializers.ModelSerializer):
+    role = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all())  # Принимаем id роли
+    region = serializers.PrimaryKeyRelatedField(queryset=Region.objects.all())  # Принимаем id региона
+
     class Meta:
         model = UserInfo
         fields = ['surname', 'name', 'patronymic', 'region', 'role', 'birthday']
+
         
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
-    info = UserInfoSerializer()  # вложенный сериализатор для UserInfo
-
+    info = UserInfoSerializer()
+    
     class Meta:
         model = User
         fields = ['email', 'nickName', 'password', 'info']
 
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Пользователь с таким email уже существует")
+        return value
+        
+    def validate_nickName(self, value):
+        if User.objects.filter(nickName=value).exists():
+            raise serializers.ValidationError("Пользователь с таким nickName уже существует")
+        return value
+    
     def create(self, validated_data):
         info_data = validated_data.pop('info')
         password = validated_data.pop('password')
@@ -25,9 +44,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
 
-        UserInfo.objects.create(user=user, **info_data)
+        role = info_data.pop('role')  # теперь это объект Role
+        UserInfo.objects.create(user=user, role=role, **info_data)
 
         return user
+
+
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()  # может быть email или nickName
