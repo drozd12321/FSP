@@ -6,7 +6,7 @@ from .serializers import (RegisterSerializer, LoginSerializer, TeamCreateSeriali
 CompetitionSerializer, InvitationCreateSerializer, InvitationSerializer, InvitationResponseSerializer,
 RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationResponseSerializer,
 FAQSerializer, NewsSerializer, UserApplicationSerializer, DisciplineSerializer, ApplicationDecisionSerializer,
-UserInfoSerializer, VacancyResponseSerializer)
+UserInfoSerializer, VacancyResponseSerializer, ResponseActionSerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -416,3 +416,54 @@ class ResponseToPublicView(APIView):
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ResponseActionView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        serializer = ResponseActionSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        response = get_object_or_404(VacancyResponse, id=serializer.validated_data['response_id'])
+        team = response.team
+        
+        # Проверяем, что текущий пользователь - капитан команды
+        if request.user.id != team.captain:
+            return Response(
+                {"detail": "Только капитан команды может обрабатывать заявки"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        action = serializer.validated_data['action']
+        
+        if action == 'accept':
+            # Проверяем, есть ли место в команде
+            if team.current_members >= team.max_members:
+                return Response(
+                    {"detail": "В команде нет свободных мест"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Добавляем пользователя в команду
+            team.members.add(response.user)
+            team.current_members = team.members.count()
+            team.save()
+            
+            # Обновляем статус заявки
+            response.status = VacancyResponse.ACCEPTED
+            response.save()
+            
+            return Response(
+                {"detail": "Заявка принята, пользователь добавлен в команду"},
+                status=status.HTTP_200_OK
+            )
+        
+        elif action == 'reject':
+            response.status = VacancyResponse.REJECTED
+            response.save()
+            
+            return Response(
+                {"detail": "Заявка отклонена"},
+                status=status.HTTP_200_OK
+            )

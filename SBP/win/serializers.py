@@ -588,3 +588,7 @@ class VacancyResponseSerializer(serializers.ModelSerializer):
             'user_nickname'
         ]
         read_only_fields = fields
+        
+class ResponseActionSerializer(serializers.Serializer):
+    action = serializers.ChoiceField(choices=['accept', 'reject'])
+    response_id = serializers.IntegerField()
