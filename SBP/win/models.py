@@ -82,15 +82,15 @@ class Competition(models.Model):
     ONLINE = 'online'
     OFFLINE = 'offline'
     COMPETITION_TYPE_CHOICES = [
-        (ONLINE, 'Online'),
-        (OFFLINE, 'Offline'),
+        (ONLINE, 'Онлайн'),
+        (OFFLINE, 'Оффлайн'),
     ]
 
     INDIVIDUAL = 'individual'
     TEAM = 'team'
     TYPE_CHOICES = [
-        (INDIVIDUAL, 'Individual'),
-        (TEAM, 'Team'),
+        (INDIVIDUAL, 'Личное'),
+        (TEAM, 'Командное'),
     ]
 
     max_participants = models.IntegerField()

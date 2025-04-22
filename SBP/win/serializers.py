@@ -174,7 +174,7 @@ class TeamCreateSerializer(serializers.ModelSerializer):
     def validate(self, data):
         # Проверка максимального количества команд
         competition = data['competition']
-        if competition.teams.count() >= competition.max_participants_in_team:
+        if competition.participant.count() >= competition.max_participants:
             raise serializers.ValidationError(
                 "Достигнуто максимальное количество команд"
             )
@@ -219,7 +219,7 @@ class InvitationCreateSerializer(serializers.ModelSerializer):
         request = self.context['request']
 
         # Проверка что пользователь не капитан
-        if team.captain == user:
+        if team.captain == user.id:
             raise serializers.ValidationError(
                 "Нельзя приглашать капитана команды"
             )
@@ -255,7 +255,7 @@ class InvitationSerializer(serializers.ModelSerializer):
     team_id = serializers.IntegerField(source='team.id')
     team_name = serializers.CharField(source='team.name')
     competition_name = serializers.CharField(source='team.competition.name')
-    user_nickname = serializers.CharField(source='user.user.nickName')  # Исправлено на nickName
+    user_nickname = serializers.CharField(source='user.nickName')  # Исправлено на nickName
     
     class Meta:
         model = Invitation
@@ -278,8 +278,8 @@ class InvitationResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Invitation
-        fields = ['action']
-        read_only_fields = ['id', 'team', 'user', 'status']
+        fields = ['action', 'status']
+        read_only_fields = ['id', 'team', 'user']
 
     def validate(self, attrs):
         if self.instance.status != 'Ожидает':
@@ -300,7 +300,7 @@ class InvitationResponseSerializer(serializers.ModelSerializer):
                 )
             
             # Проверка что пользователь не уже в команде
-            if team.members.filter(id=instance.user.id).exists():
+            if team.members.filter(id=instance.user).exists():
                 raise serializers.ValidationError(
                     "Вы уже состоите в этой команде"
                 )
@@ -333,7 +333,6 @@ class TeamApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeamApplication
         fields = ['team_id', 'status', 'reason']
-        read_only_fields = ['status', 'reason']
         extra_kwargs = {
             'team_id': {'required': True}
         }
@@ -377,8 +376,8 @@ class TeamApplicationResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TeamApplication
-        fields = ['action', 'reason']
-        read_only_fields = ['id', 'team', 'status']
+        fields = ['action', 'reason', 'status']
+        read_only_fields = ['id', 'team']
 
     def validate(self, attrs):
         if self.instance.status != 'На модерации':

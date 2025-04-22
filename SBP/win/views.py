@@ -96,30 +96,13 @@ class TeamCreateView(APIView):
     permission_classes = [AllowAny]  # Разрешаем доступ без авторизации
 
     def post(self, request):
-        # Для анонимных пользователей требуем явное указание captain_id
-        if request.user.is_anonymous:
-            if 'captain_id' not in request.data:
-                return Response(
-                    {"error": "captain_id_required", "detail": "Для анонимных пользователей обязательно укажите captain_id"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            try:
-                captain = UserInfo.objects.get(id=request.data['captain_id'])
-            except UserInfo.DoesNotExist:
-                return Response(
-                    {"error": "invalid_captain", "detail": "Указанный captain_id не существует"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        else:
-            # Для авторизованных пользователей
-            try:
-                captain = request.user.info
-            except UserInfo.DoesNotExist:
-                return Response(
-                    {"error": "user_profile_incomplete", "detail": "Профиль пользователя не заполнен"},
-                    status=status.HTTP_403_FORBIDDEN
-                )
+        try:
+            captain = UserInfo.objects.filter(id= request.user.id)
+        except UserInfo.DoesNotExist:
+            return Response(
+                {"error": "user_profile_incomplete", "detail": "Профиль пользователя не заполнен"},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         serializer = TeamCreateSerializer(
             data=request.data,
@@ -131,7 +114,7 @@ class TeamCreateView(APIView):
 
         # Остальная логика (проверка регионов и т.д.)
         competition = serializer.validated_data['competition']
-        captain_region_id = captain.region.id
+        captain_region_id = captain.region
 
         if competition.permissions and isinstance(competition.permissions, list):
             if captain_region_id not in competition.permissions:
@@ -155,7 +138,7 @@ class TeamCreateView(APIView):
                 "name": team.name,
                 "competition_id": team.competition.id,
                 "captain_id": team.captain.id,
-                "region": team.captain.region.name
+                "region": team.captain.region
             }, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response(
@@ -175,7 +158,7 @@ class InvitationCreateView(APIView):
         if serializer.is_valid():
             # Проверяем что текущий пользователь - капитан команды
             team = serializer.validated_data['team']
-            if team.captain.user != request.user:
+            if team.captain != request.user.id:
                 return Response(
                     {"detail": "Только капитан команды может отправлять приглашения"},
                     status=status.HTTP_403_FORBIDDEN
@@ -196,7 +179,7 @@ class UserInvitationsView(APIView):
 
     def get(self, request):
         invitations = Invitation.objects.filter(
-            user=request.user.userinfo,
+            user=request.user.id,
             status='Ожидает'
         )
         serializer = InvitationSerializer(invitations, many=True)
@@ -212,7 +195,7 @@ class InvitationResponseView(UpdateAPIView):
         try:
             invitation = super().get_object()
             # Проверяем что пользователь отвечает на свое приглашение
-            if invitation.user.user != self.request.user:
+            if invitation.user != self.request.user.id:
                 raise PermissionDenied("Вы можете отвечать только на свои приглашения")
             return invitation
         except Invitation.DoesNotExist:
