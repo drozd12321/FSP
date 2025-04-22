@@ -5,14 +5,15 @@ from rest_framework import status
 from .serializers import (RegisterSerializer, LoginSerializer, TeamCreateSerializer,
 CompetitionSerializer, InvitationCreateSerializer, InvitationSerializer, InvitationResponseSerializer,
 RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationResponseSerializer,
-FAQSerializer, NewsSerializer)
+FAQSerializer, NewsSerializer, UserApplicationSerializer, DisciplineSerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import *
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from rest_framework.generics import UpdateAPIView, ListAPIView
+from rest_framework.generics import UpdateAPIView, ListAPIView, CreateAPIView
 from rest_framework.pagination import PageNumberPagination
+from django.db import IntegrityError
 
 
 
@@ -201,12 +202,14 @@ class InvitationResponseView(UpdateAPIView):
             raise status.HTTP_404_NOT_FOUND("Приглашение не найдено")
 
 class RegionListView(ListAPIView):
-    queryset = Region.objects.all()
+    queryset = Region.objects.all().order_by('id')
     serializer_class = RegionSerializer
+    permission_classes = [AllowAny]
     
 class RoleListView(ListAPIView):
-    queryset = Role.objects.all()
+    queryset = Role.objects.all().order_by('id')
     serializer_class = RoleSerializer
+    permission_classes = [AllowAny]
     
 class TeamApplicationCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -265,3 +268,19 @@ class NewsListView(ListAPIView):
     serializer_class = NewsSerializer
     pagination_class = NewsPagination
     search_fields = ['title', 'content']
+    
+class UserApplicationCreateView(CreateAPIView):
+    serializer_class = UserApplicationSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = UserApplication.objects.all()
+
+    def perform_create(self, serializer):
+        try:
+            serializer.save()
+        except IntegrityError:
+            raise ValidationError("Вы уже подавали заявку на это соревнование")
+
+class DisciplineListView(ListAPIView):
+    queryset = Discipline.objects.all().order_by('id')
+    serializer_class = DisciplineSerializer
+    permission_classes = [AllowAny]

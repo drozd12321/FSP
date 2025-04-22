@@ -12,6 +12,10 @@ urlpatterns = [
     path('invitations/<int:pk>/respond/', InvitationResponseView.as_view(), name='invitation-respond'),
     path('team-applications/', TeamApplicationCreateView.as_view(), name='team-application-create'),
     path('team-applications/<int:pk>/response/', TeamApplicationResponseView.as_view(), name='team-application-response'),
+    path('user-applications/', UserApplicationCreateView.as_view(), name='user-application-create'),
     path('faq/', FAQListView.as_view(), name='faq-list'),
     path('news/', NewsListView.as_view(), name='news-list'),
+    path('roles/', RoleListView.as_view(), name='roles-list'),
+    path('regions/', RegionListView.as_view(), name='regions-list'),
+    path('disciplines/', DisciplineListView.as_view(), name='disciplines-list'),
 ]

@@ -261,21 +261,28 @@ class InvitationResponseSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if self.instance.status != 'Ожидает':
-            raise ValidationError("Можно ответить только на приглашения со статусом 'Ожидает'")
+            raise serializers.ValidationError(
+                "Можно ответить только на приглашения со статусом 'Ожидает'"
+            )
         return attrs
 
     def update(self, instance, validated_data):
         action = validated_data['action']
+        team = instance.team
         
         if action == 'accept':
-            # Проверяем максимальное количество участников
-            team = instance.team
+            # Проверка максимального количества участников
             if team.members.count() >= team.competition.max_participants:
-                raise ValidationError(
+                raise serializers.ValidationError(
                     f"Команда уже достигла максимального количества участников ({team.competition.max_participants})"
                 )
             
-            # Добавляем пользователя в команду
+            # Проверка что пользователь не уже в команде
+            if team.members.filter(id=instance.user.id).exists():
+                raise serializers.ValidationError(
+                    "Вы уже состоите в этой команде"
+                )
+            
             team.members.add(instance.user)
             instance.status = 'Принято'
         else:
@@ -471,3 +478,66 @@ class UserDisciplineStatsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserDisciplineStats
         fields = ['discipline', 'competitions_count', 'points_count']
+        
+
+class UserApplicationSerializer(serializers.ModelSerializer):
+    competition_id = serializers.PrimaryKeyRelatedField(
+        queryset=Competition.objects.filter(type='individual'),
+        source='competition',
+        write_only=True
+    )
+    
+    class Meta:
+        model = UserApplication
+        fields = ['id', 'competition_id', 'status', 'reason', 'created_at']
+        read_only_fields = ['status', 'reason', 'created_at']
+
+    def validate(self, data):
+        competition = data['competition']
+        user_info = self.context['request'].user.info
+        user_region_id = user_info.region.id
+
+        # 1. Проверка возрастных ограничений
+        today = date.today()
+        age = today.year - (user_info.birthday.year - (today.month, today.day)) < (user_info.birthday.month, user_info.birthday.day)
+        
+        if age < competition.min_age or age > competition.max_age:
+            raise serializers.ValidationError(
+                f"Возрастные ограничения: от {competition.min_age} до {competition.max_age} лет"
+            )
+
+        # 2. Проверка региональных ограничений
+        if hasattr(competition, 'permissions') and isinstance(competition.permissions, list):
+            if user_region_id not in competition.permissions:
+                allowed_regions = Region.objects.filter(
+                    id__in=competition.permissions
+                ).values_list('name', flat=True)
+                
+                raise serializers.ValidationError({
+                    "regional_restriction": {
+                        "message": "Ваш регион не участвует в этом соревновании",
+                        "user_region": user_info.region.name,
+                        "allowed_regions": list(allowed_regions)
+                    }
+                })
+
+        # 3. Проверка существующей заявки
+        if UserApplication.objects.filter(user=user_info, competition=competition).exists():
+            raise serializers.ValidationError(
+                "Вы уже подавали заявку на это соревнование"
+            )
+
+        # 4. Проверка что соревнование действительно индивидуальное
+        if competition.type != 'individual':
+            raise serializers.ValidationError(
+                "Заявки подаются только на индивидуальные соревнования"
+            )
+
+        return data
+
+    def create(self, validated_data):
+        user_info = self.context['request'].user.info
+        return UserApplication.objects.create(
+            user=user_info,
+            **validated_data
+        )
