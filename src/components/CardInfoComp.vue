@@ -44,16 +44,31 @@
         </div>
 
         <div class="card-footer-wide">
-          <button class="register-btn-wide">Зарегистрироваться</button>
-          <button class="details-btn-wide">Подробнее</button>
+          <button class="register-btn-wide" @click="createCommand">
+            Зарегистрироваться
+          </button>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup></script>
-
+<script setup>
+import { ref } from "vue";
+import { competitionStore } from "@/stores/storeComp";
+import { storeToRefs } from "pinia";
+const compStore = competitionStore();
+const { getId } = storeToRefs(competitionStore());
+const isCreate = ref(false);
+const props = defineProps({
+  id: Number,
+});
+const createCommand = () => {
+  isCreate.value = !isCreate.value;
+  compStore.setId(props.id);
+  console.log(getId);
+};
+</script>
 <style scoped>
 .competition-card-wide {
   display: flex;
@@ -161,7 +176,7 @@
 }
 
 .register-btn-wide {
-  background: #e74c3c;
+  background: var(--sin);
   color: white;
   border: none;
   padding: 12px 25px;

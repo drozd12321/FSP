@@ -1,8 +1,6 @@
 import { ref, computed } from "vue";
 import { defineStore } from "pinia";
 import axios from "axios";
-import { useRouter } from "vue-router";
-
 export const useAuthStore = defineStore("auth", () => {
   const token = ref(localStorage.getItem("jwtToken"));
   const role = ref(localStorage.getItem("role"));
@@ -45,19 +43,13 @@ export const useAuthStore = defineStore("auth", () => {
       }
       const tk = response.data.token;
       const rl = response.data.role;
-      console.log(rl.id);
-      console.log(response.data.user);
       setToken(tk);
       setRole(rl.id);
       setUser(response.data.user);
-      console.log("log1", response);
-
       isLoading.value = false;
-      console.log(isLoading);
       return true;
     } catch (err) {
       setError(err.response.data);
-      console.log(err.response.data);
       return false;
     } finally {
       isLoading.value = false;

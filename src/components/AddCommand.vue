@@ -1,9 +1,10 @@
 <template>
+  {{ form }}
   <div>
     <div v-if="loading" class="loader-overlay"><Loader /></div>
     <div class="competition-form">
       <h2>Создание новой команды</h2>
-      <form @submit.prevent="handleSubmit">
+      <form @submit.prevent="createCommand">
         <div class="form-group">
           <label>Название команды</label>
           <input
@@ -12,6 +13,17 @@
             required
             placeholder="Введите название команды"
           />
+        </div>
+        <div class="form-group">
+          <label class="label" for="email">Вид команды</label>
+          <select name="comand" id="comand" v-model="comand">
+            <option value="0">Публичная</option>
+            <option value="1">Приватная</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="label" for="email">Описание</label>
+          <textarea v-model="form.description"></textarea>
         </div>
         <button type="submit" class="submit-btn" :disabled="loading">
           Создать команду
@@ -22,33 +34,42 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import Loader from "./Loader.vue";
 import axios from "axios";
-
+import { useAuthStore } from "@/stores/useAuthStore";
+import { competitionStore } from "@/stores/storeComp";
+import { storeToRefs } from "pinia";
+const { getUser } = storeToRefs(useAuthStore());
+const comand = ref("");
 const loading = ref(false);
 const form = ref({
-  competition_id: null,
+  competition: null,
   name: "",
-  captain_id: null,
+  is_prived: null,
+  description: "",
 });
-
-const handleSubmit = async () => {
-  try {
-    loading.value = true;
-    const response = await axios.post(
-      "http://10.8.0.23:8000/teams/",
-      form.value
-    );
-    console.log("Команда создана:", response.data);
-  } catch (error) {
-    console.error("Ошибка при создании команды:", error);
-  } finally {
-    loading.value = false;
+const createCommand = () => {
+  if (comand.value === "0") {
+    form.value.is_prived = true;
+  } else {
+    form.value.is_prived = false;
   }
 };
 </script>
 <style scoped>
+textarea {
+  width: 95%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  outline: none;
+  box-shadow: none;
+  resize: none;
+}
+h2 {
+  color: #e74c3c;
+}
 .loader-overlay {
   position: fixed;
   top: 0;

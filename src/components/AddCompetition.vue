@@ -217,6 +217,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
+h2 {
+  color: var(--sin);
+}
 .loader-overlay {
   position: fixed;
   top: 0;

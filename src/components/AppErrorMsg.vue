@@ -35,22 +35,8 @@ import { ref, watch, computed } from "vue";
 
 const props = defineProps({
   title: String,
-  message: String,
-  type: {
-    type: String,
-    default: "error",
-    validator: (value) =>
-      ["error", "warning", "success", "info"].includes(value),
-  },
-  timeout: {
-    type: Number,
-    default: 5000,
-  },
-  dismissable: {
-    type: Boolean,
-    default: true,
-  },
-  hideIcon: Boolean,
+  name: String,
+  type: String,
 });
 
 const emit = defineEmits(["dismissed"]);

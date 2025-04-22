@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import axios from "axios";
 
@@ -6,9 +6,14 @@ export const competitionStore = defineStore("comp", () => {
   const token = ref(localStorage.getItem("jwtToken"));
   const errorAddCompetition = ref(null);
   const loading = ref(false);
+  const id = ref(null);
   function setError(err) {
     errorAddCompetition.value = err;
   }
+  function setId(id) {
+    id.value = id;
+  }
+  const getId = computed(() => id.value);
   async function addCompetitions(formstate) {
     try {
       loading.value = true;
@@ -32,5 +37,7 @@ export const competitionStore = defineStore("comp", () => {
     errorAddCompetition,
     loading,
     addCompetitions,
+    setId,
+    getId,
   };
 });
