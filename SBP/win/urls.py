@@ -25,4 +25,8 @@ urlpatterns = [
     path('vacancy-responses/', CaptainVacancyResponsesView.as_view(), name='captain-vacancy-responses'),
     path('response-to-public/', ResponseToPublicView.as_view(), name='response-to-public'),
     path('response-action/', ResponseActionView.as_view(), name='response-action'),
+    
+    
+    
+    path('approvals/', UserApprovalView.as_view(), name='user-approvals'),
 ]

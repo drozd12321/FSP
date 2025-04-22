@@ -4,20 +4,34 @@ from .models import *
 from rest_framework.exceptions import ValidationError
 from datetime import date
 
+
+class UserApprovalSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(source='user.id')
+    email = serializers.EmailField(source='user.email')
+    nickName = serializers.CharField(source='user.nickName')
+    role_name = serializers.CharField(source='role.name')
+    region_name = serializers.CharField(source='region.name')
+    
+    class Meta:
+        model = UserInfo
+        fields = ['user_id', 'email', 'nickName', 'surname', 'name', 'patronymic', 
+                 'role_name', 'region_name', 'birthday']
+
+
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
         fields = ['id', 'name']
 
 class UserInfoSerializer(serializers.ModelSerializer):
-    role = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all())  # Принимаем id роли
-    region = serializers.PrimaryKeyRelatedField(queryset=Region.objects.all())  # Принимаем id региона
+    role = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all())
+    region = serializers.PrimaryKeyRelatedField(queryset=Region.objects.all())
 
     class Meta:
         model = UserInfo
-        fields = ['surname', 'name', 'patronymic', 'region', 'role', 'birthday']
+        fields = ['surname', 'name', 'patronymic', 'region', 'role', 'birthday', 'is_approved']
+        read_only_fields = ['is_approved']  # Поле только для чтения, нельзя установить при регистрации
 
-        
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     info = UserInfoSerializer()
@@ -44,22 +58,28 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
 
-        role = info_data.pop('role')  # теперь это объект Role
-        UserInfo.objects.create(user=user, role=role, **info_data)
+        role = info_data.pop('role')
+        # Автоматически подтверждаем, если роль 0
+        is_approved = role.id == 0
+        UserInfo.objects.create(
+            user=user, 
+            role=role, 
+            is_approved=is_approved,
+            **info_data
+        )
 
         return user
 
 
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()  # может быть email или nickName
+    username = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
         username = data.get('username')
         password = data.get('password')
 
-        # Попытка найти пользователя по nickName или email
         user = None
         if '@' in username:
             try:
@@ -80,6 +100,10 @@ class LoginSerializer(serializers.Serializer):
 
         if not user.is_active:
             raise serializers.ValidationError('Пользователь не активен')
+
+        # Проверяем подтверждение только для ролей 1 и 2
+        if user.info.role.id in [1, 2] and not user.info.is_approved:
+            raise serializers.ValidationError('Аккаунт ожидает подтверждения администратором')
 
         data['user'] = user
         return data

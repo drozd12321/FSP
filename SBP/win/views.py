@@ -20,7 +20,47 @@ import logging
 from django.db.models import Count
 logger = logging.getLogger(__name__)
 
-
+class UserApprovalView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        # Проверяем, что текущий пользователь имеет право подтверждать других (role=2)
+        if request.user.info.role.id != 2:
+            return Response({'error': 'Недостаточно прав'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Получаем список пользователей, ожидающих подтверждения (role 1 или 2)
+        pending_users = UserInfo.objects.filter(
+            role__id__in=[1, 2],
+            is_approved=False
+        ).select_related('user', 'role', 'region')
+        
+        serializer = UserApprovalSerializer(pending_users, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request):
+        # Проверяем права
+        if request.user.info.role.id != 2:
+            return Response({'error': 'Недостаточно прав'}, status=status.HTTP_403_FORBIDDEN)
+        
+        user_id = request.data.get('user_id')
+        action = request.data.get('action')  # 'approve' или 'reject'
+        
+        try:
+            user_info = UserInfo.objects.get(user__id=user_id)
+        except UserInfo.DoesNotExist:
+            return Response({'error': 'Пользователь не найден'}, status=status.HTTP_404_NOT_FOUND)
+        
+        if action == 'approve':
+            user_info.is_approved = True
+            user_info.save()
+            return Response({'message': 'Пользователь успешно подтвержден'})
+        elif action == 'reject':
+            # Можно добавить логику удаления или просто оставить неподтвержденным
+            user_info.user.delete()  # или user_info.delete()
+            return Response({'message': 'Пользователь отклонен и удален'})
+        else:
+            return Response({'error': 'Неверное действие'}, status=status.HTTP_400_BAD_REQUEST)
+        
 class RegisterView(APIView):
     permission_classes = [AllowAny] 
     
@@ -29,16 +69,21 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             
-            token, created = Token.objects.get_or_create(user=user)
-            
-            role = user.info.role
-            role_serializer = RoleSerializer(role)
-            
-            return Response({
-                'message': 'Пользователь успешно зарегистрирован',
-                'token': token.key,
-                'role': role_serializer.data
-            }, status=status.HTTP_201_CREATED)
+            # Для ролей 1 и 2 не создаем токен и не логиним
+            if user.info.role.id in [1, 2]:
+                return Response({
+                    'message': 'Регистрация успешна. Ожидайте подтверждения администратором.'
+                }, status=status.HTTP_201_CREATED)
+            else:
+                # Для роли 0 сразу выдаем токен
+                token, created = Token.objects.get_or_create(user=user)
+                role_serializer = RoleSerializer(user.info.role)
+                
+                return Response({
+                    'message': 'Пользователь успешно зарегистрирован',
+                    'token': token.key,
+                    'role': role_serializer.data
+                }, status=status.HTTP_201_CREATED)
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -100,7 +145,9 @@ class TeamCreateView(APIView):
 
     def post(self, request):
         try:
-            captain = UserInfo.objects.get(id=request.user.id)
+            logger.debug(request.user.id)
+            captain = UserInfo.objects.get(user=request.user.id)
+            logger.debug(captain)
         except UserInfo.DoesNotExist:
             return Response(
                 {"error": "user_profile_incomplete", "detail": "Профиль пользователя не заполнен"},
@@ -353,6 +400,7 @@ class UserListView(ListAPIView):
     permission_classes = [AllowAny]
     
 class PublicTeamsView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         teams = Team.objects.filter(is_private=False).select_related(
             'competition', 

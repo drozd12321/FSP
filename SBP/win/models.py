@@ -54,6 +54,7 @@ class UserInfo(models.Model):
     region = models.ForeignKey(Region, on_delete=models.PROTECT, related_name='users')
     role = models.ForeignKey(Role, on_delete=models.PROTECT, related_name='users')
     birthday = models.DateField()
+    is_approved = models.BooleanField(default=False)  # Новое поле
 
     def __str__(self):
         return f"{self.surname} {self.name} ({self.user.nickName})"
