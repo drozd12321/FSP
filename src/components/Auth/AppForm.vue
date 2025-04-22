@@ -9,7 +9,6 @@
         <div class="pole" v-if="mode === 'log'">
           <DivLogin v-model:emailVal="email" v-model:passwordVal="password" />
           <button type="submit" :disabled="isSubmitting">
-            <!-- Убрали @click -->
             {{ isLoad ? "Загрузка" : "Войти" }}
           </button>
         </div>
@@ -26,7 +25,6 @@
             v-model:dtVal="dt"
           />
           <button type="submit" :disabled="isSubmitting">
-            <!-- Убрали @click -->
             Зарегистрироваться
           </button>
         </div>
