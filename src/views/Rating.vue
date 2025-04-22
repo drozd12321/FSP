@@ -1,3 +1,7 @@
-<template><div>rating</div></template>
-<script setup></script>
+<template>
+  <div><Rating /></div>
+</template>
+<script setup>
+import Rating from "@/components/Rating.vue";
+</script>
 <style scoped></style>
