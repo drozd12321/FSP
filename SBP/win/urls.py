@@ -20,4 +20,5 @@ urlpatterns = [
     path('disciplines/', DisciplineListView.as_view(), name='disciplines-list'),
     path('organizer/applications/', OrganizerApplicationsListView.as_view(), name='organizer-applications'),
     path('user-applications/<int:pk>/response/', ApplicationDecisionView.as_view(), name='user-application-decision'),
+    path('users/', UserListView.as_view(), name='users-list'),
 ]

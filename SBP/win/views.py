@@ -5,7 +5,8 @@ from rest_framework import status
 from .serializers import (RegisterSerializer, LoginSerializer, TeamCreateSerializer,
 CompetitionSerializer, InvitationCreateSerializer, InvitationSerializer, InvitationResponseSerializer,
 RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationResponseSerializer,
-FAQSerializer, NewsSerializer, UserApplicationSerializer, DisciplineSerializer, ApplicationDecisionSerializer)
+FAQSerializer, NewsSerializer, UserApplicationSerializer, DisciplineSerializer, ApplicationDecisionSerializer,
+UserInfoSerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -344,3 +345,8 @@ class OrganizerApplicationsListView(ListAPIView):
             competition_id__in=organized_competitions,
             status='pending'
         ).select_related('user', 'user__user', 'user__region', 'competition')
+
+class UserListView(ListAPIView):
+    queryset = UserInfo.objects.filter(role_id=0).order_by('id')  # Фильтр по role_id=0
+    serializer_class = UserInfoSerializer
+    permission_classes = [AllowAny]

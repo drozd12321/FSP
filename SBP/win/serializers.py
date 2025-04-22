@@ -545,3 +545,9 @@ class UserApplicationSerializer(serializers.ModelSerializer):
 class ApplicationDecisionSerializer(serializers.Serializer):
     action = serializers.ChoiceField(choices=['approve', 'reject'], required=True)
     reason = serializers.CharField(required=False, allow_blank=True)
+    
+class UserInfoSerializer(serializers.ModelSerializer):
+    nickName = serializers.CharField(source='user.nickName')  # Доступ к полю из связанной модели User
+    class Meta:
+        model = UserInfo
+        fields = ['surname', 'name', 'nickName']
