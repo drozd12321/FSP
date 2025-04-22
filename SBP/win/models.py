@@ -123,12 +123,21 @@ class CompetitionHistory(models.Model):
 class Team(models.Model):
     competition = models.ForeignKey(Competition, on_delete=models.CASCADE, related_name='teams')
     name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
     members = models.ManyToManyField(UserInfo, related_name='teams')
     captain = models.ForeignKey(UserInfo, on_delete=models.SET_NULL, null=True, related_name='captain_teams')
-    is_private = models.BooleanField(default=False)  # Новое поле
+    is_private = models.BooleanField(default=False)
+    max_members = models.PositiveIntegerField()
+    current_members = models.PositiveIntegerField(default=1)  # Текущее количество участников (по умолчанию 1 - капитан)
 
     def __str__(self):
         return f"{self.name} ({self.competition})"
+
+    def save(self, *args, **kwargs):
+        # Автоматическое обновление current_members при сохранении
+        self.current_members = self.members.count()
+        super().save(*args, **kwargs)
+
     
 class Invitation(models.Model):
     STATUS_CHOICES = [

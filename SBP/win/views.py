@@ -97,7 +97,7 @@ class TeamCreateView(APIView):
 
     def post(self, request):
         try:
-            captain = UserInfo.objects.get(id=request.user.id) 
+            captain = UserInfo.objects.get(id=request.user.id)
         except UserInfo.DoesNotExist:
             return Response(
                 {"error": "user_profile_incomplete", "detail": "Профиль пользователя не заполнен"},
@@ -113,7 +113,7 @@ class TeamCreateView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         competition = serializer.validated_data['competition']
-        captain_region_id = captain.region
+        captain_region_id = captain.region.id if captain.region else None
 
         if competition.permissions and isinstance(competition.permissions, list):
             if captain_region_id not in competition.permissions:
@@ -124,7 +124,7 @@ class TeamCreateView(APIView):
                 return Response(
                     {
                         "error": "regional_restriction",
-                        "detail": f"Регион капитана ({captain.region.name}) не разрешен",
+                        "detail": f"Регион капитана не разрешен для этого соревнования",
                         "allowed_regions": list(allowed_regions)
                     },
                     status=status.HTTP_403_FORBIDDEN
@@ -135,10 +135,12 @@ class TeamCreateView(APIView):
             return Response({
                 "team_id": team.id,
                 "name": team.name,
-                "competition_id": team.competition.id,
-                "captain_id": team.captain.id,
-                "region": team.captain.region,
-                "is_private": team.is_private  # Добавлено в ответ
+                "description": team.description,
+                "competition_id": team.competition,
+                "captain_id": team.captain,
+                "is_private": team.is_private,
+                "max_members": team.max_members,
+                "current_members": team.current_members  # Добавляем текущее количество участников
             }, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response(

@@ -126,18 +126,36 @@ class TeamCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Team
-        fields = ['competition', 'name', 'captain', 'is_private']  # Добавлено is_private
+        fields = ['competition', 'name', 'description', 'captain', 'is_private', 'max_members']
         extra_kwargs = {
             'name': {'required': True, 'max_length': 100},
-            'is_private': {'required': False}  # Необязательное поле, по умолчанию False
+            'description': {'required': False, 'allow_blank': True},
+            'is_private': {'required': False},
+            'max_members': {'required': True}
         }
 
     def validate(self, data):
         competition = data['competition']
-        if competition.participant.count() >= competition.max_participants:
+        
+        # Проверка максимального количества команд в соревновании
+        if competition.teams.count() >= competition.max_participants:
             raise serializers.ValidationError(
                 "Достигнуто максимальное количество команд"
             )
+        
+        # Проверка что max_members не превышает максимально допустимое для этого соревнования
+        max_members = data.get('max_members')
+        if max_members and max_members > competition.max_participants_in_team:
+            raise serializers.ValidationError(
+                f"Количество участников команды не может превышать {competition.max_participants_in_team}"
+            )
+        
+        # Проверка что max_members не меньше минимального значения
+        if max_members and max_members < 1:
+            raise serializers.ValidationError(
+                "Команда должна содержать как минимум 1 участника"
+            )
+            
         return data
 
     def create(self, validated_data):
@@ -149,7 +167,10 @@ class TeamCreateSerializer(serializers.ModelSerializer):
             captain=captain,
             competition=validated_data['competition'],
             name=validated_data['name'],
-            is_private=validated_data.get('is_private', False)  # Учитываем is_private
+            description=validated_data.get('description', ''),
+            is_private=validated_data.get('is_private', False),
+            max_members=validated_data['max_members'],
+            current_members=1  # При создании команды всегда есть 1 участник - капитан
         )
         team.members.add(captain)
         return team
