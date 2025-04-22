@@ -28,7 +28,7 @@ urlpatterns = [
     path('competitions/history/', ParticipationHistoryView.as_view(), name='participation-history'),
     path('competitions/organized/', OrganizedCompetitionsView.as_view(), name='organized-competitions'),
     path('competitions/distribute-results/', DistributeResultsView.as_view(), name='distribute-results'),
-    path('user-rofile/',UserProfileView.as_view(), name='profile-actions'),
+    path('user-profile/',UserProfileView.as_view(), name='profile-actions'),
     
     
     

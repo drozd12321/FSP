@@ -53,7 +53,10 @@ class UserInfo(models.Model):
     patronymic = models.CharField(max_length=100, blank=True, null=True)
     region = models.ForeignKey(Region, on_delete=models.PROTECT, related_name='users')
     role = models.ForeignKey(Role, on_delete=models.PROTECT, related_name='users')
-    birthday = models.DateField()
+    birthday = models.DateField(null=True)
+    tg_username = models.CharField(max_length=30, null=True, blank=True)
+
+
     is_approved = models.BooleanField(default=False)  # Новое поле
 
     def __str__(self):
@@ -132,7 +135,8 @@ class Team(models.Model):
 
     def save(self, *args, **kwargs):
         # Автоматическое обновление current_members при сохранении
-        self.current_members = self.members.count()
+        if self.pk:  # Если объект уже сохранен в БД
+            self.current_members = self.members.count()
         super().save(*args, **kwargs)
 
     
@@ -225,7 +229,7 @@ class PrizePoints(models.Model):
 class CompetitionParticipant(models.Model):
     competition = models.ForeignKey('Competition', on_delete=models.CASCADE, related_name='participants')
     participant = models.ForeignKey('UserInfo', on_delete=models.CASCADE, related_name='competition_participations')
-    result = models.PositiveIntegerField(MinValueValidator=1)
+    result = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     
 class CompetitionOrganizer(models.Model):
     user = models.ForeignKey(UserInfo, on_delete=models.CASCADE, related_name='organized_competitions')

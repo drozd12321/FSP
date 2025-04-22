@@ -3,6 +3,9 @@ from rest_framework import serializers
 from .models import *
 from rest_framework.exceptions import ValidationError
 from datetime import date
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class UserApprovalSerializer(serializers.ModelSerializer):
@@ -136,67 +139,85 @@ class CompetitionDateSerializer(serializers.ModelSerializer):
         
         return data
     
-    
 class TeamCreateSerializer(serializers.ModelSerializer):
     competition = serializers.PrimaryKeyRelatedField(
         queryset=Competition.objects.filter(type='team'),
-        source='competition',
         write_only=True
-    )
-    captain_id = serializers.IntegerField(
-        write_only=True,
-        required=False
     )
 
     class Meta:
         model = Team
-        fields = ['competition', 'name', 'description', 'captain', 'is_private', 'max_members']
+        fields = ['competition', 'name', 'description', 'is_private']
         extra_kwargs = {
             'name': {'required': True, 'max_length': 100},
             'description': {'required': False, 'allow_blank': True},
-            'is_private': {'required': False},
-            'max_members': {'required': True}
+            'is_private': {'required': False, 'default': False}
         }
 
     def validate(self, data):
+        request = self.context['request']
+        try:
+            captain = UserInfo.objects.get(user=request.user)
+        except UserInfo.DoesNotExist:
+            raise serializers.ValidationError(
+                "Профиль пользователя не заполнен. Заполните профиль перед созданием команды."
+            )
+
         competition = data['competition']
         
-        # Проверка максимального количества команд в соревновании
         if competition.teams.count() >= competition.max_participants:
             raise serializers.ValidationError(
                 "Достигнуто максимальное количество команд"
             )
-        
-        # Проверка что max_members не превышает максимально допустимое для этого соревнования
-        max_members = data.get('max_members')
-        if max_members and max_members > competition.max_participants_in_team:
-            raise serializers.ValidationError(
-                f"Количество участников команды не может превышать {competition.max_participants_in_team}"
-            )
-        
-        # Проверка что max_members не меньше минимального значения
-        if max_members and max_members < 1:
-            raise serializers.ValidationError(
-                "Команда должна содержать как минимум 1 участника"
-            )
+            
+        # Проверка региональных ограничений
+        if competition.permissions and captain.region:
+            logger.debug(f"Competition permissions: {competition.permissions}")
+            logger.debug(f"Captain region ID: {captain.region.id}")
+            
+            # Если permissions - это просто список ID регионов
+            if isinstance(competition.permissions, list) and all(isinstance(x, int) for x in competition.permissions):
+                allowed_region_ids = competition.permissions
+            else:
+                # Если permissions имеет другую структуру
+                allowed_region_ids = []
+                for item in competition.permissions:
+                    if isinstance(item, dict):
+                        if 'id' in item:
+                            allowed_region_ids.append(item['id'])
+                    elif isinstance(item, int):
+                        allowed_region_ids.append(item)
+            
+            logger.debug(f"Allowed region IDs: {allowed_region_ids}")
+            
+            if captain.region.id not in allowed_region_ids:
+                raise serializers.ValidationError(
+                    "Регион капитана не разрешен для этого соревнования. "
+                    f"Разрешены регионы: {allowed_region_ids}, ваш регион: {captain.region.id}"
+                )
             
         return data
 
     def create(self, validated_data):
-        captain = self.context.get('captain')
-        if not captain:
-            raise serializers.ValidationError("Не указан капитан команды")
-            
+        request = self.context['request']
+        captain = UserInfo.objects.get(user=request.user)
+        competition = validated_data['competition']
+        
+        # Сначала создаем команду без members
         team = Team.objects.create(
             captain=captain,
-            competition=validated_data['competition'],
+            competition=competition,
             name=validated_data['name'],
             description=validated_data.get('description', ''),
             is_private=validated_data.get('is_private', False),
-            max_members=validated_data['max_members'],
-            current_members=1  # При создании команды всегда есть 1 участник - капитан
+            max_members=competition.max_participants_in_team,
+            current_members=1
         )
+        
+        # Затем добавляем капитана в members
         team.members.add(captain)
+        team.save()  # Сохраняем обновленный current_members
+        
         return team
         
 class InvitationCreateSerializer(serializers.ModelSerializer):

@@ -142,64 +142,38 @@ class CompetitionCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 class TeamCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        try:
-            logger.debug(request.user.id)
-            captain = UserInfo.objects.get(user=request.user.id)
-            logger.debug(captain)
-        except UserInfo.DoesNotExist:
-            return Response(
-                {"error": "user_profile_incomplete", "detail": "Профиль пользователя не заполнен"},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
         serializer = TeamCreateSerializer(
             data=request.data,
-            context={'captain': captain}
+            context={'request': request}
         )
         
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        competition = serializer.validated_data['competition']
-        captain_region_id = captain.region.id if captain.region else None
-
-        if competition.permissions and isinstance(competition.permissions, list):
-            if captain_region_id not in competition.permissions:
-                allowed_regions = Region.objects.filter(
-                    id__in=competition.permissions
-                ).values_list('name', flat=True)
-                
-                return Response(
-                    {
-                        "error": "regional_restriction",
-                        "detail": f"Регион капитана не разрешен для этого соревнования",
-                        "allowed_regions": list(allowed_regions)
-                    },
-                    status=status.HTTP_403_FORBIDDEN
-                )
 
         try:
             team = serializer.save()
             return Response({
                 "team_id": team.id,
                 "name": team.name,
-                "description": team.description,
-                "competition_id": team.competition,
-                "captain_id": team.captain,
-                "is_private": team.is_private,
-                "max_members": team.max_members,
-                "current_members": team.current_members  # Добавляем текущее количество участников
+                "competition_id": team.competition.id,
+                "captain_id": team.captain.id,
+                "max_members": team.max_members
             }, status=status.HTTP_201_CREATED)
+        except UserInfo.DoesNotExist:
+            return Response(
+                {"error": "profile_incomplete", "detail": "Профиль пользователя не заполнен"},
+                status=status.HTTP_403_FORBIDDEN
+            )
         except Exception as e:
             return Response(
                 {"error": "creation_error", "detail": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+            
             
 class InvitationCreateView(APIView):
     permission_classes = [AllowAny]
