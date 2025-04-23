@@ -1,4 +1,6 @@
 <template>
+  {{ comp }}
+  <AppFilterCompititions />
   <div class="container">
     <AppMsg v-if="act" :act="act" />
     <div v-if="create" class="loader-overlay">
@@ -31,6 +33,7 @@ import axios from "axios";
 import { computed, onMounted, ref } from "vue";
 import AddCommand from "@/components/AddCommand.vue";
 import AppMsg from "@/components/message/AppMsg.vue";
+import AppFilterCompititions from "@/components/compititions/AppFilterCompititions.vue";
 const { getCreating, getMsg } = storeToRefs(useCommandStore());
 const comStore = useCommandStore();
 const comp = ref();

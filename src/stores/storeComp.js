@@ -7,14 +7,21 @@ export const competitionStore = defineStore("comp", () => {
   const errorAddCompetition = ref(null);
   const loading = ref(false);
   const id = ref(null);
+  const zavkaCreate = ref(false);
+  function setzavkaCreate(ne) {
+    zavkaCreate.value = ne;
+    console.log(zavkaCreate);
+  }
   function setError(err) {
     errorAddCompetition.value = err;
   }
   function setId(newid) {
     id.value = newid;
+    console.log(id);
   }
   const getId = computed(() => id.value);
-  const getLoading = computed(() => id.loading);
+  const getLoading = computed(() => id.value);
+  const getzavkaCreate = computed(() => zavkaCreate.value);
   async function addCompetitions(formstate, token) {
     try {
       loading.value = true;
@@ -41,6 +48,8 @@ export const competitionStore = defineStore("comp", () => {
     }
   }
   return {
+    setzavkaCreate,
+    getzavkaCreate,
     errorAddCompetition,
     getLoading,
     loading,

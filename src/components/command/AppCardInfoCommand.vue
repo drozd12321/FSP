@@ -1,5 +1,9 @@
 <template>
   <div>
+    <div v-if="zavkaCr" class="loader-overlay">
+      <ZavkaCommand @close="close" />
+    </div>
+
     <div class="competition-card-wide">
       <div class="card-image">
         <div class="image-placeholder"></div>
@@ -42,7 +46,9 @@
         </div>
 
         <div class="card-footer-wide">
-          <button class="register-btn-wide">Присоединиться</button>
+          <button class="register-btn-wide" @click="zavka">
+            Присоединиться
+          </button>
         </div>
       </div>
     </div>
@@ -52,6 +58,12 @@
 <script setup>
 import formatDateRange from "@/use/useFilterData";
 import formatRegDate from "@/use/useFilterRegData";
+import { competitionStore } from "@/stores/storeComp";
+import ZavkaCommand from "./ZavkaCommand.vue";
+import { computed, ref } from "vue";
+import { storeToRefs } from "pinia";
+const compStore = competitionStore();
+const { getzavkaCreate } = storeToRefs(competitionStore());
 const props = defineProps({
   nameCommand: String,
   nameCompitition: String,
@@ -62,6 +74,17 @@ const props = defineProps({
   startData: String,
   endData: String,
   registrationStart: String,
+  id: String,
+});
+const zavka = () => {
+  compStore.setId(props.id);
+  compStore.setzavkaCreate(true);
+};
+const close = () => {
+  compStore.setzavkaCreate(false);
+};
+const zavkaCr = computed(() => {
+  return getzavkaCreate.value;
 });
 </script>
 <style scoped>
@@ -69,6 +92,7 @@ const props = defineProps({
   display: flex;
   background: white;
   border-radius: 12px;
+  border: 2px solid rgb(150, 150, 150);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -77,7 +101,18 @@ const props = defineProps({
   margin: 10px auto;
   font-family: "Segoe UI", Roboto, sans-serif;
 }
-
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 100;
+}
 .competition-card-wide:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);

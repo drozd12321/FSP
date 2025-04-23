@@ -12,6 +12,7 @@
         :maxMembers="com.max_members"
         :curentMembers="com.current_members"
         :registrationStart="com.competition.dates.registration_start"
+        :id="com.competition.id"
       />
     </div>
   </div>
