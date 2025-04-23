@@ -30,8 +30,8 @@ const getDat = async () => {
     throw error;
   }
 };
-onMounted(() => {
-  getDat();
-});
+// onMounted(() => {
+//   getDat();
+// });
 </script>
 <style scoped></style>

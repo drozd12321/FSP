@@ -83,19 +83,18 @@ const login = async () => {
         formstate
       );
       if (isAuth) {
-        console.log(formstate);
-        authStore.setMesg({
-          show: true,
-          type: "succses",
-          title: "Вы успешно зарегестрировались",
-        });
+        // authStore.setMesg({
+        //   show: true,
+        //   type: "succses",
+        //   title: response.message,
+        // });
         router.push("/");
       } else {
-        authStore.setMesg({
-          show: true,
-          type: "error",
-          title: "Проверьте введенные данные",
-        });
+        // authStore.setMesg({
+        //   show: true,
+        //   type: "error",
+        //   title: "Проверьте введенные данные",
+        // });
         console.error("Registration failed", response.error);
       }
     } else {
@@ -108,28 +107,29 @@ const login = async () => {
         "http://10.8.0.23:8000/api/auth/login/",
         formstate
       );
+      console.log(response);
       if (response) {
-        authStore.setMesg({
-          show: true,
-          type: "succses",
-          title: "Вход выполнен успешно",
-        });
+        // authStore.setMesg({
+        //   show: true,
+        //   type: response.message,
+        //   title: "Вход выполнен успешно",
+        // });
         router.push("/");
       } else {
-        authStore.setMesg({
-          show: true,
-          type: "error",
-          title: "Проверьте введенные данные",
-        });
+        // authStore.setMesg({
+        //   show: true,
+        //   type: "error",
+        //   title: "Проверьте введенные данные",
+        // });
         router.push("/");
       }
     }
   } catch (error) {
-    authStore.setMesg({
-      show: true,
-      type: "error",
-      title: "Произошла ошибка при выполнении запроса",
-    });
+    // authStore.setMesg({
+    //   show: true,
+    //   type: "error",
+    //   title: "Произошла ошибка при выполнении запроса",
+    // });
     router.push("/");
     console.error("An error occurred:", error);
   }

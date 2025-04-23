@@ -39,6 +39,7 @@ export const useAuthStore = defineStore("auth", () => {
   }
   function setError(err) {
     error.value = err;
+    console.log(err.value);
   }
   const getError = computed(() => error.value);
   const getUser = computed(() => user.value);
@@ -49,19 +50,69 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       isLoading.value = true;
       error.value = null;
+
       const response = await axios.post(url, formstate);
-      if (!response.data?.token) {
-        throw new Error("Сервер не вернул токен");
+
+      // Проверка наличия данных в ответе
+      if (!response?.data) {
+        throw new Error("Сервер вернул пустой ответ");
       }
-      const tk = response.data.token;
-      const rl = response.data.role;
-      setToken(tk);
-      setRole(rl.id);
+
+      // Валидация структуры ответа для регистрации/логина
+      if (url.includes("/register/")) {
+        if (!response.data.user || !response.data.token) {
+          throw new Error("Ожидайте подтверждения регистраии");
+        }
+      } else {
+        if (!response.data.token) {
+          throw new Error("Не получен токен авторизации");
+        }
+      }
+      setToken(response.data.token);
       setUser(response.data.user);
-      isLoading.value = false;
+      if (response.data.role) {
+        setRole(response.data.role.id || response.data.role);
+      } else if (response.data.user?.role) {
+        setRole(response.data.user.role.id || response.data.user.role);
+      }
+      setMesg({
+        show: true,
+        type: "succses",
+        title: url.includes("/register/")
+          ? "Вы успешно зарегистрировались"
+          : "Вход выполнен успешно",
+      });
+
       return true;
     } catch (err) {
-      setError(err.response.data);
+      console.error("Auth error:", err);
+
+      // Улучшенная обработка ошибок
+      let errorMessage = "Произошла ошибка при авторизации";
+
+      if (err.response) {
+        // Сервер вернул ошибку
+        errorMessage =
+          err.response.data?.non_field_errors?.[0] ||
+          err.response.data?.detail ||
+          err.response.data?.message ||
+          err.response.data?.email[0] ||
+          err.response.data?.nickname[0] ||
+          JSON.stringify(err.response.data);
+      } else if (err.request) {
+        errorMessage = "Сервер не отвечает";
+      } else {
+        // Ошибка настройки запроса
+        errorMessage = err.message;
+      }
+
+      setMesg({
+        show: true,
+        type: "error",
+        title: errorMessage,
+      });
+
+      setError(errorMessage);
       return false;
     } finally {
       isLoading.value = false;
