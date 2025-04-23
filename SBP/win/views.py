@@ -475,10 +475,24 @@ class ResponseToPublicView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
-        serializer = VacancyResponseSerializer(data=request.data, context={'request': request})
+        try:
+            user_info = UserInfo.objects.get(user=request.user)
+        except UserInfo.DoesNotExist:
+            return Response(
+                {"detail": "Профиль пользователя не найден"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Добавляем user_info в данные для сериализатора
+        request.data['user'] = user_info.id
+        
+        serializer = VacancyResponseSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        
         if serializer.is_valid():
-            # Автоматически подставляем текущего пользователя
-            serializer.save(user=request.user)
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

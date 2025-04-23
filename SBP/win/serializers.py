@@ -635,25 +635,46 @@ class UserInfoSerializer(serializers.ModelSerializer):
         fields = ['surname', 'name', 'nickName']
         
 class VacancyResponseSerializer(serializers.ModelSerializer):
-    team_name = serializers.CharField(source=Team.name, read_only=True)
-    user_surname = serializers.CharField(source=UserInfo.surname, read_only=True)
-    user_name = serializers.CharField(source=UserInfo.name, read_only=True)
-    user_nickname = serializers.CharField(source=User.nickName, read_only=True)
+    team_name = serializers.CharField(source='team.name', read_only=True)
+    user_surname = serializers.CharField(source='user.surname', read_only=True)
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    user_nickname = serializers.CharField(source='user.user.nickName', read_only=True)
+    
+    # Поля для ввода (клиентские имена)
+    id = serializers.IntegerField(write_only=True)  # Будет преобразовано в team.id
+    description = serializers.CharField(write_only=True)  # Будет преобразовано в text
 
     class Meta:
         model = VacancyResponse
         fields = [
-            'id', 
-            'text', 
+            'id',          # write_only (из запроса)
+            'description', # write_only (из запроса)
+            'text',        # read_only (для ответа)
             'status', 
-            'team', 
+            'team',       # read_only (для ответа)
             'team_name', 
             'user',
             'user_surname',
             'user_name',
             'user_nickname'
         ]
-        read_only_fields = fields
+        read_only_fields = ['status', 'team', 'text', 'team_name', 
+                          'user_surname', 'user_name', 'user_nickname']
+
+    def create(self, validated_data):
+        # Извлекаем специальные поля
+        team_id = validated_data.pop('id')
+        text_content = validated_data.pop('description')
+        
+        # Получаем объект команды
+        team = Team.objects.get(id=team_id)
+        
+        # Создаем объект отклика
+        return VacancyResponse.objects.create(
+            team=team,
+            text=text_content,
+            **validated_data
+        )
         
 class ResponseActionSerializer(serializers.Serializer):
     action = serializers.ChoiceField(choices=['accept', 'reject'])
