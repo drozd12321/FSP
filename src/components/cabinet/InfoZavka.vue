@@ -2,7 +2,9 @@
   <div class="application-card">
     <div class="card-header">
       <h3 class="card-title">{{ name }}</h3>
-      <span class="card-status" :class="statusClass">статус</span>
+      <span class="card-status" :class="statusClass">{{
+        competition_type_display
+      }}</span>
     </div>
 
     <div class="card-content">
@@ -11,12 +13,16 @@
         <span class="info-value">имя польз</span>
       </div>
       <div class="info-row">
+        <span class="info-label">Тип:</span>
+        <span class="info-value">{{ type_display }}</span>
+      </div>
+      <div class="info-row">
         <span class="info-label">Дата подачи:</span>
         <span class="info-value">дата</span>
       </div>
-      <div class="info-row">
-        <span class="info-label">Команда:</span>
-        <span class="info-value">имя ком</span>
+      <div class="info-row descr">
+        <span class="info-label">Описание:</span>
+        <span class="info-value">{{ description }}</span>
       </div>
     </div>
 
@@ -50,7 +56,7 @@ const props = defineProps({
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  padding: 20px;
+  padding: 10px;
   margin-bottom: 16px;
   border-left: 4px solid var(--sin);
   transition: all 0.3s ease;
@@ -106,7 +112,9 @@ const props = defineProps({
   display: flex;
   margin-bottom: 8px;
 }
-
+.info-row.descr {
+  max-width: 700px;
+}
 .info-label {
   font-weight: 500;
   color: #7f8c8d;
