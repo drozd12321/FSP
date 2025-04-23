@@ -781,3 +781,12 @@ class TeamParticipantSerializer(serializers.ModelSerializer):
                 'surname': member.surname
             } for member in obj.team.members.all()
         ]
+        
+        
+class RegionalRepresentativeSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source='user.email')
+    region_name = serializers.CharField(source='region.name')
+    
+    class Meta:
+        model = UserInfo
+        fields = ['surname', 'name', 'patronymic', 'email', 'region_name']

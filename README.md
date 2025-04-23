@@ -1,29 +1,31 @@
-# .
+# Awesome Project 🚀
 
-This template should help get you started developing with Vue 3 in Vite.
+![Project Banner](logo-fsp.png)
 
-## Recommended IDE Setup
+## Описание
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+Этот проект — современный, масштабируемый и надежный backend-сервис, построенный с использованием лучших технологий для разработки REST API.  
+Идеально подходит для создания высоконагруженных приложений с асинхронной обработкой задач и надежным хранением данных.
 
-## Customize configuration
+---
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+## Стек технологий
 
-## Project Setup
+| Технология   | Описание                                      |
+|--------------|-----------------------------------------------|
+| **Django REST Framework (DRF)** | Мощный и гибкий фреймворк для создания REST API на Python |
+| **PostgreSQL**                  | Надежная и производительная реляционная СУБД              |
+| **Celery**                     | Асинхронная очередь задач для обработки фоновых задач     |
+| **Redis**                      | Быстрое хранилище данных и брокер сообщений для Celery    |
 
-```sh
-npm install
-```
+---
 
-### Compile and Hot-Reload for Development
+## Возможности
 
-```sh
-npm run dev
-```
+- Полностью RESTful API с аутентификацией и авторизацией
+- Асинхронная обработка фоновых задач (отправка email, обработка данных и т.д.)
+- Надежное хранение данных с использованием PostgreSQL
+- Высокая производительность и масштабируемость благодаря Redis и Celery
+- Легкая интеграция и расширяемость
 
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
+---
