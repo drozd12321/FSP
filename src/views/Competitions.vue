@@ -2,7 +2,7 @@
   <AppFilterCompititions :comp="filteredData" @filterChange="handleFilter" />
   <div class="container">
     <AppMsg v-if="act" :act="act" />
-    <div v-if="create" class="loader-overlay">
+    <div v-if="getCreating" class="loader-overlay">
       <AddCommand @close="close" />
     </div>
     <div v-if="dataLoad" class="loader-overlay"><Loader /></div>
@@ -124,19 +124,22 @@ onMounted(() => {
 
 .card {
   width: 100%;
-  height: 300px;
+
   transition: all 0.5s ease;
   border-radius: 5px;
 }
 
 .loader-overlay {
   position: fixed;
+  top: 0;
   left: 0;
   right: 0;
+  bottom: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 400px;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 100;
 }
 .card:hover {
   transform: translateY(-7px);

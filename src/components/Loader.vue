@@ -10,6 +10,6 @@
   background-image: url("@/assets/svg/back.svg");
 } */
 img {
-  height: 50%;
+  height: 100%;
 }
 </style>

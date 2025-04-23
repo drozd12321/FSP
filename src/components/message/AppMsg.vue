@@ -1,13 +1,32 @@
 <template>
-  <div class="notification" :class="{ show: act.show }">
-    <div class="notification-content">
+  <div
+    class="notification"
+    :class="{
+      show: act.show,
+      primary: act.type === 'succses',
+      danger: act.type === 'error',
+    }"
+  >
+    <div
+      class="notification-content"
+      :class="{
+        primary: act.type === 'succses',
+        danger: act.type === 'error',
+      }"
+    >
       <div class="icon-wrapper">
-        <svg class="check-icon" viewBox="0 0 24 24">
+        <svg v-if="act.type === succses" class="check-icon" viewBox="0 0 24 24">
           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+        </svg>
+        <svg v-else class="check-icon" viewBox="0 0 24 24">
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+            fill="#e74c3c"
+          />
         </svg>
       </div>
       <div class="text-content">
-        <h3 class="title">Успешно!</h3>
+        <h3 class="title">{{ act.type === "error" ? "Ошибка" : "Успешно" }}</h3>
         <p class="message">{{ act.title }}</p>
       </div>
       <button class="close-btn" @click="hideNotification">
@@ -92,14 +111,25 @@ defineExpose({
 .notification-content {
   display: flex;
   align-items: center;
-  background: #f0fdf4;
-  border-left: 4px solid #10b981;
   border-radius: 8px;
   padding: 16px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
-
+.notification-content.danger {
+  background: #fee2e2;
+}
+.notification-content.primary {
+  background: #f0fdf4;
+}
+.notification.primary {
+  border-left: 4px solid #10b981;
+  border-radius: 8px;
+}
+.notification.danger {
+  border-left: 4px solid #d30420;
+  border-radius: 8px;
+}
 .icon-wrapper {
   margin-right: 12px;
   flex-shrink: 0;

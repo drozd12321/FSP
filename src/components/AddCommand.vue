@@ -47,14 +47,6 @@
             >
               Подтвердить
             </button>
-            <button
-              v-if="type === 'Личное'"
-              type="submit"
-              class="submit-btn two"
-              :disabled="loading"
-            >
-              Отклонить
-            </button>
           </div>
         </form>
       </div>
@@ -88,7 +80,7 @@ const type = computed(() => {
 });
 const token = ref();
 const user = ref();
-const createCommand = async () => {
+const createCommand = async (action) => {
   if (type.value === "Командное") {
     console.log(token.value);
     if (comand.value === "0") {
@@ -97,7 +89,6 @@ const createCommand = async () => {
       form.value.is_private = false;
     }
     form.value.competition = idd.value;
-
     await comStore.addCommand(
       "http://10.8.0.23:8000/teams/",
       form.value,
@@ -112,7 +103,6 @@ const createCommand = async () => {
       token.value
     );
   }
-
   console.log(formU.value);
   resetForm();
 };
@@ -201,16 +191,10 @@ h2 {
 }
 
 .loader-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   display: flex;
   justify-content: center;
-  align-items: center;
-  background-color: rgba(255, 255, 255, 0.7);
-  z-index: 10;
+
+  height: 100px;
 }
 
 .competition-form {

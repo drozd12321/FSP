@@ -24,7 +24,6 @@ export const useCommandStore = defineStore("command", () => {
     msg.value.show = newVal.show;
     msg.value.title = newVal.title;
     msg.value.type = newVal.type;
-    console.log(msg.value);
   }
   function setId(newId) {
     Id.value = newId;
@@ -50,19 +49,24 @@ export const useCommandStore = defineStore("command", () => {
         title: "Вы успешно подали заявку",
         type: "succses",
       });
+      console.log(msg);
       loading.value = false;
       setCreating(false);
       return true;
     } catch (err) {
       setMesg({
-        show: false,
-        title: "",
-        type: "",
+        show: true,
+        title: "Вы уже подали одну заявку больше нельзя",
+        type: "error",
       });
+      console.log(msg);
       setError(err.response?.data || err.message);
+      setCreating(false);
+      console.log(isCreating);
       loading.value = false;
       return false;
     } finally {
+      setCreating(false);
       loading.value = false;
     }
   }
