@@ -169,26 +169,25 @@ async def finish_questionnaire(update: Update, context: ContextTypes.DEFAULT_TYP
             region = answers['region']
             search_comp = await conn.fetch(
             f'''
-    with comp as
-    (SELECT wc.id,
-    wc.max_participants, wc.max_participants_in_team,
-    wc.min_age, wc.max_age, wc."name", wc.competition_type,
-    wc.status, wc.description, wc."type", wc.permissions, wd."name" AS discipline,
-	win_competitiondate.start_date, win_competitiondate.end_date,
-	win_competitiondate.registration_start, win_competitiondate.registration_end
-    FROM win_competition wc
-    LEFT JOIN win_discipline wd
-    ON wc.discipline_id = wd.id
-    LEFT JOIN win_competitiondate
-    ON wc.id = win_competitiondate.competition_id)   
-    SELECT 
-    c.max_participants, c.max_participants_in_team,
-    c.min_age, c.max_age, c.name, c.competition_type,
-    c.status, c.description, c."type", c.discipline,
-    c.start_date, c.end_date, c.registration_start, c.registration_end,
-    elem->>'name' AS city_name
-    FROM comp c, jsonb_array_elements(c.permissions)AS elem
-    WHERE elem->>'name' = $1 and c.discipline = $2 and c.competition_type IN {format} and c.min_age<=$3 and c.type = $4; 
+with comp as
+(SELECT wc.id,
+wc.max_participants, wc.max_participants_in_team,
+wc.min_age, wc.max_age, wc."name", wc.competition_type,
+wc.status, wc.description, wc."type", wc.permissions, wd."name" AS discipline,
+win_competitiondate.start_date, win_competitiondate.end_date,
+win_competitiondate.registration_start, win_competitiondate.registration_end
+FROM win_competition wc
+LEFT JOIN win_discipline wd
+ON wc.discipline_id = wd.id
+LEFT JOIN win_competitiondate
+ON wc.id = win_competitiondate.competition_id)   
+SELECT 
+c.max_participants, c.max_participants_in_team,
+c.min_age, c.max_age, c.name, c.competition_type,
+c.status, c.description, c."type", c.discipline,
+c.start_date, c.end_date, c.registration_start, c.registration_end
+FROM comp c
+WHERE c.permissions @> to_jsonb((select id from win_region where "name" = $1)) and c.discipline = $2 and c.competition_type IN {format} and c.min_age<=$3 and c.type = $4; 
         ''', 
             region, discipline, age, type_
             )
