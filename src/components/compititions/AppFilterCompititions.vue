@@ -1,4 +1,5 @@
 <template>
+  {{ comp }}
   <div class="horizontal-filter-container">
     <div class="filter-row">
       <div class="filter-item search-item">
@@ -13,6 +14,24 @@
         </div>
       </div>
 
+      <div class="filter-item status-filter">
+        <h4 class="filter-label">Формат участия</h4>
+        <div class="filter-options">
+          <label
+            v-for="status in formatOptions"
+            :key="status.value"
+            :class="{ active: selectedformat === status.value }"
+          >
+            <input
+              type="radio"
+              v-model="selectedformat"
+              :value="status.value"
+              @change="handleStatusChange"
+            />
+            {{ status.label }}
+          </label>
+        </div>
+      </div>
       <div class="filter-item status-filter">
         <h4 class="filter-label">Статус</h4>
         <div class="filter-options">
@@ -80,13 +99,21 @@ const emit = defineEmits(["filter-change"]);
 
 const searchQuery = ref("");
 const selectedStatus = ref("");
+const selectedformat = ref("");
 const selectedRegion = ref("");
 const startDate = ref("");
 const endDate = ref("");
 const props = defineProps({
   comp: Array,
 });
-const statusOptions = [{}];
+const formatOptions = [
+  { value: "one", label: "Личное" },
+  { value: "two", label: "Командное" },
+];
+const statusOptions = [
+  { value: "one", label: "Личное" },
+  { value: "two", label: "Командное" },
+];
 
 const regions = [{}];
 
@@ -144,7 +171,7 @@ const resetFilters = () => {
   margin: auto;
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 55px;
   flex-wrap: wrap;
 }
 

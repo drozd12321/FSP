@@ -1,13 +1,12 @@
 <template>
-  {{ filteredData }}
-  <AppFilterCompititions :comp="comp" @filterChange="handleFilter" />
+  <AppFilterCompititions :comp="filteredData" @filterChange="handleFilter" />
   <div class="container">
     <AppMsg v-if="act" :act="act" />
     <div v-if="create" class="loader-overlay">
       <AddCommand @close="close" />
     </div>
     <div v-if="dataLoad" class="loader-overlay"><Loader /></div>
-    <div class="card" v-for="com in comp">
+    <div class="card" v-for="com in filteredData">
       <ListCard
         :name="com.name"
         :typeComp="com.competition_type_display"
