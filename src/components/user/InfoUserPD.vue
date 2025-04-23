@@ -29,7 +29,7 @@
               <input
                 type="text"
                 id="surname"
-                v-model="user.surname"
+                v-model="user.info.surname"
                 placeholder="Иванов"
               />
             </div>
@@ -38,7 +38,7 @@
               <input
                 type="text"
                 id="name"
-                v-model="user.name"
+                v-model="user.info.name"
                 placeholder="Иван"
               />
             </div>
@@ -47,7 +47,7 @@
               <input
                 type="text"
                 id="patronymic"
-                v-model="user.patronymic"
+                v-model="user.info.patronymic"
                 placeholder="Иванович"
               />
             </div>
@@ -58,7 +58,7 @@
             <input
               type="text"
               id="region"
-              v-model="user.region"
+              v-model="user.info.region_name"
               placeholder="Новгородская область"
             />
           </div>
@@ -67,7 +67,7 @@
             <input
               type="email"
               id="email"
-              v-model="user.email"
+              v-model="user.user.email"
               placeholder="example@mail.com"
             />
           </div>
@@ -76,13 +76,14 @@
             <input
               type="text"
               id="role"
-              v-model="user.role"
+              v-model="user.info.role"
+              disabled
               placeholder="example@mail.com"
             />
           </div>
           <div class="form-group">
             <label for="birthDate">Дата рождения</label>
-            <input type="date" id="birthDate" v-model="user.birthDate" />
+            <input type="date" id="birthDate" v-model="user.info.birthday" />
           </div>
           <div class="form-actions">
             <button type="submit" class="save-btn">Сохранить изменения</button>
@@ -96,18 +97,24 @@
   </div>
 </template>
 <script setup>
+import getUser from "@/use/useGetUser";
 import { onMounted, ref, watch } from "vue";
 const props = defineProps({
   data: Object,
 });
 const user = ref({
-  name: "",
-  surname: "",
-  patronymic: "",
-  email: "",
-  birthDate: "",
-  region: "",
-  role: "",
+  info: {
+    name: "",
+    surname: "",
+    patronymic: "",
+    email: "",
+    birthDate: "",
+    region: "",
+    role: "",
+  },
+  user: {
+    email: "",
+  },
 });
 const fileInput = ref(null);
 const triggerFileInput = () => {
@@ -129,31 +136,41 @@ const saveProfile = () => {
 
 const resetForm = () => {
   user.value = {
-    name: "",
-    surname: "",
-    patronymic: "",
-    email: "",
-    birthDate: "",
-    region: "",
-    role: "",
+    info: {
+      name: "",
+      surname: "",
+      patronymic: "",
+      email: "",
+      birthDate: "",
+      region: "",
+      role: "",
+    },
+    user: {
+      email: "",
+    },
   };
 };
-const updateUserFromProps = () => {
-  if (props.data) {
-    console.log(props.data.info.birthDate);
-    user.value = {
-      name: props.data.info.name,
-      surname: props.data.info.surname,
-      patronymic: props.data.info.patronymic,
-      email: props.data.user.email,
-      birthDate: props.data.info.birthday,
-      region: props.data.info.region,
-      role: props.data.info.role,
-    };
+
+const token = ref("");
+const loading = ref();
+const userData = ref();
+onMounted(async () => {
+  try {
+    loading.value = true;
+    token.value = localStorage.getItem("jwtToken");
+    if (!token.value) {
+      throw new Error("Токен не найден");
+    }
+    user.value = await getUser(token.value);
+    console.log(user);
+  } catch (error) {
+    console.error("Ошибка при загрузке пользователя:", error);
+  } finally {
+    loading.value = false;
   }
-};
-onMounted(updateUserFromProps);
-watch(() => props.data, updateUserFromProps);
+});
+// onMounted(updateUserFromProps);
+// watch(() => props.data, updateUserFromProps);
 </script>
 
 <style scoped>
@@ -166,7 +183,7 @@ watch(() => props.data, updateUserFromProps);
   margin-top: 10px;
 }
 .profile-container {
-  max-width: 1500px;
+  max-width: 1700px;
 
   padding: 2rem;
   background: #ffffff;

@@ -1,129 +1,66 @@
 <template>
-  <div class="teams-container">
-    <div class="teams-header">
-      <h2>Мои команды</h2>
-      <button class="create-team-btn" @click="openCreateModal">
-        + Создать команду
-      </button>
-    </div>
-
-    <div class="teams-list">
-      <div v-if="loading" class="loader-container">
-        <Loader />
+  <div>
+    <div class="teams-container">
+      <div class="teams-header">
+        <h2>Мои команды</h2>
       </div>
 
-      <!-- <div v-else-if="teams.length === 0" class="empty-state">
-        <img src="@/assets/no-teams.svg" alt="Нет команд" class="empty-icon" />
-        <p>У вас пока нет команд</p>
-        <button class="primary-btn" @click="openCreateModal">
-          Создать первую команду
-        </button>
-      </div> -->
+      <div class="teams-list">
+        <div v-if="loading" class="loader-container">
+          <Loader />
+        </div>
 
-      <div v-else class="team-cards">
-        <div
-          v-for="team in teams"
-          :key="team.id"
-          class="team-card"
-          @click="openTeamDetails(team.id)"
-        >
-          <div class="team-avatar">
-            <img :src="team.avatar || defaultTeamAvatar" alt="Аватар команды" />
-          </div>
-          <div class="team-info">
-            <h3 class="team-name">{{ team.name }}</h3>
-            <p class="team-description">
-              {{ truncateDescription(team.description) }}
-            </p>
-            <div class="team-meta">
-              <span
-                class="team-type"
-                :class="{ public: !team.is_private, private: team.is_private }"
-              >
-                {{ team.is_private ? "Приватная" : "Публичная" }}
-              </span>
-              <span class="team-members">
-                👥 {{ team.members_count }}/{{ team.max_members }}
-              </span>
-            </div>
-          </div>
-          <div class="team-actions">
-            <button class="action-btn" @click.stop="editTeam(team)">
-              <i class="edit-icon">✏️</i>
-            </button>
-          </div>
+        <!-- <div v-else-if="teams.length === 0" class="empty-state">
+          <img src="@/assets/no-teams.svg" alt="Нет команд" class="empty-icon" />
+          <p>У вас пока нет команд</p>
+          <button class="primary-btn" @click="openCreateModal">
+            Создать первую команду
+          </button>
+        </div> -->
+        <div v-for="comm in teams">
+          <Command
+            :nameCompet="comm.competition_name"
+            :status="comm.competition_status"
+            :disciplineName="comm.discipline_name"
+            :nameCom="comm.name"
+            :members="comm.members"
+          />
         </div>
       </div>
     </div>
-
-    <!-- Модальное окно создания команды -->
-    <CreateTeamModal
-      v-if="showCreateModal"
-      @close="closeCreateModal"
-      @created="handleTeamCreated"
-    />
   </div>
 </template>
 
 <script setup>
+import axios from "axios";
 import { onMounted, ref } from "vue";
+import Command from "./Command.vue";
 
-const teams = ref([
-  {
-    id: 1,
-    name: "Технологические лидеры",
-    description: "Команда для разработки инновационных проектов в сфере IT",
-    is_private: false,
-    members_count: 5,
-    max_members: 10,
-    avatar: null,
-  },
-  {
-    id: 2,
-    name: "Тайные исследователи",
-    description: "Закрытая группа для проведения научных экспериментов",
-    is_private: true,
-    members_count: 3,
-    max_members: 5,
-    avatar: null,
-  },
-]);
+const teams = ref();
 
 const loading = ref(false);
 const showCreateModal = ref(false);
-
-const truncateDescription = (text, length = 60) => {
-  if (!text) return "";
-  return text.length > length ? text.substring(0, length) + "..." : text;
-};
-
-const openCreateModal = () => {
-  showCreateModal.value = true;
-};
-
-const closeCreateModal = () => {
-  showCreateModal.value = false;
-};
-
-const handleTeamCreated = (newTeam) => {
-  teams.value.unshift(newTeam);
-  closeCreateModal();
-};
-
-const openTeamDetails = (teamId) => {
-  console.log("Открываем детали команды", teamId);
-  ды;
-};
-
-const editTeam = (team) => {
-  console.log("Редактируем команду", team);
+const token = ref();
+const getCommand = async () => {
+  try {
+    const response = await axios.get("http://10.8.0.23:8000/user/teams/", {
+      headers: {
+        Authorization: `Token ${token.value}`,
+        "Content-Type": "application/json",
+      },
+    });
+    teams.value = response.data.teams;
+    console.log(teams.value);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching regions:", error);
+    throw error;
+  }
 };
 
 onMounted(() => {
-  loading.value = true;
-  setTimeout(() => {
-    loading.value = false;
-  }, 800);
+  token.value = localStorage.getItem("jwtToken").trim();
+  getCommand();
 });
 </script>
 
@@ -135,6 +72,7 @@ onMounted(() => {
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-right: 80px;
 }
 
 .teams-header {
@@ -143,7 +81,7 @@ onMounted(() => {
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 2px solid #9b9b9b;
 }
 
 .teams-header h2 {
@@ -277,7 +215,9 @@ onMounted(() => {
   background-color: #e6f7ff;
   color: #1890ff;
 }
-
+.team-container {
+  border: 2px solid #e74c3c;
+}
 .team-type.private {
   background-color: #fff2e8;
   color: #fa8c16;

@@ -11,6 +11,8 @@ import News from "@/views/News.vue";
 import Cabinet from "@/views/Cabinet.vue";
 import CardInfoComp from "@/components/CardInfoComp.vue";
 import CompLayuot from "@/views/CompLayuot.vue";
+import LayoutCabinet from "@/components/cabinet/LayoutCabinet.vue";
+import InfoCommandUser from "@/components/user/infoCommandUser.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -88,11 +90,15 @@ const router = createRouter({
     {
       path: "/cabinet",
       name: "cabinet",
-      component: Cabinet,
+      component: LayoutCabinet,
       meta: {
         layout: "Main",
         auth: false,
       },
+      children: [
+        { path: "", name: "pd", component: Cabinet },
+        { path: "infocomand", name: "infocomand", component: InfoCommandUser },
+      ],
     },
     {
       path: "/auth",

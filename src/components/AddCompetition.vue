@@ -1,5 +1,4 @@
 <template>
-  {{ form }}
   <div>
     <div v-if="loading" class="loader-overlay"><Loader /></div>
     <div class="competition-form">

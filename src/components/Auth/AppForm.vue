@@ -1,7 +1,4 @@
 <template>
-  <div class="error-overlay" v-if="getError">
-    <AppErrorMsg />
-  </div>
   <div v-if="isLoading" class="loader-overlay"><Loader /></div>
   <form class="form" @submit.prevent="login">
     <div class="inf">

@@ -9,7 +9,6 @@
             placeholder="Поиск..."
             @input="handleSearch"
           />
-          <i class="search-icon">🔍</i>
         </div>
       </div>
 
