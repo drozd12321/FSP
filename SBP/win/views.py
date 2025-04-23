@@ -114,7 +114,7 @@ class LoginView(APIView):
         })
     
 class CompetitionCreateView(APIView):
-    permission_classes = [IsAuthenticated]  # Изменили на IsAuthenticated
+    permission_classes = [IsAuthenticated]
     
     def post(self, request):
         # Преобразуем название дисциплины в ID если нужно
@@ -125,6 +125,19 @@ class CompetitionCreateView(APIView):
             except Discipline.DoesNotExist:
                 return Response(
                     {"discipline": "Discipline not found"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        # Обрабатываем permissions - преобразуем в список ID
+        if 'permissions' in request.data and isinstance(request.data['permissions'], list):
+            try:
+                # Извлекаем только ID из объектов регионов
+                permissions_data = request.data['permissions']
+                region_ids = [item['id'] for item in permissions_data if isinstance(item, dict) and 'id' in item]
+                request.data['permissions'] = region_ids
+            except (TypeError, KeyError):
+                return Response(
+                    {"permissions": "Invalid format - expected list of regions with ids"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
         
