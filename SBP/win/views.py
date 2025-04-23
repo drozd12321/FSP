@@ -553,11 +553,11 @@ class ResponseActionView(APIView):
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        user = request.user.id
+        user = request.user  # Получаем объект пользователя, а не только ID
         user_info = get_object_or_404(UserInfo, user=user)
         
         # Сериализуем данные пользователя
-        user_serializer = UserUpdateSerializer(user)
+        user_serializer = UserUpdateSerializer(user)  # Теперь передаем объект пользователя
         
         # Сериализуем данные профиля с регионом
         info_serializer = UserInfoUpdateSerializer(user_info)
