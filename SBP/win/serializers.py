@@ -752,14 +752,22 @@ class MemberNicknameSerializer(serializers.ModelSerializer):
 class TeamListSerializer(serializers.ModelSerializer):
     competition_name = serializers.CharField(source='competition.name')
     competition_status = serializers.CharField(source='competition.status')
+    discipline_name = serializers.CharField(source='competition.discipline.name')  # Новое поле
     members = serializers.SerializerMethodField()
     
     class Meta:
         model = Team
-        fields = ['id', 'name', 'competition_name', 'competition_status', 'members']
+        fields = [
+            'id', 
+            'name', 
+            'competition_name', 
+            'competition_status',
+            'discipline_name',  # Добавлено новое поле
+            'members'
+        ]
     
     def get_members(self, obj):
-        # Получаем ники всех участников команды
+        # Оптимизация запроса с select_related
         members = obj.members.all().select_related('user')
         return [{
             'id': member.user.id,
