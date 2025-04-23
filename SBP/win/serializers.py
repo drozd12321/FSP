@@ -632,7 +632,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
     nickName = serializers.CharField(source='user.nickName')  # Доступ к полю из связанной модели User
     class Meta:
         model = UserInfo
-        fields = ['surname', 'name', 'nickName']
+        fields = ['surname', 'name', 'nickName', 'rating']
         
 class VacancyResponseSerializer(serializers.ModelSerializer):
     team_name = serializers.CharField(source=Team.name, read_only=True)
