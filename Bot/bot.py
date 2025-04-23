@@ -360,7 +360,7 @@ async def handle_competitions(update: Update, context: ContextTypes.DEFAULT_TYPE
             
             if competitions:
                 response = "🏆 Твои соревнования:\n\n" + "\n".join(
-                    f"• {comp['name']} ({comp['description']})" 
+                    f"• {comp['name']} ({comp['description']})\nДата проведения: {comp['start_date'].strftime("%d.%m.%Y %H:%M")} - {comp['end_date'].strftime("%d.%m.%Y %H:%M")}\nРегистрация: {comp['registration_start'].strftime("%d.%m.%Y %H:%M")} - {comp['registration_end'].strftime("%d.%m.%Y %H:%M")}" 
                     for comp in competitions
                 )
             else:
