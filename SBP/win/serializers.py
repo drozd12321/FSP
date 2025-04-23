@@ -703,7 +703,7 @@ class CompetitionShortSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Competition
-        fields = ['id', 'name', 'discipline', 'type']
+        fields = ['id', 'name', 'discipline', 'type', 'status']
 
 class ParticipationHistorySerializer(serializers.ModelSerializer):
     competition = CompetitionShortSerializer()
