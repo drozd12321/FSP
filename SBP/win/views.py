@@ -120,16 +120,9 @@ class LoginView(APIView):
         })
     
 class CompetitionCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # Изменили на IsAuthenticated
     
     def post(self, request):
-        # Проверяем роль пользователя
-        try:
-            user_info = UserInfo.objects.get(id=request.user.id)
-            is_moderator = (user_info.role == 1) if user_info.role else False
-        except UserInfo.DoesNotExist:
-            is_moderator = False
-        
         # Преобразуем название дисциплины в ID если нужно
         if 'discipline' in request.data and isinstance(request.data['discipline'], str):
             try:
@@ -141,22 +134,24 @@ class CompetitionCreateView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         
-        # Создаем копию данных, чтобы не изменять оригинал
-        data = request.data.copy()
-        
-        # Если пользователь - модератор (role=1), устанавливаем статус "pending"
-        if is_moderator:
-            data['status'] = 'pending'
-        
-        serializer = CompetitionSerializer(data=data)
+        serializer = CompetitionSerializer(data=request.data)
         if serializer.is_valid():
             competition = serializer.save()
             
-            # Создаем запись в CompetitionOrganizer
+            # Получаем UserInfo текущего пользователя
+            try:
+                user_info = UserInfo.objects.get(user=request.user)
+            except UserInfo.DoesNotExist:
+                return Response(
+                    {"error": "User profile not found"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Создаем запись организатора
             CompetitionOrganizer.objects.create(
-                user=request.user.id,
+                user=user_info,  # Передаем экземпляр UserInfo
                 competition=competition,
-                rated=False  # или другое значение по умолчанию
+                rated=False
             )
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
