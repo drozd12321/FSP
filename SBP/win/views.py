@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import *
 from rest_framework.authtoken.models import Token 
-from django.contrib.auth import authenticate
+from datetime import datetime
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import *
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -294,7 +294,7 @@ class TeamApplicationResponseView(UpdateAPIView):
 class CompetitionListView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = CompetitionSerializer
-    queryset = Competition.objects.all().select_related(
+    queryset = Competition.objects.filter(status!='pending').select_related(
         'discipline',
         'dates'
     )
@@ -856,3 +856,84 @@ class RegionalRepresentativesView(ListAPIView):
             role_id=1,  # Фильтр по role=1 (региональные представители)
             is_approved=True  # Только подтвержденные пользователи
         ).select_related('user', 'region')  # Оптимизация запросов
+        
+class CompetitionStatusView(APIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        # Получаем время из запроса
+        client_time_str = request.query_params.get('time', None)
+        
+        if not client_time_str:
+            return Response(
+                {"error": "Параметр 'time' обязателен в формате ISO 8601 (например, 2025-03-02T21:00:00Z)"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            client_time = datetime.fromisoformat(client_time_str.replace('Z', '+00:00'))
+            client_time = timezone.make_aware(client_time)
+        except ValueError:
+            return Response(
+                {"error": "Неверный формат времени. Используйте ISO 8601 (например, 2025-03-02T21:00:00Z)"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Получаем все соревнования с датами
+        competitions = Competition.objects.filter(
+            dates__isnull=False
+        ).select_related('dates').only(
+            'id', 'status', 'dates__start_date', 
+            'dates__end_date', 'dates__registration_start',
+            'dates__registration_end'
+        )
+        
+        updated_competitions = []
+        
+        for comp in competitions:
+            original_status = comp.status
+            new_status = original_status
+            
+            # Если текущий статус pending - не меняем
+            if original_status == 'pending':
+                updated_competitions.append({
+                    'id': comp.id,
+                    'name': comp.name,
+                    'original_status': original_status,
+                    'new_status': new_status,
+                    'status_changed': False
+                })
+                continue
+            
+            dates = comp.dates
+            
+            # Определяем новый статус
+            if dates.registration_start <= client_time <= dates.registration_end:
+                new_status = 'registration'
+            elif dates.start_date <= client_time <= dates.end_date:
+                new_status = 'running'
+            elif client_time > dates.end_date:
+                new_status = 'finished'
+            else:
+                new_status = 'waiting'
+            
+            # Обновляем если статус изменился
+            status_changed = new_status != original_status
+            if status_changed:
+                comp.status = new_status
+                comp.save(update_fields=['status'])
+            
+            updated_competitions.append({
+                'id': comp.id,
+                'name': comp.name,
+                'original_status': original_status,
+                'new_status': new_status,
+                'status_changed': status_changed
+            })
+        
+        return Response({
+            'client_time': client_time_str,
+            'server_time': timezone.now().isoformat(),
+            'competitions_updated': len([c for c in updated_competitions if c['status_changed']]),
+            'competitions': updated_competitions
+        })
