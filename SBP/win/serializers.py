@@ -157,7 +157,7 @@ class TeamCreateSerializer(serializers.ModelSerializer):
     def validate(self, data):
         request = self.context['request']
         try:
-            captain = UserInfo.objects.get(user=request.user)
+            creator = UserInfo.objects.get(user=request.user)
         except UserInfo.DoesNotExist:
             raise serializers.ValidationError(
                 "Профиль пользователя не заполнен. Заполните профиль перед созданием команды."
@@ -166,37 +166,53 @@ class TeamCreateSerializer(serializers.ModelSerializer):
         competition = data['competition']
         
         if competition.teams.count() >= competition.max_participants:
+            raise serializers.ValidationError("Достигнуто максимальное количество команд")
+            
+        # Если permissions пустые и создатель не модератор
+        if competition.permissions == [] and creator.role != 1:
             raise serializers.ValidationError(
-                "Достигнуто максимальное количество команд"
+                "Создание команд для этого соревнования разрешено только модераторам"
             )
             
-        # Проверка региональных ограничений
-        if competition.permissions and captain.region:
-            logger.debug(f"Competition permissions: {competition.permissions}")
-            logger.debug(f"Captain region ID: {captain.region.id}")
-            
-            # Если permissions - это просто список ID регионов
-            if isinstance(competition.permissions, list) and all(isinstance(x, int) for x in competition.permissions):
-                allowed_region_ids = competition.permissions
-            else:
-                # Если permissions имеет другую структуру
-                allowed_region_ids = []
-                for item in competition.permissions:
-                    if isinstance(item, dict):
-                        if 'id' in item:
-                            allowed_region_ids.append(item['id'])
-                    elif isinstance(item, int):
-                        allowed_region_ids.append(item)
-            
-            logger.debug(f"Allowed region IDs: {allowed_region_ids}")
-            
-            if captain.region.id not in allowed_region_ids:
+        # Проверка региональных ограничений (если permissions не пустые)
+        if competition.permissions and competition.permissions != []:
+            if not creator.region or creator.region.id not in competition.permissions:
                 raise serializers.ValidationError(
-                    "Регион капитана не разрешен для этого соревнования. "
-                    f"Разрешены регионы: {allowed_region_ids}, ваш регион: {captain.region.id}"
+                    f"Ваш регион не разрешен для этого соревнования. Разрешены: {competition.permissions}"
                 )
-            
+        
         return data
+
+    def create(self, validated_data):
+        request = self.context['request']
+        creator = UserInfo.objects.get(user=request.user)
+        
+        # Определяем капитана
+        captain_id = request.data.get('captain_id')
+        if captain_id:
+            try:
+                captain = UserInfo.objects.get(id=captain_id)
+            except UserInfo.DoesNotExist:
+                raise serializers.ValidationError("Указанный капитан не найден")
+        else:
+            captain = creator if creator.role != 1 else None
+            # Если капитан не указан и создатель не модератор, назначаем создателя капитаном
+            if not captain:
+                raise serializers.ValidationError("Для модератора необходимо указать captain_id")
+
+        # Создаем команду
+        team = Team.objects.create(
+            captain=captain,
+            **validated_data
+        )
+        
+        # Добавляем капитана в members (если это не модератор)
+        if creator.role != 1 or captain_id:
+            if captain and captain not in team.members:
+                team.members.append(captain)
+                team.save()
+        
+        return team
 
     def create(self, validated_data):
         request = self.context['request']
