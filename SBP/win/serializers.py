@@ -635,10 +635,10 @@ class UserInfoSerializer(serializers.ModelSerializer):
         fields = ['surname', 'name', 'nickName']
         
 class VacancyResponseSerializer(serializers.ModelSerializer):
-    team_name = serializers.CharField(source='team.name', read_only=True)
-    user_surname = serializers.CharField(source='user.surname', read_only=True)
-    user_name = serializers.CharField(source='user.name', read_only=True)
-    user_nickname = serializers.CharField(source='user.user.nickName', read_only=True)
+    team_name = serializers.CharField(source=Team.name, read_only=True)
+    user_surname = serializers.CharField(source=UserInfo.surname, read_only=True)
+    user_name = serializers.CharField(source=UserInfo.name, read_only=True)
+    user_nickname = serializers.CharField(source=User.nickName, read_only=True)
 
     class Meta:
         model = VacancyResponse
