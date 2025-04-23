@@ -722,21 +722,17 @@ class UserTeamsView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # Получаем UserInfo текущего пользователя
-        user_info = get_object_or_404(UserInfo, user=request.user.id)
+        # Находим UserInfo по user_id=10
+        user_info = get_object_or_404(UserInfo, user_id=request.user.id)
         
-        # Получаем все команды пользователя с оптимизацией запросов
-        teams = Team.objects.filter(
-            members__id=user_info.id  # Фильтруем по ID UserInfo в members
-        ).select_related('competition').prefetch_related(
-            'members__user'  # Оптимизация для загрузки участников
-        ).distinct()  # Убираем дубликаты если они есть
+        # Ищем команды, где members = UserInfo(id=9)
+        teams = Team.objects.filter(members=user_info.user_id)
+        
+        logger.debug(f"User ID: {request.user.id}, UserInfo ID: {user_info.id}")
+        logger.debug(f"Teams found: {teams.count()}")
         
         serializer = TeamListSerializer(teams, many=True)
-        
-        return Response({
-            'teams': serializer.data
-        })
+        return Response({'teams': serializer.data})
         
 class PendingCompetitionsView(APIView):
     permission_classes = [IsAuthenticated]
