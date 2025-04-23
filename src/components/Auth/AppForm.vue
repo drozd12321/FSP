@@ -43,7 +43,7 @@ import Loader from "../Loader.vue";
 import { storeToRefs } from "pinia";
 import AppErrorMsg from "../message/AppErrorMsg.vue";
 const authStore = useAuthStore();
-const { isLoading, getError, isAuth } = storeToRefs(useAuthStore());
+const { isLoading, getError, isAuth, getMsg } = storeToRefs(useAuthStore());
 const isLoad = computed(() => {
   authStore.isLoading;
 });

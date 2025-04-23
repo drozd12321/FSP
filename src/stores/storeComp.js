@@ -14,13 +14,19 @@ export const competitionStore = defineStore("comp", () => {
     id.value = newid;
   }
   const getId = computed(() => id.value);
-  async function addCompetitions(formstate) {
+  async function addCompetitions(formstate, token) {
     try {
       loading.value = true;
       const dt = { ...formstate };
       const response = await axios.post(
         "http://10.8.0.23:8000/competitions/create/",
-        formstate
+        formstate,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
       console.log(response.data);
       loading.value = false;

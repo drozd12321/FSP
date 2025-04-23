@@ -186,7 +186,7 @@ const handleSubmit = async () => {
     },
   };
   console.log("Отправка данных:", formattedData);
-  const response = await compStore.addCompetitions(formattedData);
+  const response = await compStore.addCompetitions(formattedData, token.value);
   console.log("Отправка данных:", formattedData);
   console.log("Отправка данных:", response);
 };
@@ -200,6 +200,7 @@ const toggleAllRegions = () => {
     form.value.permissions = [...russianRegions.value];
   }
 };
+const token = ref();
 const getDisciplin = async () => {
   try {
     const response = await axios.get("http://10.8.0.23:8000/disciplines/");
@@ -213,6 +214,7 @@ const getDisciplin = async () => {
 };
 onMounted(() => {
   getDisciplin();
+  token.value = localStorage.getItem("jwtToken");
 });
 </script>
 
