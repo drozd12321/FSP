@@ -1,6 +1,6 @@
 <template>
-  {{ comp }}
-  <AppFilterCompititions />
+  {{ filteredData }}
+  <AppFilterCompititions :comp="comp" @filterChange="handleFilter" />
   <div class="container">
     <AppMsg v-if="act" :act="act" />
     <div v-if="create" class="loader-overlay">
@@ -38,11 +38,23 @@ const { getCreating, getMsg } = storeToRefs(useCommandStore());
 const comStore = useCommandStore();
 const comp = ref();
 const dataLoad = ref(false);
+const filteredData = ref();
+const handleFilter = (filters) => {
+  filteredData.value = compData.value.filter((item) => {
+    return (
+      (!filters.search || item.name.includes(filters.search)) &&
+      (!filters.status || item.status === filters.status) &&
+      (!filters.region || item.region == filters.region) &&
+      (!filters.start_date || item.date >= filters.start_date) &&
+      (!filters.end_date || item.date <= filters.end_date)
+    );
+  });
+};
 const getCompititions = async () => {
   try {
     dataLoad.value = true;
     const response = await axios.get("http://10.8.0.23:8000/competitions/");
-    comp.value = response.data;
+    filteredData.value = response.data;
     console.log(comp.value);
     dataLoad.value = false;
     return response.data;

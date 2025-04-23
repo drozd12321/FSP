@@ -83,19 +83,12 @@ const selectedStatus = ref("");
 const selectedRegion = ref("");
 const startDate = ref("");
 const endDate = ref("");
+const props = defineProps({
+  comp: Array,
+});
+const statusOptions = [{}];
 
-const statusOptions = [
-  { value: "active", label: "Активные" },
-  { value: "pending", label: "Ожидающие" },
-  { value: "completed", label: "Завершенные" },
-];
-
-const regions = [
-  { id: 1, name: "Москва" },
-  { id: 2, name: "Санкт-Петербург" },
-  { id: 3, name: "Новосибирск" },
-  // Другие регионы...
-];
+const regions = [{}];
 
 const handleSearch = () => {
   emit("filter-change", { search: searchQuery.value });
@@ -143,7 +136,7 @@ const resetFilters = () => {
   padding: 15px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   width: 80%;
-  margin: auto;
+  margin: 20px auto;
   display: flex;
 }
 
@@ -158,13 +151,13 @@ const resetFilters = () => {
 .filter-item {
   display: flex;
   flex-direction: column;
-  min-width: 100px;
+  min-width: 150px;
   flex: 1;
 }
 
 .search-item {
-  min-width: 100px;
-  flex: 2;
+  min-width: 130px;
+  flex: 1;
 }
 
 .filter-label {
