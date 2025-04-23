@@ -294,7 +294,7 @@ class TeamApplicationResponseView(UpdateAPIView):
 class CompetitionListView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = CompetitionSerializer
-    queryset = Competition.objects.all().select_related(
+    queryset = Competition.objects.filter(status!='pending').select_related(
         'discipline',
         'dates'
     )
