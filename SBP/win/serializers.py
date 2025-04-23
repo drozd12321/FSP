@@ -384,7 +384,7 @@ class TeamApplicationSerializer(serializers.ModelSerializer):
         Invitation.objects.filter(team=team).delete()
         # Устанавливаем статус "На модерации" и пустое поле reason
         return TeamApplication.objects.create(
-            status='На модерации',
+            status='pending',
             reason=None,
             **validated_data
         )
@@ -407,9 +407,9 @@ class TeamApplicationResponseSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'team']
 
     def validate(self, attrs):
-        if self.instance.status != 'На модерации':
+        if self.instance.status != 'pending':
             raise serializers.ValidationError(
-                "Можно обрабатывать только заявки со статусом 'На модерации'"
+                "Можно обрабатывать только заявки со статусом 'pending'"
             )
         
         if attrs['action'] == 'reject' and not attrs.get('reason'):
@@ -728,3 +728,7 @@ class TeamListSerializer(serializers.ModelSerializer):
             'id': member.user.id,
             'nickName': member.user.nickName
         } for member in members]
+        
+class CompetitionDecisionSerializer(serializers.Serializer):
+    competition_id = serializers.IntegerField()
+    action = serializers.ChoiceField(choices=['accept', 'reject'])

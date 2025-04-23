@@ -8,7 +8,7 @@ RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationRespo
 FAQSerializer, NewsSerializer, UserApplicationSerializer, DisciplineSerializer, ApplicationDecisionSerializer,
 UserInfoSerializer, VacancyResponseSerializer, ResponseActionSerializer, UserProfileUpdateSerializer,
 UserInfoUpdateSerializer, UserUpdateSerializer, ParticipationHistorySerializer, OrganizerCompetitionSerializer,
-CompetitionResultsSerializer, UserApprovalSerializer, TeamListSerializer)
+CompetitionResultsSerializer, UserApprovalSerializer, TeamListSerializer, CompetitionDecisionSerializer)
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -375,7 +375,7 @@ class ApplicationDecisionView(UpdateAPIView):
         
         application.save()
         
-class OrganizerApplicationsListView(ListAPIView):
+class OrganizerUserApplicationsListView(ListAPIView):
     serializer_class = UserApplicationSerializer
     permission_classes = [IsAuthenticated]
 
@@ -632,7 +632,6 @@ class OrganizedCompetitionsView(APIView):
         serializer = OrganizerCompetitionSerializer(organizers, many=True)
         
         return Response({
-            'count': organizers.count(),
             'competitions': serializer.data
         })
         
@@ -728,3 +727,70 @@ class PendingCompetitionsView(APIView):
         return Response({
             'competitions': serializer.data
         })
+        
+class OrganizerTeamApplicationsListView(ListAPIView):
+    serializer_class = TeamApplicationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user_info = self.request.user
+        # Получаем соревнования, где пользователь организатор
+        organized_competitions = CompetitionOrganizer.objects.filter(
+            user=user_info.id
+        ).values_list('competition', flat=True)
+        
+        return TeamApplication.objects.filter(
+            competition__in=organized_competitions,
+            status='pending'  # или 'pending' в зависимости от вашей логики
+        ).select_related('team', 'competition')
+        
+class CompetitionDecisionView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    @transaction.atomic
+    def post(self, request):
+        serializer = CompetitionDecisionSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        competition_id = serializer.validated_data['competition']
+        action = serializer.validated_data['action']
+        
+        # Получаем соревнование
+        competition = get_object_or_404(Competition, id=competition_id, status='pending')
+        
+        # Проверяем что пользователь имеет право подтверждать соревнования
+        try:
+            user_info = UserInfo.objects.get(user=request.user)
+            if user_info.role.id != 2:  # Проверка что пользователь модератор
+                return Response(
+                    {"detail": "Только представители ФСП могут подтверждать соревнования"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        except UserInfo.DoesNotExist:
+            return Response(
+                {"detail": "Профиль пользователя не найден"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        if action == 'accept':
+            # Обновляем статус соревнования
+            competition.status = 'upcoming'
+            competition.save()
+            
+            return Response(
+                {"detail": "Соревнование подтверждено", "competition_id": competition.id},
+                status=status.HTTP_200_OK
+            )
+        
+        elif action == 'reject':
+            # Удаляем записи организаторов
+            CompetitionOrganizer.objects.filter(competition=competition).delete()
+            
+            # Удаляем само соревнование
+            competition.delete()
+            
+            return Response(
+                {"detail": "Соревнование отклонено и удалено"},
+                status=status.HTTP_200_OK
+            )

@@ -18,7 +18,8 @@ urlpatterns = [
     path('roles/', RoleListView.as_view(), name='roles-list'),
     path('regions/', RegionListView.as_view(), name='regions-list'),
     path('disciplines/', DisciplineListView.as_view(), name='disciplines-list'),
-    path('organizer/applications/', OrganizerApplicationsListView.as_view(), name='organizer-applications'),
+    path('organizer/user/applications/', OrganizerUserApplicationsListView.as_view(), name='organizer-user-applications'),
+    path('organizer/team/applications/', OrganizerTeamApplicationsListView.as_view(), name='organizer-team-applications'),
     path('user-applications/<int:pk>/response/', ApplicationDecisionView.as_view(), name='user-application-decision'),
     path('users/', UserListView.as_view(), name='users-list'),
     path('teams/public/', PublicTeamsView.as_view(), name='public-teams'),
@@ -31,7 +32,7 @@ urlpatterns = [
     path('user-profile/',UserProfileView.as_view(), name='profile-actions'),
     path('user/teams/', UserTeamsView.as_view(), name='user-teams'),
     path('competitions/pending/', PendingCompetitionsView.as_view(), name='pending-competitions'),
-    
+    path('competitions/decision/', CompetitionDecisionView.as_view(), name='competition-decision'),
     
     
     path('approvals/', UserApprovalView.as_view(), name='user-approvals'),
