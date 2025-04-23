@@ -12,4 +12,4 @@ python bot.py
 
 Интерфейс:
 
-![Интерфейс]('FSP/Bot/source/photo_2025-04-23_09-32-25.jpg')
+![Интерфейс]('Bot/source/photo_2025-04-23_09-32-25.jpg')
