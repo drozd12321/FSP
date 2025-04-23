@@ -1,4 +1,5 @@
 <template>
+  {{ form }}
   <div>
     <div v-if="loading" class="loader-overlay"><Loader /></div>
     <div class="competition-form">
@@ -94,7 +95,8 @@
             placeholder="Выберите регионы"
             label="name"
             track-by="code"
-          ></multiselect>
+          >
+          </multiselect>
         </div>
         <div class="form-group">
           <label>Даты проведения</label>
@@ -146,11 +148,7 @@ import axios from "axios";
 const compStore = competitionStore();
 const { loading } = storeToRefs(competitionStore());
 const distiplines = ref();
-const russianRegions = ref([
-  { code: "RU-MOW", name: "Москва" },
-  { code: "RU-SPE", name: "Санкт-Петербург" },
-  { code: "RU-MOS", name: "Московская область" },
-]);
+const russianRegions = ref([]);
 const form = ref({
   name: "",
   discipline: "",
@@ -212,8 +210,20 @@ const getDisciplin = async () => {
     throw error;
   }
 };
+const getRegons = async () => {
+  try {
+    const response = await axios.get("http://10.8.0.23:8000/regions/");
+
+    russianRegions.value = response.data;
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching regions:", error);
+    throw error;
+  }
+};
 onMounted(() => {
   getDisciplin();
+  getRegons();
   token.value = localStorage.getItem("jwtToken");
 });
 </script>

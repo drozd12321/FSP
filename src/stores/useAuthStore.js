@@ -22,7 +22,6 @@ export const useAuthStore = defineStore("auth", () => {
     msg.value.show = newVal.show;
     msg.value.title = newVal.title;
     msg.value.type = newVal.type;
-    localStorage.setItem("lastMessage", JSON.stringify(msg.value));
     console.log(msg.value);
   }
   function setUser(newUser) {

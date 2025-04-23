@@ -14,6 +14,7 @@ export const competitionStore = defineStore("comp", () => {
     id.value = newid;
   }
   const getId = computed(() => id.value);
+  const getLoading = computed(() => id.loading);
   async function addCompetitions(formstate, token) {
     try {
       loading.value = true;
@@ -41,6 +42,7 @@ export const competitionStore = defineStore("comp", () => {
   }
   return {
     errorAddCompetition,
+    getLoading,
     loading,
     addCompetitions,
     setId,

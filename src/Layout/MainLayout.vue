@@ -1,7 +1,7 @@
 <template>
   <TheHead />
   <RouterView v-slot="{ Component }">
-    <Transition name="fade" mode="in-out">
+    <Transition name="fade">
       <component :is="Component" :key="route.fullPath" />
     </Transition>
   </RouterView>

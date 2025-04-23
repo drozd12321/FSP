@@ -1,19 +1,14 @@
-<template>
-  {{ act.value }}
+<template></template>
 
-  <div>
-    glavn
-    {{ getMsg.value }}
-  </div>
-</template>
 <script setup>
+import { ref, onMounted } from "vue";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { storeToRefs } from "pinia";
-import { computed, onMounted, ref } from "vue";
-const act = ref();
+const act = ref(null);
+
 onMounted(() => {
   act.value = JSON.parse(localStorage.getItem("lastMessage"));
-  console.log(act.value);
 });
 </script>
+
 <style scoped></style>
