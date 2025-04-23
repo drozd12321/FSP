@@ -66,21 +66,30 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             
-            # Для ролей 1 и 2 не создаем токен и не логиним
+            # Для всех ролей возвращаем одинаковую структуру ответа
+            response_data = {
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'nickName': user.nickName,
+                    'info': {
+                        'name': user.info.name,
+                        'surname': user.info.surname
+                    }
+                },
+                'role': RoleSerializer(user.info.role).data
+            }
+            
+            # Для ролей 1 и 2 не создаем токен
             if user.info.role.id in [1, 2]:
-                return Response({
-                    'message': 'Регистрация успешна. Ожидайте подтверждения администратором.'
-                }, status=status.HTTP_201_CREATED)
+                response_data['message'] = 'Регистрация успешна. Ожидайте подтверждения администратором.'
+                return Response(response_data, status=status.HTTP_201_CREATED)
             else:
                 # Для роли 0 сразу выдаем токен
                 token, created = Token.objects.get_or_create(user=user)
-                role_serializer = RoleSerializer(user.info.role)
-                
-                return Response({
-                    'message': 'Пользователь успешно зарегистрирован',
-                    'token': token.key,
-                    'role': role_serializer.data
-                }, status=status.HTTP_201_CREATED)
+                response_data['token'] = token.key
+                response_data['message'] = 'Пользователь успешно зарегистрирован'
+                return Response(response_data, status=status.HTTP_201_CREATED)
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
