@@ -198,8 +198,7 @@ WHERE c.permissions @> to_jsonb((select id from win_region where "name" = $1)) a
                     end_date = competition['end_date'].strftime("%d.%m.%Y %H:%M")
                     registration_start = competition['registration_start'].strftime("%d.%m.%Y %H:%M")
                     registration_end = competition['registration_end'].strftime("%d.%m.%Y %H:%M")
-                    message = f'''Название:\n{competition['name']}
-Описание:\n{competition['description']}
+                    message = f'''• {competition['name']} ({competition['description']})
 Дата проведения: {start_date} - {end_date}
 Регистрация: {registration_start} - {registration_end}
     '''
@@ -246,8 +245,7 @@ WHERE c.permissions @> to_jsonb((select id from win_region where "name" = $1)) a
                     end_date = competition['end_date'].strftime("%d.%m.%Y %H:%M")
                     registration_start = competition['registration_start'].strftime("%d.%m.%Y %H:%M")
                     registration_end = competition['registration_end'].strftime("%d.%m.%Y %H:%M")
-                    message = f'''Название:\n{competition['name']}
-Описание:\n{competition['description']}
+                    message = f'''• {competition['name']} ({competition['description']})
 Дата проведения: {start_date} - {end_date}
 Регистрация: {registration_start} - {registration_end}
     '''
