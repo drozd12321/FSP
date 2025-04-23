@@ -544,9 +544,7 @@ class UserDisciplineStatsSerializer(serializers.ModelSerializer):
 
 class UserApplicationSerializer(serializers.ModelSerializer):
     competition = serializers.PrimaryKeyRelatedField(
-        queryset=Competition.objects.filter(type='individual'),
-        source='competition',
-        write_only=True
+        queryset=Competition.objects.filter(type='individual')
     )
     
     class Meta:
@@ -555,12 +553,18 @@ class UserApplicationSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         competition = data['competition']
-        user_info = self.context['request'].user
-        user_region = UserInfo.objects.filter(id = user_info.id).region
+        user = self.context['request'].user
+        
+        # Получаем информацию о пользователе
+        try:
+            user_info = UserInfo.objects.get(user=user)
+        except UserInfo.DoesNotExist:
+            raise serializers.ValidationError("Профиль пользователя не найден")
 
         # 1. Проверка возрастных ограничений
         today = date.today()
-        age = today.year - (user_info.birthday.year - (today.month, today.day)) < (user_info.birthday.month, user_info.birthday.day)
+        age = today.year - user_info.birthday.year - ((today.month, today.day) < 
+                                                     (user_info.birthday.month, user_info.birthday.day))
         
         if age < competition.min_age or age > competition.max_age:
             raise serializers.ValidationError(
@@ -569,7 +573,7 @@ class UserApplicationSerializer(serializers.ModelSerializer):
 
         # 2. Проверка региональных ограничений
         if hasattr(competition, 'permissions') and isinstance(competition.permissions, list):
-            if user_region not in competition.permissions:
+            if user_info.region.id not in competition.permissions:
                 allowed_regions = Region.objects.filter(
                     id__in=competition.permissions
                 ).values_list('name', flat=True)
@@ -577,13 +581,13 @@ class UserApplicationSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     "regional_restriction": {
                         "message": "Ваш регион не участвует в этом соревновании",
-                        "user_region": user_region,
+                        "user_region": user_info.region.name,
                         "allowed_regions": list(allowed_regions)
                     }
                 })
 
         # 3. Проверка существующей заявки
-        if UserApplication.objects.filter(user=user_info.id, competition=competition.id).exists():
+        if UserApplication.objects.filter(user=user_info, competition=competition).exists():
             raise serializers.ValidationError(
                 "Вы уже подавали заявку на это соревнование"
             )
@@ -597,9 +601,10 @@ class UserApplicationSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        user_id = self.context['request'].user.id
+        user = self.context['request'].user
+        user_info = UserInfo.objects.get(user=user)
         return UserApplication.objects.create(
-            user=user_id,
+            user=user_info,
             **validated_data
         )
         

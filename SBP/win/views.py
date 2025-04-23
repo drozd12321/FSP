@@ -403,8 +403,7 @@ class PublicTeamsView(APIView):
                 },
                 'captain': {
                     'id': team.captain.id if team.captain else None,
-                    'username': team.captain.user.username if team.captain else None,
-                    'nickName': team.captain.nickName if team.captain else None
+                    'nickName': team.captain.user.nickName if team.captain and hasattr(team.captain, 'user') else None
                 },
                 'max_members': team.max_members,
                 'current_members': team.members_count,  # Используем аннотированное значение
