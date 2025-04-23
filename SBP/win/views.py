@@ -597,7 +597,6 @@ class ParticipationHistoryView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # Получаем UserInfo текущего пользователя
         try:
             user_info = UserInfo.objects.get(user=request.user.id)
         except UserInfo.DoesNotExist:
@@ -606,20 +605,20 @@ class ParticipationHistoryView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Получаем все участия пользователя
         participations = CompetitionParticipant.objects.filter(
             participant=user_info
+        ).select_related('competition').annotate(
+            total_participants=Count('competition__participants')
         )
         
-        # Сериализуем данные
-        serializer = ParticipationHistorySerializer(participations, many=True)
-        
-        # Считаем статистику
         stats = {
             'total_participations': participations.count(),
             'wins': participations.filter(result=1).count(),
             'podiums': participations.filter(result__lte=3).count(),
+            'current_rating': user_info.rating,
         }
+        
+        serializer = ParticipationHistorySerializer(participations, many=True)
         
         return Response({
             'stats': stats,

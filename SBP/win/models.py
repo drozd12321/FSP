@@ -58,7 +58,13 @@ class UserInfo(models.Model):
 
 
     is_approved = models.BooleanField(default=False)  # Новое поле
-
+    rating = models.FloatField(default=0.0, verbose_name="Рейтинг")  # Добавляем это
+    
+    def update_rating(self):
+        """Метод для обновления рейтинга"""
+        from .utils import calculate_user_rating
+        self.rating = calculate_user_rating(self)
+        self.save(update_fields=['rating'])
     def __str__(self):
         return f"{self.surname} {self.name} ({self.user.nickName})"
 
