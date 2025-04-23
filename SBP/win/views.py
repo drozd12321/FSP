@@ -2,13 +2,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import (RegisterSerializer, LoginSerializer, TeamCreateSerializer,
-CompetitionSerializer, InvitationCreateSerializer, InvitationSerializer, InvitationResponseSerializer,
-RoleSerializer,RegionSerializer, TeamApplicationSerializer, TeamApplicationResponseSerializer,
-FAQSerializer, NewsSerializer, UserApplicationSerializer, DisciplineSerializer, ApplicationDecisionSerializer,
-UserInfoSerializer, VacancyResponseSerializer, ResponseActionSerializer, UserProfileUpdateSerializer,
-UserInfoUpdateSerializer, UserUpdateSerializer, ParticipationHistorySerializer, OrganizerCompetitionSerializer,
-CompetitionResultsSerializer, UserApprovalSerializer, TeamListSerializer, CompetitionDecisionSerializer)
+from .serializers import *
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -399,7 +393,8 @@ class PublicTeamsView(APIView):
         teams = Team.objects.filter(is_private=False).select_related(
             'competition', 
             'captain',
-            'captain__user'  # Добавляем связь с пользователем капитана
+            'captain__user',  # Добавляем связь с пользователем капитана
+            'competition__dates'  # Добавляем связь с датами соревнования
         ).prefetch_related(
             'members'
         ).annotate(
@@ -414,7 +409,13 @@ class PublicTeamsView(APIView):
                 'description': team.description,
                 'competition': {
                     'id': team.competition.id,
-                    'name': team.competition.name
+                    'name': team.competition.name,
+                    'dates': {
+                        'start_date': team.competition.dates.start_date if hasattr(team.competition, 'dates') else None,
+                        'end_date': team.competition.dates.end_date if hasattr(team.competition, 'dates') else None,
+                        'registration_start': team.competition.dates.registration_start if hasattr(team.competition, 'dates') else None,
+                        'registration_end': team.competition.dates.registration_end if hasattr(team.competition, 'dates') else None,
+                    }
                 },
                 'captain': {
                     'id': team.captain.id if team.captain else None,
@@ -789,3 +790,34 @@ class CompetitionDecisionView(APIView):
                 {"detail": "Соревнование отклонено и удалено"},
                 status=status.HTTP_200_OK
             )
+            
+class CompetitionParticipantsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, competition_id):
+        competition = get_object_or_404(Competition, id=competition_id)
+        
+        if competition.type == 'individual':
+            # Для индивидуальных соревнований
+            participants = UserApplication.objects.filter(
+                competition=competition,
+                status='approved'
+            ).select_related('user__user')
+            
+            serializer = IndividualParticipantSerializer(participants, many=True)
+            
+        else:
+            # Для командных соревнований
+            participants = TeamApplication.objects.filter(
+                competition=competition,
+                status='approved'
+            ).select_related('team__captain').prefetch_related('team__members__user')
+            
+            serializer = TeamParticipantSerializer(participants, many=True)
+        
+        return Response({
+            'competition_id': competition.id,
+            'competition_name': competition.name,
+            'competition_type': competition.type,
+            'participants': serializer.data
+        })

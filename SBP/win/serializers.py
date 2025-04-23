@@ -748,3 +748,36 @@ class TeamListSerializer(serializers.ModelSerializer):
 class CompetitionDecisionSerializer(serializers.Serializer):
     competition_id = serializers.IntegerField()
     action = serializers.ChoiceField(choices=['accept', 'reject'])
+    
+class IndividualParticipantSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(source='user.id')
+    nickName = serializers.CharField(source='user.user.nickName')
+    name = serializers.CharField(source='user.name')
+    surname = serializers.CharField(source='user.surname')
+    
+    class Meta:
+        model = UserApplication
+        fields = ['user_id', 'nickName', 'name', 'surname', 'status']
+
+class TeamParticipantSerializer(serializers.ModelSerializer):
+    team_id = serializers.IntegerField(source='team.id')
+    team_name = serializers.CharField(source='team.name')
+    captain_name = serializers.SerializerMethodField()
+    members = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = TeamApplication
+        fields = ['team_id', 'team_name', 'captain_name', 'members', 'status']
+    
+    def get_captain_name(self, obj):
+        return f"{obj.team.captain.surname} {obj.team.captain.name}"
+    
+    def get_members(self, obj):
+        return [
+            {
+                'user_id': member.user.id,
+                'nickName': member.user.nickName,
+                'name': member.name,
+                'surname': member.surname
+            } for member in obj.team.members.all()
+        ]

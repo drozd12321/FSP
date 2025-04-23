@@ -15,6 +15,7 @@ urlpatterns = [
     path('competitions/pending/', PendingCompetitionsView.as_view(), name='pending-competitions'),
     path('competitions/decision/', CompetitionDecisionView.as_view(), name='competition-decision'),
     path('competitions/distribute-results/', DistributeResultsView.as_view(), name='distribute-results'),
+    path('competitions/<int:competition_id>/participants/', CompetitionParticipantsView.as_view(), name='competition-participants'),
     
     path('teams/', TeamCreateView.as_view(), name='create-team'),
     path('teams/public/', PublicTeamsView.as_view(), name='public-teams'),
