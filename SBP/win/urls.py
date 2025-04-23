@@ -24,6 +24,7 @@ urlpatterns = [
     path('vacancy-responses/', CaptainVacancyResponsesView.as_view(), name='captain-vacancy-responses'),
     path('response-to-public/', ResponseToPublicView.as_view(), name='response-to-public'),
     path('response-action/', ResponseActionView.as_view(), name='response-action'),
+    path('user/vacancy-responses/', UserVacancyResponsesView.as_view(), name='user-vacancy-responses'),
     
     path('invitations/', InvitationCreateView.as_view(), name='create-invitation'),
     path('user/invitations/', UserInvitationsView.as_view(), name='user-invitations'),

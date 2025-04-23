@@ -811,3 +811,18 @@ class RegionalRepresentativeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserInfo
         fields = ['surname', 'name', 'patronymic', 'email', 'region_name']
+        
+class TeamWithCompetitionSerializer(serializers.ModelSerializer):
+    competition = CompetitionShortSerializer()
+    
+    class Meta:
+        model = Team
+        fields = ['id', 'name', 'description', 'competition']
+
+class UserVacancyResponseSerializer(serializers.ModelSerializer):
+    team = TeamWithCompetitionSerializer()
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    
+    class Meta:
+        model = VacancyResponse
+        fields = ['id', 'text', 'status', 'status_display', 'team', 'created_at']

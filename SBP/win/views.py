@@ -937,3 +937,31 @@ class CompetitionStatusView(APIView):
             'competitions_updated': len([c for c in updated_competitions if c['status_changed']]),
             'competitions': updated_competitions
         })
+        
+class UserVacancyResponsesView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        try:
+            # Получаем UserInfo текущего пользователя
+            user_info = request.user.info
+        except AttributeError:
+            return Response(
+                {"detail": "Профиль пользователя не найден"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Получаем все отклики пользователя с предварительной загрузкой связанных данных
+        responses = VacancyResponse.objects.filter(
+            user=user_info
+        ).select_related(
+            'team',
+            'team__competition'
+        ).order_by('-created_at')
+        
+        serializer = UserVacancyResponseSerializer(responses, many=True)
+        
+        return Response({
+            'count': responses.count(),
+            'responses': serializer.data
+        })
