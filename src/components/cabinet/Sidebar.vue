@@ -99,7 +99,7 @@
           <img :src="user.avatar" alt="User Avatar" />
         </div>
         <div class="user-details">
-          <div class="user-name">{{ user.name }}</div>
+          <div class="user-name">{{ user.info.name }}</div>
           <div class="user-role">{{ user.role }}</div>
         </div>
       </div>
@@ -110,14 +110,11 @@
 <script setup>
 import { onMounted, ref } from "vue";
 
-const user = {
-  name: "Иван Иванов",
-  role: "Участник",
-  avatar: "/src/assets/user.png",
-};
+const user = ref({});
 const role = ref();
 onMounted(() => {
   role.value = localStorage.getItem("role");
+  user.value = JSON.parse(localStorage.getItem("user"));
 });
 </script>
 
