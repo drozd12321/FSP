@@ -1,5 +1,4 @@
 <template>
-  {{ comp }}
   <div class="horizontal-filter-container">
     <div class="filter-row">
       <div class="filter-item search-item">
@@ -15,7 +14,7 @@
       </div>
 
       <div class="filter-item status-filter">
-        <h4 class="filter-label">Формат участия</h4>
+        <h4 class="filter-label">Вид соревнований</h4>
         <div class="filter-options">
           <label
             v-for="status in formatOptions"
@@ -26,7 +25,25 @@
               type="radio"
               v-model="selectedformat"
               :value="status.value"
-              @change="handleStatusChange"
+              @change="emitFilters"
+            />
+            {{ status.label }}
+          </label>
+        </div>
+      </div>
+      <div class="filter-item status-filter">
+        <h4 class="filter-label">Формат соревнований</h4>
+        <div class="filter-options">
+          <label
+            v-for="status in oflOptions"
+            :key="status.value"
+            :class="{ active: selectedformatOfl === status.value }"
+          >
+            <input
+              type="radio"
+              v-model="selectedformatOfl"
+              :value="status.value"
+              @change="emitFilters"
             />
             {{ status.label }}
           </label>
@@ -44,7 +61,7 @@
               type="radio"
               v-model="selectedStatus"
               :value="status.value"
-              @change="handleStatusChange"
+              @change="emitFilters"
             />
             {{ status.label }}
           </label>
@@ -55,7 +72,7 @@
         <h4 class="filter-label">Регион</h4>
         <select
           v-model="selectedRegion"
-          @change="handleRegionChange"
+          @change="emitFilters"
           class="region-select"
         >
           <option value="">Все регионы</option>
@@ -71,14 +88,14 @@
           <input
             type="date"
             v-model="startDate"
-            @change="handleDateChange"
+            @change="emitFilters"
             placeholder="От"
           />
           <span>—</span>
           <input
             type="date"
             v-model="endDate"
-            @change="handleDateChange"
+            @change="emitFilters"
             placeholder="До"
           />
         </div>
@@ -86,20 +103,20 @@
 
       <div class="filter-item actions">
         <button class="reset-btn" @click="resetFilters">Сбросить</button>
-        <button class="apply-btn" @click="applyFilters">Применить</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 
 const emit = defineEmits(["filter-change"]);
 
 const searchQuery = ref("");
 const selectedStatus = ref("");
 const selectedformat = ref("");
+const selectedformatOfl = ref("");
 const selectedRegion = ref("");
 const startDate = ref("");
 const endDate = ref("");
@@ -107,51 +124,45 @@ const props = defineProps({
   comp: Array,
 });
 const formatOptions = [
-  { value: "one", label: "Личное" },
-  { value: "two", label: "Командное" },
+  { value: "individual", label: "Личное" },
+  { value: "team", label: "Командное" },
 ];
 const statusOptions = [
-  { value: "one", label: "Личное" },
-  { value: "two", label: "Командное" },
+  { value: "registration", label: "Регистрация" },
+  { value: "finished", label: "Завершены" },
+];
+const oflOptions = [
+  { value: "online", label: "Онлайн" },
+  { value: "offline", label: "Оффлайн" },
 ];
 
-const regions = [{}];
-
 const handleSearch = () => {
-  emit("filter-change", { search: searchQuery.value });
+  emitFilters();
 };
-
-const handleStatusChange = () => {
-  emit("filter-change", { status: selectedStatus.value });
-};
-
-const handleRegionChange = () => {
-  emit("filter-change", { region: selectedRegion.value });
-};
-
-const handleDateChange = () => {
-  emit("filter-change", {
-    start_date: startDate.value,
-    end_date: endDate.value,
-  });
-};
-
-const applyFilters = () => {
+const emitFilters = () => {
   emit("filter-change", {
     search: searchQuery.value,
     status: selectedStatus.value,
+    format: selectedformat.value,
+    ofline: selectedformatOfl.value,
     region: selectedRegion.value,
     start_date: startDate.value,
     end_date: endDate.value,
   });
 };
-
+watch([startDate, endDate], () => {
+  if (startDate.value || endDate.value) {
+    emitFilters();
+  }
+});
 const resetFilters = () => {
   searchQuery.value = "";
   selectedStatus.value = "";
   selectedRegion.value = "";
   startDate.value = "";
   endDate.value = "";
+  selectedformat.value = "";
+  selectedformatOfl.value = "";
   emit("filter-change", {});
 };
 </script>
@@ -162,7 +173,7 @@ const resetFilters = () => {
   border-radius: 10px;
   padding: 15px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  width: 80%;
+  width: 93%;
   margin: 20px auto;
   display: flex;
 }
@@ -178,7 +189,7 @@ const resetFilters = () => {
 .filter-item {
   display: flex;
   flex-direction: column;
-  min-width: 150px;
+  min-width: 100px;
   flex: 1;
 }
 
@@ -217,7 +228,6 @@ const resetFilters = () => {
 }
 
 .filter-options {
-  display: flex;
   gap: 8px;
 }
 

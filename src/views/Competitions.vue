@@ -28,6 +28,7 @@ import ListCard from "@/components/ListCard.vue";
 import Loader from "@/components/Loader.vue";
 import { useCommandStore } from "@/stores/storeCommand";
 import { storeToRefs } from "pinia";
+import { debounce } from "lodash-es";
 import axios from "axios";
 import { computed, onMounted, ref } from "vue";
 import AddCommand from "@/components/AddCommand.vue";
@@ -38,22 +39,55 @@ const comStore = useCommandStore();
 const comp = ref();
 const dataLoad = ref(false);
 const filteredData = ref();
-const handleFilter = (filters) => {
-  filteredData.value = compData.value.filter((item) => {
+
+const handleFilter = debounce((filters) => {
+  filteredData.value = comp.value.filter((item) => {
+    // Фильтрация по поиску
+    const searchMatch =
+      !filters.search ||
+      item.name.toLowerCase().includes(filters.search.toLowerCase());
+
+    // Фильтрация по статусу
+    const statusMatch = !filters.status || item.status === filters.status;
+
+    // Фильтрация по формату участия
+    const formatMatch = !filters.format || item.type === filters.format;
+    // Фильтрация по формату участия
+    const oflineMatch =
+      !filters.ofline || item.competition_type === filters.ofline;
+    // Фильтрация по региону (предполагаем, что поле называется region_id)
+    const regionMatch = !filters.region || item.region_id == filters.region;
+
+    // Фильтрация по дате (используем dates.start_date)
+    const dateMatch = () => {
+      if (!filters.start_date && !filters.end_date) return true;
+
+      const itemDate = new Date(item.dates.start_date);
+      const start = filters.start_date ? new Date(filters.start_date) : null;
+      const end = filters.end_date ? new Date(filters.end_date) : null;
+
+      if (start && itemDate < start) return false;
+      if (end && itemDate > end) return false;
+
+      return true;
+    };
+
     return (
-      (!filters.search || item.name.includes(filters.search)) &&
-      (!filters.status || item.status === filters.status) &&
-      (!filters.region || item.region == filters.region) &&
-      (!filters.start_date || item.date >= filters.start_date) &&
-      (!filters.end_date || item.date <= filters.end_date)
+      searchMatch &&
+      statusMatch &&
+      oflineMatch &&
+      formatMatch &&
+      regionMatch &&
+      dateMatch()
     );
   });
-};
+}, 300);
 const getCompititions = async () => {
   try {
     dataLoad.value = true;
     const response = await axios.get("http://10.8.0.23:8000/competitions/");
     filteredData.value = response.data;
+    comp.value = response.data;
     console.log(comp.value);
     dataLoad.value = false;
     return response.data;

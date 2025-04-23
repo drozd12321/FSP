@@ -4,10 +4,7 @@
 
 <script setup></script>
 <style scoped>
-.img {
-  height: 400px;
-}
 img {
-  height: 300px;
+  height: 90%;
 }
 </style>
