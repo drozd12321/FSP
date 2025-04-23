@@ -1,26 +1,22 @@
 <template>
   <div class="application-card">
     <div class="card-header">
-      <h3 class="card-title">{{ application.title }}</h3>
-      <span class="card-status" :class="statusClass">{{
-        application.status
-      }}</span>
+      <h3 class="card-title">{{ name }}</h3>
+      <span class="card-status" :class="statusClass">статус</span>
     </div>
 
     <div class="card-content">
       <div class="info-row">
         <span class="info-label">Участник:</span>
-        <span class="info-value">{{ application.userName }}</span>
+        <span class="info-value">имя польз</span>
       </div>
       <div class="info-row">
         <span class="info-label">Дата подачи:</span>
-        <span class="info-value">{{ formatDate(application.submitDate) }}</span>
+        <span class="info-value">дата</span>
       </div>
       <div class="info-row">
         <span class="info-label">Команда:</span>
-        <span class="info-value">{{
-          application.teamName || "Индивидуально"
-        }}</span>
+        <span class="info-value">имя ком</span>
       </div>
     </div>
 
@@ -39,41 +35,14 @@
 import { computed } from "vue";
 
 const props = defineProps({
-  application: {
-    type: Object,
-    required: true,
-    default: () => ({
-      id: 0,
-      title: "Название заявки",
-      userName: "Иван Иванов",
-      teamName: "Команда А",
-      submitDate: new Date().toISOString(),
-      status: "на рассмотрении", // 'на рассмотрении', 'подтверждена', 'отклонена'
-    }),
-  },
+  name: String,
+  competition_type_display: String,
+  type_display: String,
+  discipline_name: String,
+  startDate: String,
+  endDate: String,
+  description: String,
 });
-
-const emit = defineEmits(["approve", "reject"]);
-
-const statusClass = computed(() => {
-  return {
-    "status-pending": props.application.status === "на рассмотрении",
-    "status-approved": props.application.status === "подтверждена",
-    "status-rejected": props.application.status === "отклонена",
-  };
-});
-
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString("ru-RU");
-};
-
-const approveApplication = () => {
-  emit("approve", props.application.id);
-};
-
-const rejectApplication = () => {
-  emit("reject", props.application.id);
-};
 </script>
 
 <style scoped>

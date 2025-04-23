@@ -19,7 +19,16 @@
           <button class="primary-btn" @click="gotoComp">Участвовать</button>
         </div>
         <div v-else>
-          <InfoZavka />
+          <InfoZavka
+            v-for="zavk in zavkaProved"
+            :name="zavk.name"
+            :competition_type_display="zavk.competition_type_display"
+            :type_display="zavk.type_display"
+            :discipline_name="zavk.discipline_name"
+            :startDate="zavk.dates.start_date"
+            :endDate="zavk.dates.end_date"
+            :description="zavk.description"
+          />
         </div>
       </div>
     </div>
