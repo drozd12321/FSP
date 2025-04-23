@@ -506,9 +506,12 @@ class ResponseActionView(APIView):
         
         response = get_object_or_404(VacancyResponse, id=serializer.validated_data['response_id'])
         team = response.team
-        
+        logger.debug(f'response : {response}')
+        logger.debug(f"team : {team}")
+        logger.debug(f'team captain : {team.captain.id}')
+        logger.debug(f'request.user.id : {request.user.id}')
         # Проверяем, что текущий пользователь - капитан команды
-        if request.user.id != team.captain:
+        if request.user.id != team.captain.id:
             return Response(
                 {"detail": "Только капитан команды может обрабатывать заявки"},
                 status=status.HTTP_403_FORBIDDEN

@@ -216,7 +216,7 @@ class VacancyResponse(models.Model):
     )
 
     def __str__(self):
-        return f"Отклик от {self.user.username} в команду {self.team.name}"
+        return f"Отклик от {self.user} в команду {self.team.name}"
     
 class PrizePoints(models.Model):
 
