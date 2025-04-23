@@ -1,29 +1,39 @@
 <template>
   <div v-if="loading" class="loader-overlay"><Loader /></div>
-  <div v-else>
+  <div v-else class="container">
     <div class="teams-container">
       <div class="teams-header">
-        <h2>Мои команды</h2>
+        <h2>Заявки команд</h2>
       </div>
       <div class="teams-list">
         <div v-if="loading" class="loader-container">
           <Loader />
         </div>
-        <!-- <div v-else-if="teams.length === 0" class="empty-state">
-          <img src="@/assets/no-teams.svg" alt="Нет команд" class="empty-icon" />
-          <p>У вас пока нет команд</p>
-          <button class="primary-btn" @click="openCreateModal">
-            Создать первую команду
-          </button>
-        </div> -->
-        <div v-for="comm in teams">
-          <Command
-            :nameCompet="comm.competition_name"
-            :status="comm.competition_status"
-            :disciplineName="comm.discipline_name"
-            :nameCom="comm.name"
-            :members="comm.members"
-          />
+        <div v-if="isData" class="empty-state">
+          <img src="/src/assets/user.png" alt="Нет команд" class="empty-icon" />
+          <p>Команды пока не подали заявки на участия в соревнованиях</p>
+          <button class="primary-btn" @click="gotoComp">Учавствовать</button>
+        </div>
+        <div v-else>
+          <InfoZavka />
+        </div>
+      </div>
+    </div>
+    <div class="teams-container">
+      <div class="teams-header">
+        <h2>Заявки пользователей</h2>
+      </div>
+      <div class="teams-list">
+        <div v-if="loading" class="loader-container">
+          <Loader />
+        </div>
+        <div v-if="isData" class="empty-state">
+          <img src="/src/assets/user.png" alt="Нет команд" class="empty-icon" />
+          <p>Пользователи пока не подали заявки на участия в соревнованиях</p>
+          <button class="primary-btn" @click="gotoComp">Учавствовать</button>
+        </div>
+        <div v-else>
+          <InfoZavka />
         </div>
       </div>
     </div>
@@ -33,26 +43,55 @@
 <script setup>
 import axios from "axios";
 import { onMounted, ref } from "vue";
-import Command from "./Command.vue";
+
 import Loader from "../Loader.vue";
+import InfoZavka from "./InfoZavka.vue";
 
-const teams = ref();
-
+const zavkateams = ref();
+const zavkauser = ref();
+const isData = ref(false);
 const loading = ref(false);
-const showCreateModal = ref(false);
 const token = ref();
-const getCommand = async () => {
+const getZavka = async () => {
   try {
     loading.value = true;
-    const response = await axios.get("http://10.8.0.23:8000/user/teams/", {
-      headers: {
-        Authorization: `Token ${token.value}`,
-        "Content-Type": "application/json",
-      },
-    });
-    teams.value = response.data.teams;
+    const response = await axios.get(
+      "http://10.8.0.23:8000/organizer/team/applications/",
+      {
+        headers: {
+          Authorization: `Token ${token.value}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    zavkateams.value = response.data;
     loading.value = false;
-    console.log(teams.value);
+    isData.value = false;
+    console.log(zavkateams.value);
+    return response.data;
+  } catch (error) {
+    isData.value = true;
+    loading.value = false;
+    console.error("Error fetching regions:", error);
+    throw error;
+  }
+};
+const getZavkaUsers = async () => {
+  try {
+    loading.value = true;
+    const response = await axios.get(
+      "http://10.8.0.23:8000/organizer/user/applications/",
+      {
+        headers: {
+          Authorization: `Token ${token.value}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    zavkauser.value = response.data.teams;
+    loading.value = false;
+    isData.value = true;
+    console.log(zavkauser.value);
     return response.data;
   } catch (error) {
     loading.value = false;
@@ -60,14 +99,20 @@ const getCommand = async () => {
     throw error;
   }
 };
-
 onMounted(() => {
   token.value = localStorage.getItem("jwtToken").trim();
-  getCommand();
+  getZavka();
+  getZavkaUsers();
 });
 </script>
 
 <style scoped>
+.container {
+  display: flex;
+  justify-content: space-around;
+  width: 90%;
+  margin: auto;
+}
 .teams-container {
   margin-top: 20px;
   max-width: 1500px;

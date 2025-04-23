@@ -5,7 +5,6 @@
         <Sidebar />
       </div>
       <div class="info">
-        <div v-if="loading" class="loader-overlay"><Loader /></div>
         <RouterView> </RouterView>
       </div>
     </div>
@@ -34,7 +33,7 @@ import getUser from "@/use/useGetUser";
 }
 .containerInfo {
   display: grid;
-  grid-template-areas: "sidebar sidebar info info info";
+  grid-template-areas: "sidebar  info info info";
 }
 .sidebar {
   grid-area: sidebar;

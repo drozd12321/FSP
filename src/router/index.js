@@ -13,6 +13,9 @@ import CardInfoComp from "@/components/CardInfoComp.vue";
 import CompLayuot from "@/views/CompLayuot.vue";
 import LayoutCabinet from "@/components/cabinet/LayoutCabinet.vue";
 import InfoCommandUser from "@/components/user/infoCommandUser.vue";
+import InfoAllCompititions from "@/components/user/infoAllCompititions.vue";
+import InfoCardUserAdmin from "@/components/cabinet/InfoCardUserAdmin.vue";
+import InfoCardZavkaProved from "@/components/cabinet/InfoCardZavkaProved.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -98,6 +101,21 @@ const router = createRouter({
       children: [
         { path: "", name: "pd", component: Cabinet },
         { path: "infocomand", name: "infocomand", component: InfoCommandUser },
+        {
+          path: "infoallcompetitions",
+          name: "infoallcompetitions",
+          component: InfoAllCompititions,
+        },
+        {
+          path: "InfoCardUserAdmin",
+          name: "InfoCardUserAdmin",
+          component: InfoCardUserAdmin,
+        },
+        {
+          path: "InfoCardZavkaProved",
+          name: "InfoCarInfoCardZavkaProveddUserAdmin",
+          component: InfoCardZavkaProved,
+        },
       ],
     },
     {

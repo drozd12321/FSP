@@ -3,27 +3,20 @@
   <div v-else>
     <div class="teams-container">
       <div class="teams-header">
-        <h2>Мои команды</h2>
+        <h2>Мои соревнования</h2>
       </div>
+
       <div class="teams-list">
         <div v-if="loading" class="loader-container">
           <Loader />
         </div>
-        <!-- <div v-else-if="teams.length === 0" class="empty-state">
-          <img src="@/assets/no-teams.svg" alt="Нет команд" class="empty-icon" />
-          <p>У вас пока нет команд</p>
-          <button class="primary-btn" @click="openCreateModal">
-            Создать первую команду
-          </button>
-        </div> -->
-        <div v-for="comm in teams">
-          <Command
-            :nameCompet="comm.competition_name"
-            :status="comm.competition_status"
-            :disciplineName="comm.discipline_name"
-            :nameCom="comm.name"
-            :members="comm.members"
-          />
+        <div v-if="isData" class="empty-state">
+          <img src="/src/assets/user.png" alt="Нет команд" class="empty-icon" />
+          <p>Вы пока не учавствовали в соревнованиях</p>
+          <button class="primary-btn" @click="gotoComp">Учавствовать</button>
+        </div>
+        <div v-else>
+          <Competitions />
         </div>
       </div>
     </div>
@@ -33,26 +26,31 @@
 <script setup>
 import axios from "axios";
 import { onMounted, ref } from "vue";
-import Command from "./Command.vue";
+import Competitions from "./Competitions.vue";
+import { useRouter } from "vue-router";
 import Loader from "../Loader.vue";
-
-const teams = ref();
+const router = useRouter();
+const commpet = ref();
 
 const loading = ref(false);
-const showCreateModal = ref(false);
+const isData = ref(false);
 const token = ref();
-const getCommand = async () => {
+const getCompetitions = async () => {
   try {
     loading.value = true;
-    const response = await axios.get("http://10.8.0.23:8000/user/teams/", {
-      headers: {
-        Authorization: `Token ${token.value}`,
-        "Content-Type": "application/json",
-      },
-    });
-    teams.value = response.data.teams;
+    const response = await axios.get(
+      "http://10.8.0.23:8000/competitions/history/",
+      {
+        headers: {
+          Authorization: `Token ${token.value}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    isData.value = true;
+    commpet.value = response.data;
+    console.log(commpet.value);
     loading.value = false;
-    console.log(teams.value);
     return response.data;
   } catch (error) {
     loading.value = false;
@@ -60,10 +58,12 @@ const getCommand = async () => {
     throw error;
   }
 };
-
+const gotoComp = () => {
+  router.push("/competitions");
+};
 onMounted(() => {
   token.value = localStorage.getItem("jwtToken").trim();
-  getCommand();
+  getCompetitions();
 });
 </script>
 

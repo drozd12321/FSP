@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroicons/vue": "^2.2.0",
     "axios": "^1.8.4",
     "ldrs": "^1.1.6",
     "lodash-es": "^4.17.21",

@@ -1,8 +1,9 @@
 <template>
-  <div class="profile-container">
+  <div v-if="loading" class="loader-overlay"><Loader /></div>
+  <div v-else class="profile-container">
     <div class="profile-header">
       <h2>Личный кабинет</h2>
-      <div class="id">Уникальный номер:</div>
+      <div class="id">Уникальный номер: {{ user.info.user_id }}</div>
     </div>
     <div class="profile-content">
       <div class="avatar-section">
@@ -76,7 +77,7 @@
             <input
               type="text"
               id="role"
-              v-model="user.info.role"
+              v-model="user.info.role_name"
               disabled
               placeholder="example@mail.com"
             />
@@ -99,6 +100,7 @@
 <script setup>
 import getUser from "@/use/useGetUser";
 import { onMounted, ref, watch } from "vue";
+import Loader from "../Loader.vue";
 const props = defineProps({
   data: Object,
 });
