@@ -1,6 +1,6 @@
 # Awesome Project 🚀
 
-![Project Banner](https://your-image-link.com/banner.png)
+![Project Banner](logo-fsp.png)
 
 ## Описание
 
