@@ -44,6 +44,9 @@ const { isLoading, getError, isAuth, getMsg } = storeToRefs(useAuthStore());
 const isLoad = computed(() => {
   authStore.isLoading;
 });
+const act = computed(() => {
+  return getMsg.value;
+});
 const {
   email,
   firstname,
@@ -79,7 +82,7 @@ const login = async () => {
         "http://10.8.0.23:8000/api/auth/register/",
         formstate
       );
-      if (response.success) {
+      if (isAuth) {
         console.log(formstate);
         authStore.setMesg({
           show: true,
@@ -88,6 +91,11 @@ const login = async () => {
         });
         router.push("/");
       } else {
+        authStore.setMesg({
+          show: true,
+          type: "error",
+          title: "Проверьте введенные данные",
+        });
         console.error("Registration failed", response.error);
       }
     } else {
@@ -100,8 +108,7 @@ const login = async () => {
         "http://10.8.0.23:8000/api/auth/login/",
         formstate
       );
-
-      if (isAuth) {
+      if (response) {
         authStore.setMesg({
           show: true,
           type: "succses",
@@ -109,10 +116,21 @@ const login = async () => {
         });
         router.push("/");
       } else {
-        console.error("Login failed", response.error);
+        authStore.setMesg({
+          show: true,
+          type: "error",
+          title: "Проверьте введенные данные",
+        });
+        router.push("/");
       }
     }
   } catch (error) {
+    authStore.setMesg({
+      show: true,
+      type: "error",
+      title: "Произошла ошибка при выполнении запроса",
+    });
+    router.push("/");
     console.error("An error occurred:", error);
   }
 };
