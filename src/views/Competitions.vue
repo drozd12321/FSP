@@ -41,6 +41,7 @@ const dataLoad = ref(false);
 const filteredData = ref();
 
 const handleFilter = debounce((filters) => {
+  console.log(filters);
   filteredData.value = comp.value.filter((item) => {
     // Фильтрация по поиску
     const searchMatch =
@@ -56,8 +57,9 @@ const handleFilter = debounce((filters) => {
     const oflineMatch =
       !filters.ofline || item.competition_type === filters.ofline;
     // Фильтрация по региону (предполагаем, что поле называется region_id)
-    const regionMatch = !filters.region || item.region_id == filters.region;
-
+    const regionMatch =
+      !filters.region ||
+      item.permissions.some((perm) => perm == filters.region);
     // Фильтрация по дате (используем dates.start_date)
     const dateMatch = () => {
       if (!filters.start_date && !filters.end_date) return true;
@@ -122,6 +124,7 @@ onMounted(() => {
 
 .card {
   width: 100%;
+  height: 300px;
   transition: all 0.5s ease;
   border-radius: 5px;
 }

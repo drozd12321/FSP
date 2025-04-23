@@ -85,6 +85,7 @@ const toggle = () => {
   margin: 20px auto;
   max-width: 900px;
   overflow: hidden;
+  border: 2px solid rgb(158, 158, 158);
 }
 
 .competition-card:hover {

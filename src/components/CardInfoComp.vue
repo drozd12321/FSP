@@ -74,6 +74,7 @@ const createCommand = () => {
   display: flex;
   background: white;
   border-radius: 12px;
+
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;

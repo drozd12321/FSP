@@ -52,7 +52,6 @@ const props = defineProps({
   border: 1px solid #e0e0e0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
-  margin: 10px 0;
   transition: transform 0.3s ease;
   max-width: 1500px;
   margin: 50px auto;
@@ -81,6 +80,7 @@ const props = defineProps({
 .member-info {
   flex-grow: 1;
   display: flex;
+  justify-content: space-around;
   gap: 120px;
 }
 

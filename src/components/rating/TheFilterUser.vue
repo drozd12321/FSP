@@ -1,4 +1,5 @@
 <template>
+  {{ regions }}
   <div class="horizontal-filter-container">
     <div class="filter-row">
       <div class="filter-item search-item">

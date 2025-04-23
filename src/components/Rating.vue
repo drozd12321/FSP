@@ -1,5 +1,6 @@
 <template>
   <div class="rating-container">
+    <div v-if="dataLoad" class="loader-overlay"><Loader /></div>
     <h2 class="rating-title">Рейтинг пользователей</h2>
     <div class="rating-controls">
       <input type="text" placeholder="Поиск по имени" class="search-input" />
@@ -30,7 +31,7 @@
               <span>{{ user.name }}</span>
             </div>
           </div>
-          <div class="grid-cell points-cell">{{ user.points }}</div>
+          <div class="grid-cell points-cell">{{ user.rating }}</div>
         </div>
       </div>
     </div>
@@ -63,158 +64,13 @@
 </template>
 <script setup>
 import { usePagination } from "@/use/usePagination";
-import { computed } from "vue";
-const users = [
-  {
-    id: 1,
-    name: "Алексей Петров",
-    avatar: "https://randomuser.me/api/portraits/men/1.jpg",
-    points: 2450,
-    rating: 9.8,
-  },
-  {
-    id: 2,
-    name: "Мария Иванова",
-    avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-    points: 2100,
-    rating: 9.2,
-  },
-  {
-    id: 3,
-    name: "Дмитрий Смирнов",
-    avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-    points: 1950,
-    rating: 8.7,
-  },
-  {
-    id: 4,
-    name: "Елена Кузнецова",
-    avatar: "https://randomuser.me/api/portraits/women/2.jpg",
-    points: 1800,
-    rating: 8.1,
-  },
-  {
-    id: 5,
-    name: "Иван Васильев",
-    avatar: "https://randomuser.me/api/portraits/men/3.jpg",
-    points: 1650,
-    rating: 7.5,
-  },
-  {
-    id: 6,
-    name: "Алексей Петров",
-    avatar: "https://randomuser.me/api/portraits/men/1.jpg",
-    points: 2450,
-    rating: 9.8,
-  },
-  {
-    id: 7,
-    name: "Мария Иванова",
-    avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-    points: 2100,
-    rating: 9.2,
-  },
-  {
-    id: 8,
-    name: "Дмитрий Смирнов",
-    avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-    points: 1950,
-    rating: 8.7,
-  },
-  {
-    id: 9,
-    name: "Елена Кузнецова",
-    avatar: "https://randomuser.me/api/portraits/women/2.jpg",
-    points: 1800,
-    rating: 8.1,
-  },
-  {
-    id: 10,
-    name: "Иван Васильев",
-    avatar: "https://randomuser.me/api/portraits/men/3.jpg",
-    points: 1650,
-    rating: 7.5,
-  },
-  {
-    id: 11,
-    name: "Алексей Петров",
-    avatar: "https://randomuser.me/api/portraits/men/1.jpg",
-    points: 2450,
-    rating: 9.8,
-  },
-  {
-    id: 12,
-    name: "Мария Иванова",
-    avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-    points: 2100,
-    rating: 9.2,
-  },
-  {
-    id: 13,
-    name: "Дмитрий Смирнов",
-    avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-    points: 1950,
-    rating: 8.7,
-  },
-  {
-    id: 14,
-    name: "Елена Кузнецова",
-    avatar: "https://randomuser.me/api/portraits/women/2.jpg",
-    points: 1800,
-    rating: 8.1,
-  },
-  {
-    id: 15,
-    name: "Иван Васильев",
-    avatar: "https://randomuser.me/api/portraits/men/3.jpg",
-    points: 1650,
-    rating: 7.5,
-  },
-  {
-    id: 16,
-    name: "Алексей Петров",
-    avatar: "https://randomuser.me/api/portraits/men/1.jpg",
-    points: 2450,
-    rating: 9.8,
-  },
-  {
-    id: 17,
-    name: "Мария Иванова",
-    avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-    points: 2100,
-    rating: 9.2,
-  },
-  {
-    id: 18,
-    name: "Дмитрий Смирнов",
-    avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-    points: 1950,
-    rating: 8.7,
-  },
-  {
-    id: 19,
-    name: "Елена Кузнецова",
-    avatar: "https://randomuser.me/api/portraits/women/2.jpg",
-    points: 1800,
-    rating: 8.1,
-  },
-  {
-    id: 20,
-    name: "Иван Васильев",
-    avatar: "https://randomuser.me/api/portraits/men/3.jpg",
-    points: 1650,
-    rating: 7.5,
-  },
-  {
-    id: 21,
-    name: "Иван Васильев",
-    avatar: "https://randomuser.me/api/portraits/men/3.jpg",
-    points: 1650,
-    rating: 7.5,
-  },
-];
+import axios from "axios";
+import { computed, onMounted, ref } from "vue";
+import Loader from "./Loader.vue";
+const users = ref([]);
 const itemsPerPage = 10;
 const totalPages = Math.ceil(users.length / itemsPerPage);
+console.log(totalPages);
 const {
   currentPage,
   goToPage,
@@ -228,16 +84,46 @@ const {
 const displayedUsers = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage;
   const end = start + itemsPerPage;
-  return users.slice(start, end);
+  return users.value.slice(start, end);
 });
 const getRatingClass = (rating) => {
   if (rating >= 9) return "high-rating";
   if (rating >= 8) return "medium-rating";
   return "low-rating";
 };
+const dataLoad = ref();
+const getUsers = async () => {
+  try {
+    dataLoad.value = true;
+    const response = await axios.get("http://10.8.0.23:8000/users/");
+    users.value = response.data;
+    console.log(users.value);
+    dataLoad.value = false;
+    return response.data;
+  } catch (error) {
+    dataLoad.value = false;
+    console.error("Error fetching regions:", error);
+    throw error;
+  }
+};
+onMounted(() => {
+  getUsers();
+});
 </script>
 
 <style scoped>
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 100;
+}
 .active {
   background-color: var(--sin);
 }

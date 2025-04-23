@@ -5,6 +5,6 @@
 <script setup></script>
 <style scoped>
 img {
-  height: 90%;
+  height: 50%;
 }
 </style>
