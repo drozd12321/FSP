@@ -366,7 +366,7 @@ class TeamApplicationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TeamApplication
-        fields = ['team_id', 'status', 'reason']
+        fields = ['team_id', 'status', 'reason', 'competition']
         extra_kwargs = {
             'team_id': {'required': True}
         }
