@@ -727,7 +727,7 @@ class UserTeamsView(APIView):
         
         # Получаем команды с предзагрузкой связанных данных
         teams = Team.objects.filter(
-            members=user_info
+            members=user_info.user_id
         ).select_related(
             'competition',
             'competition__discipline'  # Добавлено для оптимизации
