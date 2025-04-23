@@ -763,7 +763,8 @@ class TeamListSerializer(serializers.ModelSerializer):
             'competition_name', 
             'competition_status',
             'discipline_name',  # Добавлено новое поле
-            'members'
+            'members',
+            'captain',
         ]
     
     def get_members(self, obj):
