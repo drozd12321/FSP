@@ -376,17 +376,20 @@ class UserListView(ListAPIView):
     serializer_class = UserInfoSerializer
     permission_classes = [AllowAny]
     
+
 class PublicTeamsView(APIView):
     permission_classes = [AllowAny]
+    
     def get(self, request):
         teams = Team.objects.filter(is_private=False).select_related(
             'competition', 
-            'captain'
+            'captain',
+            'captain__user'  # Добавляем связь с пользователем капитана
         ).prefetch_related(
             'members'
         ).annotate(
             members_count=Count('members')
-        ).order_by('-created_at')
+        )
         
         data = []
         for team in teams:
@@ -394,10 +397,19 @@ class PublicTeamsView(APIView):
                 'id': team.id,
                 'name': team.name,
                 'description': team.description,
-                'competition': team.competition,
-                'captain': team.captain,
+                'competition': {
+                    'id': team.competition.id,
+                    'name': team.competition.name
+                },
+                'captain': {
+                    'id': team.captain.id if team.captain else None,
+                    'username': team.captain.user.username if team.captain else None,
+                    'nickName': team.captain.nickName if team.captain else None
+                },
                 'max_members': team.max_members,
-                'current_members': team.current_members,
+                'current_members': team.members_count,  # Используем аннотированное значение
+                'is_private': team.is_private,
+                'members_count': team.members_count  # Дублируем для совместимости
             }
             data.append(team_data)
         
