@@ -543,7 +543,7 @@ class UserDisciplineStatsSerializer(serializers.ModelSerializer):
         
 
 class UserApplicationSerializer(serializers.ModelSerializer):
-    competition_id = serializers.PrimaryKeyRelatedField(
+    competition = serializers.PrimaryKeyRelatedField(
         queryset=Competition.objects.filter(type='individual'),
         source='competition',
         write_only=True
@@ -551,7 +551,7 @@ class UserApplicationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = UserApplication
-        fields = ['id', 'competition_id', 'status', 'reason']
+        fields = ['id', 'competition', 'status', 'reason']
 
     def validate(self, data):
         competition = data['competition']
