@@ -305,16 +305,19 @@ class StandardResultsSetPagination(PageNumberPagination):
     max_page_size = 100
 
 class FAQListView(ListAPIView):
+    permission_classes = [AllowAny]
     queryset = FAQ.objects.all()
     serializer_class = FAQSerializer
     pagination_class = StandardResultsSetPagination
     
 class NewsPagination(PageNumberPagination):
+    permission_classes = [AllowAny]
     page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 100
 
 class NewsListView(ListAPIView):
+    permission_classes = [AllowAny]
     queryset = News.objects.all().order_by('-created_at')
     serializer_class = NewsSerializer
     pagination_class = NewsPagination

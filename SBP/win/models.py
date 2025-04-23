@@ -160,8 +160,9 @@ class Invitation(models.Model):
     
 class TeamApplication(models.Model):
 
-    team = models.ForeignKey('Team', on_delete=models.CASCADE, related_name='applications')
+    team = models.ForeignKey('Team', on_delete=models.CASCADE, related_name='team_applications')
     status = models.CharField(max_length=25)
+    competition = models.ForeignKey('Competition', on_delete=models.CASCADE, related_name='team_applications')
     reason = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -178,8 +179,8 @@ class UserApplication(models.Model):
         ('rejected', 'Отклонена'),
     ]
     
-    user = models.ForeignKey('UserInfo', on_delete=models.CASCADE, related_name='applications')
-    competition = models.ForeignKey('Competition', on_delete=models.CASCADE, related_name='applications')
+    user = models.ForeignKey('UserInfo', on_delete=models.CASCADE, related_name='user_applications')
+    competition = models.ForeignKey('Competition', on_delete=models.CASCADE, related_name='user_applications')
     status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='pending')
     reason = models.TextField(blank=True, null=True)
 
