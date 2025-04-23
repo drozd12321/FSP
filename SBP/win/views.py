@@ -566,6 +566,10 @@ class UserProfileView(APIView):
         region = user_info.region
         region_serializer = RegionSerializer(region) if region else None
         
+        # Получаем данные роли
+        role = user_info.role
+        role_serializer = RoleSerializer(role) if role else None
+        
         response_data = {
             'user': user_serializer.data,
             'info': info_serializer.data
@@ -574,6 +578,10 @@ class UserProfileView(APIView):
         # Добавляем название региона в ответ
         if region_serializer:
             response_data['info']['region_name'] = region_serializer.data['name']
+        
+        # Добавляем название роли в ответ
+        if role_serializer:
+            response_data['info']['role_name'] = role_serializer.data['name']
         
         return Response(response_data)
     

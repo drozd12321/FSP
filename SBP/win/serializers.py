@@ -20,12 +20,6 @@ class UserApprovalSerializer(serializers.ModelSerializer):
         fields = ['user_id', 'email', 'nickName', 'surname', 'name', 'patronymic', 
                  'role_name', 'region_name', 'birthday']
 
-
-class RoleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Role
-        fields = ['id', 'name']
-
 class UserInfoSerializer(serializers.ModelSerializer):
     role = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all())
     region = serializers.PrimaryKeyRelatedField(queryset=Region.objects.all())
@@ -361,10 +355,7 @@ class RegionSerializer(serializers.ModelSerializer):
         model = Region
         fields = ['id', 'name'] 
         
-class RoleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Role
-        fields = '__all__'  # или конкретные поля
+
         
 class TeamApplicationSerializer(serializers.ModelSerializer):
     team_id = serializers.PrimaryKeyRelatedField(
@@ -557,7 +548,11 @@ class UserDisciplineStatsSerializer(serializers.ModelSerializer):
         model = UserDisciplineStats
         fields = ['discipline', 'competitions_count', 'points_count']
         
-
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['id', 'name']
+        
 class UserApplicationSerializer(serializers.ModelSerializer):
     competition = serializers.PrimaryKeyRelatedField(
         queryset=Competition.objects.filter(type='individual')
@@ -692,7 +687,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 class UserInfoUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserInfo
-        fields = ['surname', 'name', 'patronymic', 'region', 'role', 'birthday']
+        fields = ['surname', 'name', 'patronymic', 'region', 'role', 'birthday',  'user_id']
         extra_kwargs = {
             'region': {'required': False},
             'role': {'required': False},
