@@ -1,6 +1,5 @@
 <template>
   <div class="rating-container">
-    <div v-if="dataLoad" class="loader-overlay"><Loader /></div>
     <h2 class="rating-title">Рейтинг пользователей</h2>
     <div class="rating-controls">
       <input type="text" placeholder="Поиск по имени" class="search-input" />
@@ -10,55 +9,58 @@
         <option>Новички</option>
       </select>
     </div>
-    <div class="table-grid">
-      <div class="grid-header">
-        <div class="grid-cell rank-header">#</div>
-        <div class="grid-cell user-header">Пользователь</div>
-        <div class="grid-cell points-header">Очки</div>
-      </div>
-      <div class="grid-body">
-        <div
-          class="grid-row"
-          v-for="(user, index) in displayedUsers"
-          :key="user.id"
-        >
-          <div class="grid-cell rank-cell">
-            {{ (currentPage - 1) * itemsPerPage + index + 1 }}
-          </div>
-          <div class="grid-cell user-cell">
-            <div class="user-info">
-              <img :src="user.avatar" class="user-avatar" alt="Аватар" />
-              <span>{{ user.name }}</span>
+    <div v-if="dataLoad" class="loader-overlay"><Loader /></div>
+    <div v-else>
+      <div class="table-grid">
+        <div class="grid-header">
+          <div class="grid-cell rank-header">#</div>
+          <div class="grid-cell user-header">Пользователь</div>
+          <div class="grid-cell points-header">Очки</div>
+        </div>
+        <div class="grid-body">
+          <div
+            class="grid-row"
+            v-for="(user, index) in displayedUsers"
+            :key="user.id"
+          >
+            <div class="grid-cell rank-cell">
+              {{ (currentPage - 1) * itemsPerPage + index + 1 }}
             </div>
+            <div class="grid-cell user-cell">
+              <div class="user-info">
+                <img :src="user.avatar" class="user-avatar" alt="Аватар" />
+                <span>{{ user.name }}</span>
+              </div>
+            </div>
+            <div class="grid-cell points-cell">{{ user.rating }}</div>
           </div>
-          <div class="grid-cell points-cell">{{ user.rating }}</div>
         </div>
       </div>
-    </div>
-    <div class="pagination">
-      <button
-        class="pagination-btn prev-btn"
-        @click="prevPage"
-        :disabled="isFirstPage()"
-      >
-        ←
-      </button>
-      <button
-        v-for="page in pages"
-        :key="page.number"
-        class="pagination-btn"
-        :class="{ active: currentPage === page.number }"
-        @click="goToPage(page.number)"
-      >
-        {{ page.number }}
-      </button>
-      <button
-        class="pagination-btn next-btn"
-        @click="nextPage"
-        :disabled="isLastPage()"
-      >
-        →
-      </button>
+      <div class="pagination">
+        <button
+          class="pagination-btn prev-btn"
+          @click="prevPage"
+          :disabled="isFirstPage()"
+        >
+          ←
+        </button>
+        <button
+          v-for="page in pages"
+          :key="page.number"
+          class="pagination-btn"
+          :class="{ active: currentPage === page.number }"
+          @click="goToPage(page.number)"
+        >
+          {{ page.number }}
+        </button>
+        <button
+          class="pagination-btn next-btn"
+          @click="nextPage"
+          :disabled="isLastPage()"
+        >
+          →
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -113,16 +115,10 @@ onMounted(() => {
 
 <style scoped>
 .loader-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   display: flex;
   justify-content: center;
-  align-items: center;
-  background-color: rgba(255, 255, 255, 0.8);
-  z-index: 100;
+
+  height: 400px;
 }
 .active {
   background-color: var(--sin);

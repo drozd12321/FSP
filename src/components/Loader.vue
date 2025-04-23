@@ -6,9 +6,9 @@
 
 <script setup></script>
 <style scoped>
-div {
+/* div {
   background-image: url("@/assets/svg/back.svg");
-}
+} */
 img {
   height: 50%;
 }
