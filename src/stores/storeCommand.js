@@ -32,26 +32,22 @@ export const useCommandStore = defineStore("command", () => {
   function setType(newType) {
     type.value = newType;
   }
-  async function addCommand(formstate, token) {
+  async function addCommand(url, formstate, token) {
     try {
       loading.value = true;
       console.log("form", formstate, token);
       if (!token) {
         throw new Error("No authentication token available");
       }
-      const response = await axios.post(
-        "http://10.8.0.23:8000/teams/",
-        formstate,
-        {
-          headers: {
-            Authorization: `Token ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axios.post(url, formstate, {
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       setMesg({
         show: true,
-        title: "Вы успешно создали команду",
+        title: "Вы успешно подали заявку",
         type: "succses",
       });
       loading.value = false;

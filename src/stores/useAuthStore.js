@@ -6,12 +6,23 @@ export const useAuthStore = defineStore("auth", () => {
   const role = ref(localStorage.getItem("role"));
   const user = ref(localStorage.getItem("user"));
   const error = ref(null);
+  const msg = ref({
+    show: false,
+    type: "",
+    title: "",
+  });
   const isLoading = ref(false);
 
   function setToken(newToken) {
     token.value = newToken;
     localStorage.setItem("jwtToken", newToken);
     error.value = null;
+  }
+  function setMesg(newVal) {
+    msg.value.show = newVal.show;
+    msg.value.title = newVal.title;
+    msg.value.type = newVal.type;
+    console.log(msg.value);
   }
   function setUser(newUser) {
     user.value = newUser;
@@ -33,6 +44,7 @@ export const useAuthStore = defineStore("auth", () => {
   const getUser = computed(() => user.value);
   const getToken = computed(() => token.value);
   const isAuth = computed(() => !!token.value);
+  const getMsg = computed(() => msg.value);
   async function login(url, formstate) {
     try {
       isLoading.value = true;
@@ -56,6 +68,8 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
   return {
+    getMsg,
+    setMesg,
     token,
     error,
     getError,

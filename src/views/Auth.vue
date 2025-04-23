@@ -14,9 +14,7 @@
 <script setup>
 import AppForm from "@/components/Auth/AppForm.vue";
 import TheHeadAuth from "@/components/Auth/TheHeadAuth.vue";
-
-import { provide, ref } from "vue";
-
+import { ref } from "vue";
 const mode = ref("reg");
 const setMode = (newMode) => {
   mode.value = newMode;

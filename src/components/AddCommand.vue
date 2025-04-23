@@ -38,7 +38,7 @@
           >
             Регистрация новой команды
           </button>
-          <div v-if="type">
+          <div v-if="type" class="two">
             <button
               v-if="type === 'Личное'"
               type="submit"
@@ -50,7 +50,7 @@
             <button
               v-if="type === 'Личное'"
               type="submit"
-              class="submit-btn"
+              class="submit-btn two"
               :disabled="loading"
             >
               Отклонить
@@ -77,6 +77,9 @@ const form = ref({
   is_private: null,
   description: "",
 });
+const formU = ref({
+  competition: null,
+});
 const idd = computed(() => {
   return getId.value;
 });
@@ -86,30 +89,46 @@ const type = computed(() => {
 const token = ref();
 const user = ref();
 const createCommand = async () => {
-  console.log(token.value);
-  if (type === "Командное") {
+  if (type.value === "Командное") {
+    console.log(token.value);
     if (comand.value === "0") {
       form.value.is_private = true;
     } else {
       form.value.is_private = false;
     }
+    form.value.competition = idd.value;
+
+    await comStore.addCommand(
+      "http://10.8.0.23:8000/teams/",
+      form.value,
+      token.value
+    );
+    console.log(form.value);
   } else {
-    form.value.is_private = true;
-    form.value.name = user.value.email;
-    console.log(user);
+    formU.value.competition = idd.value;
+    await comStore.addCommand(
+      "http://10.8.0.23:8000/user-applications/",
+      formU.value,
+      token.value
+    );
   }
-  form.value.competition = idd.value;
-  console.log(form.value);
-  await comStore.addCommand(form.value, token.value);
+
+  console.log(formU.value);
   resetForm();
 };
 const resetForm = () => {
-  form.value = {
-    competition: null,
-    name: "",
-    is_private: null,
-    description: "",
-  };
+  if (type === "Командное") {
+    form.value = {
+      competition: null,
+      name: "",
+      is_private: null,
+      description: "",
+    };
+  } else {
+    formU.value = {
+      competition: null,
+    };
+  }
 };
 const closeModal = () => {
   emit("close");
@@ -121,6 +140,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.submit-btn.two {
+  background-color: #e74c3c;
+}
+.two {
+  display: flex;
+  gap: 10px;
+}
 .modal-overlay {
   position: fixed;
   top: 0;

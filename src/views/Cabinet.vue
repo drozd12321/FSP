@@ -4,9 +4,11 @@
     <div class="containerInfo">
       <InfoUser :data="userData" /> <InfoCommandUser />
     </div>
+    <AddCompetition />
   </div>
 </template>
 <script setup>
+import AddCompetition from "@/components/AddCompetition.vue";
 import Loader from "@/components/Loader.vue";
 import InfoCommandUser from "@/components/user/infoCommandUser.vue";
 import InfoUser from "@/components/user/InfoUserPD.vue";

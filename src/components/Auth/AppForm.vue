@@ -84,6 +84,11 @@ const login = async () => {
       );
       if (response.success) {
         console.log(formstate);
+        authStore.setMesg({
+          show: true,
+          type: "succses",
+          title: "Вы успешно зарегестрировались",
+        });
         router.push("/");
       } else {
         console.error("Registration failed", response.error);
@@ -100,6 +105,11 @@ const login = async () => {
       );
 
       if (isAuth) {
+        authStore.setMesg({
+          show: true,
+          type: "succses",
+          title: "Вход выполнен успешно",
+        });
         router.push("/");
       } else {
         console.error("Login failed", response.error);
