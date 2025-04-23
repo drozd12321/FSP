@@ -834,3 +834,13 @@ class CompetitionParticipantsView(APIView):
             'competition_type': competition.type,
             'participants': serializer.data
         })
+        
+class RegionalRepresentativesView(ListAPIView):
+    permission_classes = [AllowAny]  # Или [IsAuthenticated] если нужно ограничить доступ
+    serializer_class = RegionalRepresentativeSerializer
+    
+    def get_queryset(self):
+        return UserInfo.objects.filter(
+            role_id=1,  # Фильтр по role=1 (региональные представители)
+            is_approved=True  # Только подтвержденные пользователи
+        ).select_related('user', 'region')  # Оптимизация запросов
