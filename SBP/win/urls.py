@@ -30,6 +30,7 @@ urlpatterns = [
     path('competitions/distribute-results/', DistributeResultsView.as_view(), name='distribute-results'),
     path('user-profile/',UserProfileView.as_view(), name='profile-actions'),
     path('user/teams/', UserTeamsView.as_view(), name='user-teams'),
+    path('competitions/pending/', PendingCompetitionsView.as_view(), name='pending-competitions'),
     
     
     

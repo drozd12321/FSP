@@ -120,16 +120,20 @@ class LoginView(APIView):
         })
     
 class CompetitionCreateView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     
     def post(self, request):
+        # Проверяем роль пользователя
+        try:
+            user_info = UserInfo.objects.get(id=request.user.id)
+            is_moderator = (user_info.role == 1) if user_info.role else False
+        except UserInfo.DoesNotExist:
+            is_moderator = False
+        
         # Преобразуем название дисциплины в ID если нужно
         if 'discipline' in request.data and isinstance(request.data['discipline'], str):
-            logger.debug('1')
             try:
                 discipline = Discipline.objects.get(name=request.data['discipline'])
-                logger.info(f'Discipline found: {discipline}')
-
                 request.data['discipline'] = discipline.id
             except Discipline.DoesNotExist:
                 return Response(
@@ -137,11 +141,27 @@ class CompetitionCreateView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         
-        serializer = CompetitionSerializer(data=request.data)
+        # Создаем копию данных, чтобы не изменять оригинал
+        data = request.data.copy()
+        
+        # Если пользователь - модератор (role=1), устанавливаем статус "pending"
+        if is_moderator:
+            data['status'] = 'pending'
+        
+        serializer = CompetitionSerializer(data=data)
         if serializer.is_valid():
-            serializer.save()
+            competition = serializer.save()
+            
+            # Создаем запись в CompetitionOrganizer
+            CompetitionOrganizer.objects.create(
+                user=request.user.id,
+                competition=competition,
+                rated=False  # или другое значение по умолчанию
+            )
+            
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 class TeamCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -692,4 +712,19 @@ class UserTeamsView(APIView):
         
         return Response({
             'teams': serializer.data
+        })
+        
+class PendingCompetitionsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        # Получаем все соревнования со статусом 'pending'
+        competitions = Competition.objects.filter(status='pending').select_related(
+            'discipline'
+        ).prefetch_related('dates')
+        
+        serializer = CompetitionSerializer(competitions, many=True)
+        
+        return Response({
+            'competitions': serializer.data
         })
