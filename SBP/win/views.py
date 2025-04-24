@@ -1009,7 +1009,7 @@ class CompetitionDecisionView(APIView):
     @transaction.atomic
     def post(self, request):
         request.data['status'] = 'pending'  # Жёстко перезаписываем
-        serializer = CompetitionSerializer(data=request.data)
+        serializer = CompetitionDecisionSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
