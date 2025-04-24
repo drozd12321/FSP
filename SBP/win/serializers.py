@@ -771,15 +771,16 @@ class VacancyResponseSerializer(serializers.ModelSerializer):
     user_nickname = serializers.CharField(source='user.user.nickName', read_only=True)
     
     # Поля для ввода (клиентские имена)
-    id = serializers.IntegerField(write_only=True)  # Будет преобразовано в team.id
+    team_id = serializers.IntegerField(write_only=True, source='id')  # Переименовано для ясности
     description = serializers.CharField(write_only=True)  # Будет преобразовано в text
 
     class Meta:
         model = VacancyResponse
         fields = [
-            'id',          # write_only (из запроса)
+            'id',          # будет read_only (так как это ID отклика)
+            'team_id',     # write_only (из запроса)
             'description', # write_only (из запроса)
-            'text',        # read_only (для ответа)
+            'text',       # read_only (для ответа)
             'status', 
             'team',       # read_only (для ответа)
             'team_name', 
@@ -788,7 +789,7 @@ class VacancyResponseSerializer(serializers.ModelSerializer):
             'user_name',
             'user_nickname'
         ]
-        read_only_fields = ['status', 'team', 'text', 'team_name', 
+        read_only_fields = ['id', 'status', 'team', 'text', 'team_name', 
                           'user_surname', 'user_name', 'user_nickname']
 
     def create(self, validated_data):
