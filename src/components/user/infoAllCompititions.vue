@@ -15,7 +15,7 @@
       <transition name="fade">
         <AddCompetition v-if="ahow" />
       </transition>
-      <div class="teams-list org">
+      <div v-if="!isData" class="teams-list org">
         <h2 class="teams-header">Организованные вами сореванования</h2>
         <Competitions
           v-for="comp in organized"
@@ -30,7 +30,7 @@
         <div v-if="loading" class="loader-container">
           <Loader />
         </div>
-        <div v-if="isDataHistory && isData" class="empty-state">
+        <div v-if="isDataHistory || isData" class="empty-state">
           <img src="/src/assets/user.png" alt="Нет команд" class="empty-icon" />
           <p>Вы пока не учавствовали в соревнованиях</p>
           <button class="primary-btn" @click="gotoComp">Учавствовать</button>
@@ -115,12 +115,13 @@ const getCompetitionsOrganized = async () => {
         },
       }
     );
-    if (response.data.length === 0) {
+
+    organized.value = response.data.competitions;
+    if (organized.value.length === 0) {
       isData.value = true;
     } else {
       isData.value = false;
     }
-    organized.value = response.data.competitions;
     console.log("org", organized.value);
     loading.value = false;
     return response.data;
@@ -138,7 +139,9 @@ onMounted(() => {
   role.value = localStorage.getItem("role").trim();
 
   getCompetitions();
-  getCompetitionsOrganized();
+  if (role.value === "1" || role.value === "2") {
+    getCompetitionsOrganized();
+  }
 });
 </script>
 
