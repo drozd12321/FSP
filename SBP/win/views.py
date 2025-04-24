@@ -1676,17 +1676,20 @@ class RegionCompetitionsView(APIView):
     """
     API для получения активных соревнований в указанном регионе
     
-    Параметры:
-    - region_id: числовой идентификатор региона
+    Параметры запроса (POST):
+    - region: название региона (строка)
     
     Возвращает:
-    - ID запрошенного региона
+    - ID найденного региона
+    - Название региона
     - Количество доступных соревнований
     - Список соревнований с краткой информацией:
       * ID, название, дисциплина
       * Тип и статус соревнования
     
     Особенности:
+    - Принимает название региона в теле запроса
+    - Находит соответствующий регион в базе данных
     - Фильтрует соревнования по наличию региона в permissions
     - Исключает соревнования в статусах 'pending' и 'finished'
     - Использует оптимизированные запросы (select_related)
@@ -1695,24 +1698,31 @@ class RegionCompetitionsView(APIView):
     - Без авторизации
     
     Ошибки:
-    - 400: если region_id не является числом
+    - 400: если параметр region не указан или регион не найден
     """
     permission_classes = [AllowAny]
     
-    def get(self, request, region_id):
-        try:
-            region_id = int(region_id)  # Преобразуем в число
-        except ValueError:
+    def post(self, request):
+        region_name = request.data.get('region')
+        
+        if not region_name:
             return Response(
-                {"error": "Номер региона должен быть числом"},
+                {"error": "Параметр 'region' обязателен в теле запроса"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Ищем соревнования, где:
-        # 1) region_id есть в permissions
-        # 2) статус не 'pending' и не 'finished'
+        try:
+            # Ищем регион по названию (регистронезависимо)
+            region = Region.objects.get(name__iexact=region_name)
+        except Region.DoesNotExist:
+            return Response(
+                {"error": f"Регион '{region_name}' не найден"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Получаем активные соревнования для региона
         competitions = Competition.objects.filter(
-            permissions__contains=[region_id],
+            permissions__contains=[region.id],
         ).exclude(
             status__in=['pending', 'finished']
         ).select_related('discipline')
@@ -1720,11 +1730,11 @@ class RegionCompetitionsView(APIView):
         serializer = CompetitionShortSerializer(competitions, many=True)
         
         return Response({
-            'region_id': region_id,
+            'region_id': region.id,
+            'region_name': region.name,
             'count': competitions.count(),
             'competitions': serializer.data
-        })
-        
+        })    
 
 class CompetitionParticipantsStructuredExportAPI(APIView):
     """
