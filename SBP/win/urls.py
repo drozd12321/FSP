@@ -52,4 +52,6 @@ urlpatterns = [
     path('regions/', RegionListView.as_view(), name='regions-list'),  # Список регионов
     path('disciplines/', DisciplineListView.as_view(), name='disciplines-list'),  # Список дисциплин
     path('regional-representatives/', RegionalRepresentativesView.as_view(), name='regional-representatives'),  # Региональные представители
+
+    path('download/', CompetitionParticipantsStructuredExportAPI.as_view())
 ]

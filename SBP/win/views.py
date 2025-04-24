@@ -15,6 +15,11 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 import logging
 from django.db.models import Count
+from django.http import HttpResponse
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import Font, Alignment, Border, Side
+from io import BytesIO
 logger = logging.getLogger(__name__)
 
 class UserApprovalView(APIView):
@@ -547,12 +552,12 @@ class ApplicationDecisionView(UpdateAPIView):
         action = serializer.validated_data['action']
         reason = serializer.validated_data.get('reason', '')
 
-        if action == 'approve':
+        if action == 'accept':
             if application.competition.participants.count() >= application.competition.max_participants:
                 raise ValidationError("Достигнуто максимальное количество участников")
             
-        if action == 'approve':
-            application.status = 'approved'
+        if action == 'accept':
+            application.status = 'accepted'
             application.reason = None
             # Создаем запись об участии
             CompetitionParticipant.objects.get_or_create(
@@ -649,7 +654,8 @@ class CaptainVacancyResponsesView(APIView):
 
         # Получаем все отклики для команд пользователя-капитана
         responses = VacancyResponse.objects.filter(
-            team__in=user_teams.values_list('id', flat=True)
+            team__in=user_teams.values_list('id', flat=True),
+            status = 'pending'
         ).select_related('team')  # Оптимизация запросов к БД
 
         serializer = VacancyResponseSerializer(responses, many=True)
@@ -1169,7 +1175,7 @@ class UserVacancyResponsesView(APIView):
         ).select_related(
             'team',
             'team__competition'
-        ).order_by('-created_at')
+        )
         
         serializer = UserVacancyResponseSerializer(responses, many=True)
         
@@ -1206,3 +1212,195 @@ class RegionCompetitionsView(APIView):
             'count': competitions.count(),
             'competitions': serializer.data
         })
+        
+
+
+class CompetitionParticipantsStructuredExportAPI(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, competition_id=None):
+        try:
+            # Получаем данные из базы
+            if competition_id:
+                competitions = Competition.objects.filter(pk=competition_id)
+            else:
+                competitions = Competition.objects.all().order_by('id')
+            
+            if not competitions.exists():
+                return Response(
+                    {"error": "Соревнования не найдены"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Создаем Excel файл в памяти
+            output = BytesIO()
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Соревнования и участники"
+
+            # Стили для оформления
+            header_font = Font(bold=True, size=12)
+            comp_header_font = Font(bold=True, size=12, color='003366')
+            border = Border(
+                left=Side(style='thin'),
+                right=Side(style='thin'),
+                top=Side(style='thin'),
+                bottom=Side(style='thin')
+            )
+            center_alignment = Alignment(horizontal='center', vertical='center')
+
+            # Начальная строка
+            current_row = 1
+
+            for comp in competitions:
+                # Заголовок соревнования
+                ws.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=9)
+                comp_title = f"Соревнование: {comp.name} (ID: {comp.id})"
+                ws.cell(row=current_row, column=1, value=comp_title).font = comp_header_font
+                current_row += 1
+
+                # Основная информация о соревновании
+                comp_data = [
+                    ["Тип", comp.get_type_display()],
+                    ["Формат", comp.get_competition_type_display()],
+                    ["Дисциплина", comp.discipline.name],
+                    ["Статус", comp.status],
+                    ["Макс. участников", comp.max_participants],
+                    ["Описание", comp.description[:200] + "..." if len(comp.description) > 200 else comp.description]
+                ]
+
+                # Добавляем даты, если они есть
+                try:
+                    comp_dates = CompetitionDate.objects.get(competition=comp)
+                    comp_data.extend([
+                        ["Даты проведения", f"{comp_dates.start_date.strftime('%d.%m.%Y %H:%M')} - {comp_dates.end_date.strftime('%d.%m.%Y %H:%M')}"],
+                        ["Даты регистрации", f"{comp_dates.registration_start.strftime('%d.%m.%Y %H:%M')} - {comp_dates.registration_end.strftime('%d.%m.%Y %H:%M')}"]
+                    ])
+                except CompetitionDate.DoesNotExist:
+                    pass
+
+                # Записываем данные о соревновании
+                for row_data in comp_data:
+                    ws.cell(row=current_row, column=1, value=row_data[0]).font = Font(bold=True)
+                    ws.cell(row=current_row, column=2, value=row_data[1])
+                    current_row += 1
+
+                current_row += 1  # Пустая строка после информации о соревновании
+
+                # Заголовки таблицы участников
+                headers = [
+                    "ID участника", "ФИО", "Никнейм", "Регион", 
+                    "Роль", "Рейтинг", "Место", "Результат", "Тип участия"
+                ]
+                
+                for col_num, header in enumerate(headers, 1):
+                    cell = ws.cell(row=current_row, column=col_num, value=header)
+                    cell.font = header_font
+                    cell.border = border
+
+                current_row += 1
+
+                # Участники (индивидуальные)
+                participants = CompetitionParticipant.objects.filter(competition=comp).select_related(
+                    'participant', 'participant__user', 'participant__region', 'participant__role'
+                )
+                
+                for participant in participants:
+                    user_info = participant.participant
+                    result = CompetitionResult.objects.filter(
+                        competition=comp,
+                        participant=user_info
+                    ).first()
+                    
+                    participant_data = [
+                        user_info.user.id,
+                        f"{user_info.surname} {user_info.name} {user_info.patronymic or ''}".strip(),
+                        user_info.user.nickName,
+                        user_info.region.name,
+                        user_info.role.name,
+                        user_info.rating,
+                        result.place if result else "-",
+                        participant.result or "-",
+                        "Индивидуальный"
+                    ]
+                    
+                    for col_num, value in enumerate(participant_data, 1):
+                        cell = ws.cell(row=current_row, column=col_num, value=value)
+                        cell.border = border
+                    current_row += 1
+
+                # Команды
+                teams = Team.objects.filter(competition=comp).prefetch_related(
+                    'members', 'members__user', 'members__region', 'members__role'
+                )
+                
+                for team in teams:
+                    # Заголовок команды
+                    ws.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=len(headers))
+                    cell = ws.cell(row=current_row, column=1, value=f"Команда: {team.name} (Капитан: {team.captain.user.nickName if team.captain else 'не указан'})")
+                    cell.font = Font(bold=True, italic=True)
+                    current_row += 1
+
+                    for member in team.members.all():
+                        result = CompetitionResult.objects.filter(
+                            competition=comp,
+                            participant=member
+                        ).first()
+                        
+                        member_data = [
+                            member.user.id,
+                            f"{member.surname} {member.name} {member.patronymic or ''}".strip(),
+                            member.user.nickName,
+                            member.region.name,
+                            member.role.name,
+                            member.rating,
+                            result.place if result else "-",
+                            "-",  # Для командных результатов
+                            "Командный"
+                        ]
+                        
+                        for col_num, value in enumerate(member_data, 1):
+                            cell = ws.cell(row=current_row, column=col_num, value=value)
+                            cell.border = border
+                        current_row += 1
+
+                current_row += 3  # Отступ перед следующим соревнованием
+
+            # Настраиваем ширину столбцов (обход объединенных ячеек)
+            for col in range(1, 10):  # У нас 9 столбцов
+                max_length = 0
+                column_letter = get_column_letter(col)
+                
+                # Проверяем только необъединенные ячейки
+                for row in range(1, current_row + 1):
+                    try:
+                        cell = ws.cell(row=row, column=col)
+                        if cell.value and not isinstance(cell, ws.merged_cells):
+                            if len(str(cell.value)) > max_length:
+                                max_length = len(str(cell.value))
+                    except:
+                        pass
+                
+                adjusted_width = (max_length + 2) * 1.2
+                ws.column_dimensions[column_letter].width = adjusted_width
+
+            # Сохраняем файл
+            wb.save(output)
+            output.seek(0)
+
+            # Настраиваем HTTP ответ
+            response = HttpResponse(
+                output.getvalue(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            
+            filename = 'structured_competitions_participants.xlsx' if not competition_id else f'structured_competition_{competition_id}_participants.xlsx'
+            response['Content-Disposition'] = f'attachment; filename={filename}'
+            
+            return response
+            
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

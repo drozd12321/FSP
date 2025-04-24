@@ -236,7 +236,7 @@ class PrizePoints(models.Model):
 class CompetitionParticipant(models.Model):
     competition = models.ForeignKey('Competition', on_delete=models.CASCADE, related_name='participants')
     participant = models.ForeignKey('UserInfo', on_delete=models.CASCADE, related_name='competition_participations')
-    result = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    result = models.PositiveIntegerField(validators=[MinValueValidator(1)], null = True, default=0)
     
 class CompetitionOrganizer(models.Model):
     user = models.ForeignKey(UserInfo, on_delete=models.CASCADE, related_name='organized_competitions')

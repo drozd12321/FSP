@@ -499,7 +499,7 @@ class TeamApplicationSerializer(serializers.ModelSerializer):
         
 class TeamApplicationResponseSerializer(serializers.ModelSerializer):
     action = serializers.ChoiceField(
-        choices=['approve', 'reject'],
+        choices=['accept', 'reject'],
         write_only=True,
         required=True
     )
@@ -530,7 +530,7 @@ class TeamApplicationResponseSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         action = validated_data['action']
         
-        if action == 'approve':
+        if action == 'accept':
             # Добавляем всех участников команды в соревнование
             for member in instance.team.members.all():
                 CompetitionParticipant.objects.get_or_create(
@@ -538,11 +538,11 @@ class TeamApplicationResponseSerializer(serializers.ModelSerializer):
                     participant=member
                 )
             
-            instance.status = 'Одобрено'
+            instance.status = 'accepted'
             instance.reason = None
             instance.team.save()
         else:
-            instance.status = 'Отклонено'
+            instance.status = 'rejected'
             instance.reason = validated_data['reason']
         
         instance.save()
@@ -750,9 +750,13 @@ class UserApplicationSerializer(serializers.ModelSerializer):
             **validated_data
         )
         
-class ApplicationDecisionSerializer(serializers.Serializer):
-    action = serializers.ChoiceField(choices=['accept', 'reject'], required=True)
-    reason = serializers.CharField(required=False, allow_blank=True)
+class ApplicationDecisionSerializer(serializers.ModelSerializer):
+    action = serializers.ChoiceField(choices=['accept', 'reject'], write_only=True)
+    reason = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
+    class Meta:
+        model = UserApplication
+        fields = ['status', 'reason', 'action']  # добавьте другие нужные поля
     
 class UserInfoSerializer(serializers.ModelSerializer):
     nickName = serializers.CharField(source='user.nickName')  # Доступ к полю из связанной модели User
@@ -960,4 +964,4 @@ class UserVacancyResponseSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = VacancyResponse
-        fields = ['id', 'text', 'status', 'status_display', 'team', 'created_at']
+        fields = ['id', 'text', 'status', 'status_display', 'team']
