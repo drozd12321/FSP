@@ -1,7 +1,6 @@
 <template>
   <div class="region-detail">
     <h2>Информация о регионе: {{ regionName }}</h2>
-    <!-- Детальная информация о регионе -->
   </div>
 </template>
 

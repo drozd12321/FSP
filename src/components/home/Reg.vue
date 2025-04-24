@@ -11,10 +11,4 @@
   </div>
 </template>
 
-<script setup>
-const regions = [
-  { id: 1, name: "Москва", slug: "moscow" },
-  { id: 2, name: "Санкт-Петербург", slug: "spb" },
-  // ... другие регионы
-];
-</script>
+<script setup></script>

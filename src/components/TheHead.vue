@@ -33,6 +33,14 @@
         </div>
       </nav>
       <div class="user-actions">
+        <a
+          href="https://t.me/FSPCompetitions_Bot"
+          target="_blank"
+          class="icon-link"
+          title="Телеграммбот"
+        >
+          <img src="/src/assets/svg/i (2).png" />
+        </a>
         <RouterLink to="/cabinet/message" class="icon-link" title="Сообщения">
           <svg
             class="icon"
@@ -105,7 +113,10 @@ const logout = () => {
   top: 0;
   z-index: 1000;
 }
-
+img {
+  margin-top: 10px;
+  height: 40px;
+}
 .header-content {
   display: flex;
   justify-content: space-between;
