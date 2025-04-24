@@ -18,55 +18,89 @@ from django.db.models import Count
 logger = logging.getLogger(__name__)
 
 class UserApprovalView(APIView):
+    """
+    API для модерации пользователей (подтверждение/отклонение регистраций)
+    Доступно только представителям ФСП (role.id=2)
+    """
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # Проверяем, что текущий пользователь имеет право подтверждать других (role=2)
+        """
+        Получение списка пользователей, ожидающих подтверждения
+        Возвращает:
+        - 403: если пользователь не администратор
+        - 200: список пользователей в формате UserApprovalSerializer
+        """
+        # Проверка прав доступа (только для админов)
         if request.user.info.role.id != 2:
             return Response({'error': 'Недостаточно прав'}, status=status.HTTP_403_FORBIDDEN)
         
-        # Получаем список пользователей, ожидающих подтверждения (role 1 или 2)
+        # Оптимизированный запрос с выборкой связанных данных
         pending_users = UserInfo.objects.filter(
-            role__id__in=[1, 2],
-            is_approved=False
-        ).select_related('user', 'role', 'region')
+            role__id__in=[1, 2],  # Только роли 1 и 2 требуют подтверждения
+            is_approved=False      # Только неподтвержденные пользователи
+        ).select_related('user', 'role', 'region')  # Жадная загрузка
         
         serializer = UserApprovalSerializer(pending_users, many=True)
         return Response(serializer.data)
     
     def post(self, request):
-        # Проверяем права
+        """
+        Подтверждение/отклонение пользователя
+        Параметры:
+        - user_id: ID пользователя (обязательный)
+        - action: "approve" или "reject" (обязательный)
+        Возвращает:
+        - 400: неверные параметры
+        - 403: нет прав
+        - 404: пользователь не найден
+        - 200: успешное выполнение
+        """
+        # Проверка прав администратора
         if request.user.info.role.id != 2:
             return Response({'error': 'Недостаточно прав'}, status=status.HTTP_403_FORBIDDEN)
         
         user_id = request.data.get('user_id')
-        action = request.data.get('action')  # 'approve' или 'reject'
+        action = request.data.get('action')  # Тип действия
         
         try:
             user_info = UserInfo.objects.get(user__id=user_id)
         except UserInfo.DoesNotExist:
             return Response({'error': 'Пользователь не найден'}, status=status.HTTP_404_NOT_FOUND)
         
+        # Логика обработки действий
         if action == 'approve':
             user_info.is_approved = True
             user_info.save()
             return Response({'message': 'Пользователь успешно подтвержден'})
         elif action == 'reject':
-            # Можно добавить логику удаления или просто оставить неподтвержденным
-            user_info.user.delete()  # или user_info.delete()
+            # Внимание! Полное удаление пользователя
+            user_info.user.delete()
             return Response({'message': 'Пользователь отклонен и удален'})
         else:
             return Response({'error': 'Неверное действие'}, status=status.HTTP_400_BAD_REQUEST)
         
 class RegisterView(APIView):
+    """
+    API регистрации новых пользователей
+    Особенности:
+    - Для ролей 1 и 2 требуется подтверждение представителя ФСП
+    - Для роли 0 сразу выдается токен
+    """
     permission_classes = [AllowAny] 
     
     def post(self, request):
+        """
+        Создание нового пользователя
+        Возвращает:
+        - 400: ошибки валидации
+        - 201: успешная регистрация
+        """
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             
-            # Для всех ролей возвращаем одинаковую структуру ответа
+            # Базовая структура ответа
             response_data = {
                 'user': {
                     'id': user.id,
@@ -80,34 +114,49 @@ class RegisterView(APIView):
                 'role': RoleSerializer(user.info.role).data
             }
             
-            # Для ролей 1 и 2 не создаем токен
+            # Разная логика для разных ролей
             if user.info.role.id in [1, 2]:
+                # Для ролей 1 и 2 - ожидание подтверждения
                 response_data['message'] = 'Регистрация успешна. Ожидайте подтверждения администратором.'
                 return Response(response_data, status=status.HTTP_201_CREATED)
             else:
-                # Для роли 0 сразу выдаем токен
+                # Для роли 0 - сразу выдаем токен
                 token, created = Token.objects.get_or_create(user=user)
                 response_data['token'] = token.key
                 response_data['message'] = 'Пользователь успешно зарегистрирован'
                 return Response(response_data, status=status.HTTP_201_CREATED)
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     
 class LoginView(APIView):
+    """
+    API для аутентификации пользователей и получения токена доступа.
+    
+    Особенности:
+    - При успешной аутентификации возвращается токен, роль пользователя и базовая информация.
+    - Доступ открыт для всех (не требует авторизации).
+    """
+
     permission_classes = [AllowAny]
 
     def post(self, request):
+        # Сериализуем и валидируем входные данные (логин, пароль)
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        # Получаем пользователя из валидированных данных
         user = serializer.validated_data['user']
-        
+
+        # Получаем или создаём токен для пользователя (DRF TokenAuthentication)
         token, created = Token.objects.get_or_create(user=user)
-        
-        # Сериализуем данные пользователя
+
+        # Получаем дополнительную информацию о пользователе
         user_info = user.info
+
+        # Сериализуем роль пользователя для возврата в ответе
         role_serializer = RoleSerializer(user_info.role)
-        
+
+        # Формируем и возвращаем ответ с токеном, ролью и информацией о пользователе
         return Response({
             'token': token.key,
             'role': role_serializer.data,
