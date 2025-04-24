@@ -12,7 +12,6 @@
         <div v-if="isDataTeam" class="empty-state">
           <img src="/src/assets/user.png" alt="Нет команд" class="empty-icon" />
           <p>Команды пока не подали заявки на участия в соревнованиях</p>
-          <button class="primary-btn" @click="gotoComp">Учавствовать</button>
         </div>
         <div v-else>
           <InfoZavka
@@ -38,7 +37,6 @@
         <div v-if="!isDataUser" class="empty-state">
           <img src="/src/assets/user.png" alt="Нет команд" class="empty-icon" />
           <p>Пользователи пока не подали заявки на участия в соревнованиях</p>
-          <button class="primary-btn" @click="gotoComp">Учавствовать</button>
         </div>
         <div v-else>
           <InfoZavka

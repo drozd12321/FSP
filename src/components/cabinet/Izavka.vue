@@ -1,34 +1,67 @@
 <template>
   <div class="application-card">
     <div class="card-header">
-      <h3 class="card-title">{{ name }}</h3>
-      <span class="card-status" :class="statusClass">{{
-        competition_type_display
-      }}</span>
+      <h3 v-if="name" class="card-title">{{ name }}</h3>
+      <h3 v-if="teamName" class="card-title">{{ teamName }}</h3>
+      <span
+        v-if="competition_type_display"
+        class="card-status"
+        :class="statusClass"
+        >{{ competition_type_display }}</span
+      >
+      <span
+        v-if="status"
+        class="card-status"
+        :class="{
+          danger: status === 'Отклонено',
+          primary: status === 'Одобрено',
+          warning: status === 'В рассмотрении',
+        }"
+        >{{ status }}</span
+      >
     </div>
 
     <div class="card-content">
-      <div class="info-row">
+      <div v-if="competition_type_display" class="info-row">
         <span class="info-label"> Формат:</span>
         <span class="info-value">{{ competition_type_display }}</span>
       </div>
-      <div class="info-row">
-        <span class="info-label">Тип:</span>
-        <span class="info-value">{{ type_display }}</span>
+      <div v-if="competitionName" class="info-row">
+        <span class="info-label"> Название соревнований:</span>
+        <span class="info-value">{{ competitionName }}</span>
       </div>
-      <div class="info-row">
-        <span class="info-label">Даты проведения:</span>
-        <span class="info-value">{{
-          formatDateRange(startDate, endDate)
-        }}</span>
+      <div v-if="!discipline_name">
+        <div v-if="type_display" class="info-row">
+          <span class="info-label">Тип:</span>
+          <span class="info-value">{{ type_display }}</span>
+        </div>
+        <div v-if="userName" class="info-row">
+          <span class="info-label">ФИО:</span>
+          <span class="info-value"
+            >{{ userName }} {{ userSurname }} - '{{ userNickname }}'</span
+          >
+        </div>
+
+        <div v-if="startDate" class="info-row">
+          <span class="info-label">Даты проведения:</span>
+          <span class="info-value">{{
+            formatDateRange(startDate, endDate)
+          }}</span>
+        </div>
+        <div class="info-row descr">
+          <span class="info-label">Описание:</span>
+          <span class="info-value">{{ description }}</span>
+        </div>
       </div>
-      <div class="info-row descr">
-        <span class="info-label">Описание:</span>
-        <span class="info-value">{{ description }}</span>
+      <div v-else>
+        <div class="info-row">
+          <span class="info-label">Название дисциплины:</span>
+          <span class="info-value">{{ discipline_name }}</span>
+        </div>
       </div>
     </div>
 
-    <div class="card-actions">
+    <div v-if="!discipline_name" class="card-actions">
       <button
         class="action-btn reject-btn"
         @click="$emit('rejectApplication', id)"
@@ -59,6 +92,12 @@ const props = defineProps({
   endDate: String,
   description: String,
   id: Number,
+  status: String,
+  teamName: String,
+  competitionName: String,
+  userName: String,
+  userSurname: String,
+  userNickname: String,
 });
 const token = ref();
 onMounted(() => {
@@ -75,6 +114,7 @@ onMounted(() => {
   margin-bottom: 16px;
   border-left: 4px solid var(--sin);
   transition: all 0.3s ease;
+  border-bottom: 1px solid rgb(158, 157, 157);
 }
 
 .application-card:hover {
@@ -103,7 +143,18 @@ onMounted(() => {
   font-size: 0.75rem;
   font-weight: 600;
 }
-
+.card-status.primary {
+  color: white;
+  background-color: #166534;
+}
+.card-status.danger {
+  color: white;
+  background-color: #ef4444;
+}
+.card-status.warning {
+  color: white;
+  background-color: #2563eb;
+}
 .status-pending {
   background-color: #fef9c3;
   color: #854d0e;
@@ -125,7 +176,7 @@ onMounted(() => {
 
 .info-row {
   display: grid;
-  grid-template-columns: 200px auto;
+  grid-template-columns: 300px auto;
   margin-bottom: 8px;
 }
 .info-row.descr {
@@ -145,7 +196,7 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding-top: 16px;
+  padding-top: 12px;
   border-top: 1px solid #eaeaea;
 }
 

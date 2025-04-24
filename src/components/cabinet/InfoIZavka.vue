@@ -17,7 +17,14 @@
           <button class="primary-btn" @click="gotoComm">Найти команду</button>
         </div>
         <div v-else>
-          <Izavka />
+          <Izavka
+            v-for="zavka in izavka"
+            :status="zavka.status_display"
+            :description="zavka.text"
+            :teamName="zavka.team.name"
+            :competitionName="zavka.team.competition.name"
+            :discipline_name="zavka.team.competition.discipline"
+          />
         </div>
       </div>
     </div>
@@ -53,10 +60,11 @@ const getIzavka = async () => {
         },
       }
     );
+    console.log(response);
     isData.value = false;
-    izavka.value = response.data.competitions;
+    izavka.value = response.data.responses;
     loading.value = false;
-    console.log(Izavka.value);
+    console.log("zavka", izavka.value);
     return response.data;
   } catch (error) {
     isData.value = true;

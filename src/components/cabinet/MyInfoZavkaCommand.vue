@@ -1,28 +1,28 @@
 <template>
   <div v-if="loading" class="loader-overlay"><Loader /></div>
   <div v-else>
+    <div v-if="msgE"><AppMsg :act="msgE" @close="close" /></div>
     <div class="teams-container">
       <div class="teams-header">
-        <h2>Мои команды</h2>
+        <h2>Заявки в мою команду</h2>
       </div>
       <div class="teams-list">
         <div v-if="loading" class="loader-container">
           <Loader />
         </div>
-        <div v-else-if="isData" class="empty-state">
+        <div v-if="isData" class="empty-state">
           <img src="/src/assets/user.png" alt="Нет команд" class="empty-icon" />
-          <p>У вас пока нет команд</p>
-          <button class="primary-btn" @click="gotoCompitition">
-            Создать команду
-          </button>
+          <p>Вы пока не подавали заявок на участие в командах</p>
+          <button class="primary-btn" @click="gotoComm">Найти команду</button>
         </div>
-        <div v-for="comm in teams">
-          <Command
-            :nameCompet="comm.competition_name"
-            :status="comm.competition_status"
-            :disciplineName="comm.discipline_name"
-            :nameCom="comm.name"
-            :members="comm.members"
+        <div v-else>
+          <Izavka
+            v-for="zavka in izavka"
+            :description="zavka.text"
+            :teamName="zavka.team_name"
+            :userName="zavka.user_name"
+            :userSurname="zavka.user_surname"
+            :userNickname="zavka.user_nickname"
           />
         </div>
       </div>
@@ -32,47 +32,68 @@
 
 <script setup>
 import axios from "axios";
-import { onMounted, ref } from "vue";
-import Command from "./Command.vue";
-import Loader from "../Loader.vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import { useMsgStore } from "@/stores/useMessageStore";
+import { storeToRefs } from "pinia";
+import InfoZavka from "./InfoZavka.vue";
+import Loader from "../Loader.vue";
+import AppMsg from "../message/AppMsg.vue";
+import Izavka from "./Izavka.vue";
 const router = useRouter();
-const isData = ref(false);
-const teams = ref();
-const gotoCompitition = () => {
-  router.push("/competitions");
-};
+const izavka = ref();
+const msgStore = useMsgStore();
+const { getMsg } = storeToRefs(useMsgStore());
 const loading = ref(false);
-const showCreateModal = ref(false);
+const isData = ref(false);
 const token = ref();
-const getCommand = async () => {
+const getIzavka = async () => {
   try {
     loading.value = true;
-    const response = await axios.get("http://10.8.0.23:8000/user/teams/", {
-      headers: {
-        Authorization: `Token ${token.value}`,
-        "Content-Type": "application/json",
-      },
-    });
-    teams.value = response.data.teams;
-    if (teams.value.length === 0) {
+    const response = await axios.get(
+      "http://10.8.0.23:8000/vacancy-responses/",
+      {
+        headers: {
+          Authorization: `Token ${token.value}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log(response);
+    izavka.value = response.data.responses;
+    if (izavka.value.length === 0) {
       isData.value = true;
     } else {
       isData.value = false;
     }
     loading.value = false;
-    console.log(teams.value);
+    console.log("zavka", izavka.value);
     return response.data;
   } catch (error) {
+    isData.value = true;
     loading.value = false;
     console.error("Error fetching regions:", error);
     throw error;
   }
 };
+const gotoComm = () => {
+  router.push("/command");
+};
+const msgE = computed(() => {
+  return getMsg.value;
+});
+const msg = ref({
+  show: false,
+  type: "",
+  title: "",
+});
+const close = () => {
+  msg.value = { show: false, type: "", title: "" };
+};
 
 onMounted(() => {
   token.value = localStorage.getItem("jwtToken").trim();
-  getCommand();
+  getIzavka();
 });
 </script>
 
@@ -84,7 +105,6 @@ onMounted(() => {
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-right: 80px;
 }
 
 .teams-header {

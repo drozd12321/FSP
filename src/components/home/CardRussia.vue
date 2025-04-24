@@ -57,7 +57,7 @@ const props = defineProps({
 
 .map-wrap svg {
   width: 100%;
-  height: 800px;
+  height: 700px;
 }
 .tooltip {
   position: fixed;
