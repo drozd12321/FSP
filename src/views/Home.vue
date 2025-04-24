@@ -1,5 +1,9 @@
 <template>
-  <div><AppMsg v-if="act1?.show" :act="act1" /> <CardRussia /></div>
+  <div>
+    <AppMsg v-if="act1?.show" :act="act1" />
+    <h1>Федерация спортивного программирования</h1>
+    <CardRussia />
+  </div>
 </template>
 <script setup>
 import AppMsg from "@/components/message/AppMsg.vue";
@@ -35,4 +39,9 @@ onMounted(() => {
   getDat();
 });
 </script>
-<style scoped></style>
+<style scoped>
+h1 {
+  color: #e74c3c;
+  text-align: center;
+}
+</style>

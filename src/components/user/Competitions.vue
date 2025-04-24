@@ -1,44 +1,33 @@
 <template>
   <div class="compact-competition-card" @click="toggleDetails">
     <div class="card-header">
-      <div class="card-badge">disciplineName</div>
-      <h3 class="card-title">name</h3>
+      <div class="card-badge">{{ disciplineName }}</div>
+      <h3 class="card-title">{{ name }}</h3>
     </div>
 
     <div class="card-dates">
       <div class="date-item">
-        <CalendarIcon class="icon" />
-        <span></span>
-      </div>
-      <div class="date-item">
         <RegisterIcon class="icon" />
-        <span>Регистрация открыта</span>
+        <span>{{ useStatus(status) }}</span>
       </div>
     </div>
 
     <div class="card-footer">
       <div class="card-type">
-        <span> typeDisplay </span>
+        <span> Тип проведения: </span>
       </div>
-      <button class="details-btn">534545</button>
+      <button class="details-btn">
+        {{ type === "team" ? "Командное" : "Личное" }}
+      </button>
     </div>
-
-    <transition name="slide-fade">
-      <div v-if="showDetails" class="card-details">
-        <div class="detail-row">
-          <span class="detail-label">Формат:</span>
-          <span> format </span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Регистрация до:</span>
-          <span>lfnf</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Участников в команде:</span>
-          <span>size</span>
-        </div>
+    <div class="card-footer">
+      <div class="card-type">
+        <span> Mecто: </span>
       </div>
-    </transition>
+      <button class="details-btn">
+        {{ res }}
+      </button>
+    </div>
   </div>
 </template>
 
@@ -47,22 +36,29 @@ import { computed, ref } from "vue";
 import CalendarIcon from "../utils/icons/CalendarIcon.vue";
 import RegisterIcon from "../utils/icons/RegisterIcon.vue";
 const props = defineProps({
-  id: Number,
   name: String,
   disciplineName: String,
-  startDate: String,
-  endDate: String,
-  regStartDate: String,
-  regEndDate: String,
-  format: String,
-  typeDisplay: String,
-  teamSize: String,
   status: String,
+  type: String,
+  res: Number,
 });
 
 const showDetails = ref(false);
 const registrationOpen = computed(() => props.status === "registration");
-
+const useStatus = (st) => {
+  if (st === "finished") {
+    return "Завершено";
+  }
+  if (st === "registration") {
+    return "Регистрация";
+  }
+  if (st === "running") {
+    return "Идет сейчас";
+  }
+  if (st === "waiting") {
+    return "В ожидании";
+  }
+};
 const toggleDetails = () => {
   showDetails.value = !showDetails.value;
 };
@@ -70,6 +66,9 @@ const toggleDetails = () => {
 
 <style scoped>
 .compact-competition-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);

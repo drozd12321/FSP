@@ -83,18 +83,8 @@ const login = async () => {
         formstate
       );
       if (isAuth) {
-        // authStore.setMesg({
-        //   show: true,
-        //   type: "succses",
-        //   title: response.message,
-        // });
         router.push("/");
       } else {
-        // authStore.setMesg({
-        //   show: true,
-        //   type: "error",
-        //   title: "Проверьте введенные данные",
-        // });
         console.error("Registration failed", response.error);
       }
     } else {
@@ -109,27 +99,12 @@ const login = async () => {
       );
       console.log(response);
       if (response) {
-        // authStore.setMesg({
-        //   show: true,
-        //   type: response.message,
-        //   title: "Вход выполнен успешно",
-        // });
         router.push("/");
       } else {
-        // authStore.setMesg({
-        //   show: true,
-        //   type: "error",
-        //   title: "Проверьте введенные данные",
-        // });
         router.push("/");
       }
     }
   } catch (error) {
-    // authStore.setMesg({
-    //   show: true,
-    //   type: "error",
-    //   title: "Произошла ошибка при выполнении запроса",
-    // });
     router.push("/");
     console.error("An error occurred:", error);
   }

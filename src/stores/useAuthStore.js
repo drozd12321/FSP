@@ -29,8 +29,8 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.setItem("user", JSON.stringify(newUser));
   }
   function setRole(newRole) {
-    role.value = newRole;
-    localStorage.setItem("role", newRole);
+    role.value = newRole.id;
+    localStorage.setItem("role", newRole.id);
     error.value = null;
   }
   function removeToken() {

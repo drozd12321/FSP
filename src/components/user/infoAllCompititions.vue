@@ -3,9 +3,11 @@
   <div v-else>
     <div class="teams-container">
       <div class="teams-header">
-        <h2>Мои соревнования</h2>
+        <div>
+          <h2>Мои соревнования</h2>
+        </div>
       </div>
-
+      <AddCompetition />
       <div class="teams-list">
         <div v-if="loading" class="loader-container">
           <Loader />
@@ -15,8 +17,15 @@
           <p>Вы пока не учавствовали в соревнованиях</p>
           <button class="primary-btn" @click="gotoComp">Учавствовать</button>
         </div>
-        <div v-else>
-          <Competitions />
+        <div v-else class="teams-list">
+          <Competitions
+            v-for="comp in commpet.history"
+            :name="comp.competition.name"
+            :disciplineName="comp.competition.discipline"
+            :status="comp.competition.status"
+            :type="comp.competition.type"
+            :res="comp.result"
+          />
         </div>
       </div>
     </div>
@@ -29,8 +38,12 @@ import { onMounted, ref } from "vue";
 import Competitions from "./Competitions.vue";
 import { useRouter } from "vue-router";
 import Loader from "../Loader.vue";
+import AddCompetition from "../compititions/AddCompetition.vue";
 const router = useRouter();
-const commpet = ref();
+const commpet = ref({
+  stats: null,
+  history: null,
+});
 
 const loading = ref(false);
 const isData = ref(false);
@@ -49,13 +62,20 @@ const getCompetitions = async () => {
         },
       }
     );
-    isData.value = true;
-    commpet.value = response.data;
+
+    commpet.value.stats = response.data.stats;
+    commpet.value.history = response.data.history;
+    if (commpet.value.history.length === 0) {
+      isData.value = true;
+    } else {
+      isData.value = false;
+    }
     console.log(commpet.value);
     loading.value = false;
     return response.data;
   } catch (error) {
     loading.value = false;
+    isData.value = false;
     console.error("Error fetching regions:", error);
     throw error;
   }
@@ -89,12 +109,38 @@ const gotoComp = () => {
 onMounted(() => {
   token.value = localStorage.getItem("jwtToken").trim();
   role.value = localStorage.getItem("role").trim();
+
   getCompetitions();
   getCompetitionsOrganized();
 });
 </script>
 
 <style scoped>
+.stats {
+  display: grid;
+  grid-template-areas: "one two five", "three foo";
+}
+.one {
+  grid-area: one;
+}
+.two {
+  grid-area: two;
+}
+.five {
+  grid-area: five;
+}
+.three {
+  grid-area: three;
+}
+.one {
+  grid-area: one;
+}
+.teams-list {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  gap: 20px;
+}
 .teams-container {
   margin-top: 20px;
   max-width: 1500px;

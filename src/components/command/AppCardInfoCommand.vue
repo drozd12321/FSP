@@ -75,9 +75,11 @@ const props = defineProps({
   endData: String,
   registrationStart: String,
   id: String,
+  teamId: Number,
 });
 const zavka = () => {
   compStore.setId(props.id);
+  compStore.setteamId(props.teamId);
   compStore.setzavkaCreate(true);
 };
 const close = () => {

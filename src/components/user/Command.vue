@@ -1,5 +1,7 @@
 <template>
+  <div v-if="act"><AppMsg :act="act" /></div>
   <div class="team-container">
+    <div v-if="loading" class="loader-overlay"><Loader /></div>
     <div class="team-header">
       <h2 class="team-title">{{ nameCom }}</h2>
       <div class="team-meta">
@@ -27,7 +29,23 @@
 
     <transition name="slide">
       <div class="team-members" v-if="showMembers">
-        <h3 class="section-title">Участники команды</h3>
+        <div class="cap">
+          <h3 class="section-title">Участники команды</h3>
+          <button
+            v-if="isAdmin && status != 'finished' && !registr"
+            class="btn danger"
+            @click="sentZ"
+          >
+            Подать заявку
+          </button>
+          <button
+            v-if="isAdmin && status != 'finished' && !registr"
+            class="btn primary"
+            @click="addteamid"
+          >
+            Пригласить в команду
+          </button>
+        </div>
         <div class="members-list">
           <div class="member-card" v-for="member in members" :key="member.id">
             <div class="member-avatar">
@@ -44,31 +62,93 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import axios from "axios";
+import { computed, onMounted, ref } from "vue";
+import { storeToRefs } from "pinia";
+import { useMsgStore } from "@/stores/useMessageStore";
+import AppMsg from "../message/AppMsg.vue";
+import Loader from "../Loader.vue";
+import { competitionStore } from "@/stores/storeComp";
+const { getMsg } = storeToRefs(useMsgStore());
+const compStore = competitionStore();
+const msgStore = useMsgStore();
+const showModal = ref(false);
+const emit = defineEmits(["sentZavka", "modal"]);
 const props = defineProps({
   nameCompet: String,
   status: String,
   disciplineName: String,
   nameCom: String,
   members: String,
+  id: Number,
+  registr: Boolean,
+  teamComp: Number,
+  teamId: Number,
 });
+const sentZ = () => {
+  emit("sentZavka", { competition: props.teamComp, team_id: props.teamId });
+};
+const addteamid = () => {
+  compStore.setteamId(props.teamId);
+  emit("modal");
+};
+const loading = ref(false);
 const showMembers = ref(false);
-
+const isAdmin = ref();
+const token = ref();
 const toggleMembers = () => {
   showMembers.value = !showMembers.value;
 };
+const act = computed(() => {
+  return getMsg.value;
+});
+
+const admin = () => {
+  try {
+    const userData = localStorage.getItem("user");
+    if (!userData) return false;
+
+    const idUs = JSON.parse(userData);
+    if (!idUs?.id) return false;
+    console.log(idUs.id);
+    return String(idUs.id) === String(props.id);
+  } catch (error) {
+    console.error("Error checking admin status:", error);
+    return false;
+  }
+};
+onMounted(() => {
+  token.value = localStorage.getItem("jwtToken");
+  isAdmin.value = admin();
+});
 </script>
 
 <style scoped>
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 100;
+}
 .team-container {
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   padding: 24px;
   max-width: 800px;
-  margin: 0 auto;
+  margin: 10px auto;
 }
-
+.cap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 .team-header {
   display: flex;
   justify-content: space-between;

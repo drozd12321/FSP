@@ -32,20 +32,25 @@ import { competitionStore } from "@/stores/storeComp";
 import { storeToRefs } from "pinia";
 import Loader from "../Loader.vue";
 const comStore = useCommandStore();
-const { getId } = storeToRefs(competitionStore());
+const { getId, getteamId } = storeToRefs(competitionStore());
 const emit = defineEmits(["close"]);
 const loading = ref(false);
 const form = ref({
   id: "",
   description: "",
+  team_id: "",
 });
 const id = computed(() => {
   return getId.value;
+});
+const teamId = computed(() => {
+  return getteamId.value;
 });
 const token = ref();
 const createCommand = async () => {
   loading.value = true;
   form.value.id = id.value;
+  form.value.team_id = teamId.value;
   await comStore.addCommand(
     "http://10.8.0.23:8000/response-to-public/",
     form.value,
