@@ -77,15 +77,16 @@ const toggleDetails = () => {
 .compact-competition-card {
   display: flex;
   flex-direction: column;
-  flex: 1;
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 16px;
+  margin-left: 19rem;
   margin-bottom: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
   border-left: 4px solid var(--sin);
+  max-width: 1100px;
 }
 
 .compact-competition-card:hover {

@@ -35,7 +35,7 @@
           <p>Вы пока не учавствовали в соревнованиях</p>
           <button class="primary-btn" @click="gotoComp">Учавствовать</button>
         </div>
-        <div v-else-if="isDataHistory" class="teams-list">
+        <div v-else-if="!isDataHistory" class="teams-list org">
           <h2 class="teams-header">Сореванования в которых вы учавствовали</h2>
           <Competitions
             v-for="comp in commpet.history"
@@ -194,7 +194,7 @@ onMounted(() => {
 .teams-container {
   margin-top: 20px;
   max-width: 1500px;
-  padding: 2rem;
+  padding: 10rem;
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
