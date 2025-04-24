@@ -394,18 +394,25 @@ class InvitationSerializer(serializers.ModelSerializer):
         read_only_fields = fields
     
 class InvitationResponseSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для обработки ответа на приглашение
+    """
     action = serializers.ChoiceField(
         choices=['accept', 'reject'],
         write_only=True,
-        required=True
+        required=True,
+        help_text="Действие: accept (принять) или reject (отклонить)"
     )
 
     class Meta:
         model = Invitation
         fields = ['action', 'status']
-        read_only_fields = ['id', 'team', 'user']
+        read_only_fields = ['id', 'team', 'user', 'status']
 
     def validate(self, attrs):
+        """
+        Проверяет что приглашение в статусе 'Ожидает'
+        """
         if self.instance.status != 'Ожидает':
             raise serializers.ValidationError(
                 "Можно ответить только на приглашения со статусом 'Ожидает'"
@@ -413,6 +420,11 @@ class InvitationResponseSerializer(serializers.ModelSerializer):
         return attrs
 
     def update(self, instance, validated_data):
+        """
+        Обрабатывает действие с приглашением:
+        - accept: добавляет пользователя в команду (с проверками)
+        - reject: отклоняет приглашение
+        """
         action = validated_data['action']
         team = instance.team
         
@@ -420,27 +432,33 @@ class InvitationResponseSerializer(serializers.ModelSerializer):
             # Проверка максимального количества участников
             if team.members.count() >= team.competition.max_participants:
                 raise serializers.ValidationError(
-                    f"Команда уже достигла максимального количества участников ({team.competition.max_participants})"
+                    f"Команда уже достигла максимума ({team.competition.max_participants} участников)"
                 )
             
             # Проверка что пользователь не уже в команде
-            if team.members.filter(id=instance.user).exists():
+            if team.members.filter(id=instance.user.id).exists():
                 raise serializers.ValidationError(
                     "Вы уже состоите в этой команде"
                 )
             
+            # Добавляем пользователя в команду
             team.members.add(instance.user)
             instance.status = 'Принято'
         else:
+            # Отклоняем приглашение
             instance.status = 'Отклонено'
         
         instance.save()
         return instance
     
 class RegionSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для регионов
+    Возвращает только id и название региона
+    """
     class Meta:
         model = Region
-        fields = ['id', 'name'] 
+        fields = ['id', 'name']  # Только основные поля
         
 
         
