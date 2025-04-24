@@ -430,30 +430,52 @@ class UserInvitationsView(APIView):
         return Response(serializer.data)
     
 class InvitationResponseView(UpdateAPIView):
+    """
+    API для ответа на приглашение в команду
+    Доступные действия: accept (принять) или reject (отклонить)
+    Только для владельца приглашения
+    Только PATCH-запросы
+    """
     serializer_class = InvitationResponseSerializer
-    permission_classes = [IsAuthenticated]  # Только для авторизованных пользователей
+    permission_classes = [IsAuthenticated]
     queryset = Invitation.objects.all()
-    http_method_names = ['patch']
+    http_method_names = ['patch']  # Разрешаем только PATCH-метод
 
     def get_object(self):
+        """
+        Получает приглашение и проверяет права:
+        - Приглашение должно существовать
+        - Текущий пользователь должен быть получателем приглашения
+        """
         try:
             invitation = super().get_object()
-            # Проверяем что пользователь отвечает на свое приглашение
-            if invitation.user != self.request.user.id:
+            # Проверка что пользователь отвечает на свое приглашение
+            if invitation.user.id != self.request.user.id:
                 raise PermissionDenied("Вы можете отвечать только на свои приглашения")
             return invitation
         except Invitation.DoesNotExist:
-            raise status.HTTP_404_NOT_FOUND("Приглашение не найдено")
+            raise status.HTTP_400_BAD_REQUEST
 
 class RegionListView(ListAPIView):
-    queryset = Region.objects.all().order_by('id')
+    """
+    API для получения списка регионов
+    Доступ: без авторизации (AllowAny)
+    Сортировка: по id (возрастание)
+    """
+    queryset = Region.objects.all().order_by('id')  # Оптимизированный запрос с сортировкой
     serializer_class = RegionSerializer
-    permission_classes = [AllowAny]
-    
+    permission_classes = [AllowAny]  # Доступно всем пользователям
+
+
 class RoleListView(ListAPIView):
-    queryset = Role.objects.all().order_by('id')
+    """
+    API для получения списка ролей пользователей
+    Доступ: без авторизации (AllowAny) 
+    Сортировка: по id (возрастание)
+    """
+    queryset = Role.objects.all().order_by('id')  # Оптимизированный запрос с сортировкой
     serializer_class = RoleSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # Доступно всем пользователям
     
 class TeamApplicationCreateView(APIView):
     permission_classes = [IsAuthenticated]
