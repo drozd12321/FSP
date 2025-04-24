@@ -134,6 +134,24 @@ class CompetitionDateSerializer(serializers.ModelSerializer):
         return data
     
 class TeamCreateSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для создания команд.
+    
+    Включает валидацию:
+    1. Проверка заполненности профиля создателя
+    2. Проверка лимита команд в соревновании
+    3. Проверка региональных ограничений соревнования
+    4. Проверка прав на создание команды
+    
+    Особенности:
+    - Поле competition: только для командных соревнований (type='team')
+    - Автоматическое назначение капитана (если не модератор)
+    - Установка max_members из параметров соревнования
+    
+    Методы:
+    - validate: комплексная проверка условий создания команды
+    - create: логика создания команды с обработкой капитана
+    """
     competition = serializers.PrimaryKeyRelatedField(
         queryset=Competition.objects.filter(type='team'),
         write_only=True
@@ -149,6 +167,15 @@ class TeamCreateSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, data):
+        """
+        Основная валидация данных перед созданием команды.
+        
+        Проверяет:
+        - Наличие профиля у создателя
+        - Не превышен ли лимит команд в соревновании
+        - Региональные ограничения соревнования
+        - Права на создание команды (для соревнований с пустыми permissions)
+        """
         request = self.context['request']
         try:
             creator = UserInfo.objects.get(user=request.user)
@@ -178,6 +205,19 @@ class TeamCreateSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        """
+        Создание команды с дополнительной логикой:
+        
+        1. Определение капитана:
+           - Для обычных пользователей - сам создатель
+           - Для модераторов - должен быть указан captain_id
+        
+        2. Установка max_members из параметров соревнования
+        
+        3. Автоматическое добавление капитана в состав команды
+        
+        4. Обновление счетчика участников (current_members)
+        """
         request = self.context['request']
         creator = UserInfo.objects.get(user=request.user)
         
@@ -231,6 +271,20 @@ class TeamCreateSerializer(serializers.ModelSerializer):
         return team
         
 class InvitationCreateSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для создания приглашений в команду.
+    
+    Включает комплексную валидацию:
+    1. Проверка что приглашающий - капитан команды
+    2. Проверка что приглашаемый не является капитаном
+    3. Проверка что пользователь не состоит в команде
+    4. Проверка отсутствия дублирующих приглашений
+    5. Проверка что пользователь не приглашает сам себя
+    
+    Поля:
+    - team_id: ID команды (write-only)
+    - user_id: ID приглашаемого пользователя (write-only)
+    """
     team_id = serializers.PrimaryKeyRelatedField(
         queryset=Team.objects.all(),
         source='team',
@@ -251,6 +305,15 @@ class InvitationCreateSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, data):
+        """
+        Основная валидация данных перед созданием приглашения.
+        
+        Проверяет:
+        - Приглашаемый не является капитаном команды
+        - Пользователь еще не в команде
+        - Нет активных дублирующих приглашений
+        - Пользователь не приглашает сам себя
+        """
         team = data['team']
         user = data['user']
         request = self.context['request']
@@ -282,13 +345,37 @@ class InvitationCreateSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        # Создаем приглашение со статусом "Ожидает"
+        """
+        Создание приглашения с автоматической установкой:
+        - Статуса "Ожидает"
+        - Даты создания (автоматически)
+        
+        Возвращает созданный объект Invitation
+        """
         return Invitation.objects.create(
             **validated_data,
             status='Ожидает'
         )
         
 class InvitationSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для отображения приглашений с расширенными данными.
+    
+    Особенности:
+    - Все поля только для чтения (read_only_fields)
+    - Добавляет связанные данные:
+      * ID и название команды
+      * Название соревнования
+      * Никнейм приглашенного пользователя
+    
+    Поля:
+    - id: ID приглашения
+    - team_id: ID команды
+    - team_name: Название команды
+    - competition_name: Название соревнования
+    - user_nickname: Никнейм пользователя (из UserInfo.nickName)
+    - status: Текущий статус приглашения
+    """
     team_id = serializers.IntegerField(source='team.id')
     team_name = serializers.CharField(source='team.name')
     competition_name = serializers.CharField(source='team.competition.name')
@@ -363,13 +450,27 @@ class TeamApplicationSerializer(serializers.ModelSerializer):
         source='team',
         write_only=True
     )
+    competition_name = serializers.CharField(source='competition.name', read_only=True)
+    team_name = serializers.CharField(source='team.name', read_only=True)
+    team_members = serializers.SerializerMethodField()
 
     class Meta:
         model = TeamApplication
-        fields = ['team_id', 'status', 'reason', 'competition']
+        fields = ['team_id', 'status', 'reason', 'competition', 
+                 'competition_name', 'team_name', 'team_members']
         extra_kwargs = {
-            'team_id': {'required': True}
+            'team_id': {'required': True},
+            'competition': {'write_only': True}
         }
+
+    def get_team_members(self, obj):
+        members = obj.team.members.all()
+        return [{
+            'surname': member.surname,
+            'name': member.name,
+            'patronymic': member.patronymic,
+            'nickName': member.user.nickName
+        } for member in members]
 
     def validate(self, attrs):
         # Проверяем, что команда существует
@@ -455,6 +556,22 @@ class DisciplineSerializer(serializers.ModelSerializer):
 
         
 class CompetitionSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели Competition.
+    
+    Особенности:
+    - Добавляет поле discipline_name (название дисциплины)
+    - Добавляет human-readable поля для типов (competition_type_display, type_display)
+    - Включает вычисляемое поле permissions_status:
+      * 0 - нет разрешений
+      * 1 - разрешения есть, но не для всех регионов (не 89)
+      * 2 - полный набор разрешений (89 регионов)
+    - Обрабатывает вложенный объект dates через CompetitionDateSerializer
+    
+    Методы:
+    - create: переопределен для обработки вложенных дат
+    - get_permissions_status: вычисляет статус permissions
+    """
     dates = CompetitionDateSerializer()
     discipline = serializers.PrimaryKeyRelatedField(queryset=Discipline.objects.all())
     discipline_name = serializers.CharField(source='discipline.name', read_only=True)
@@ -512,6 +629,8 @@ class CompetitionSerializer(serializers.ModelSerializer):
         )
         
         return competition
+    
+    
 class FAQSerializer(serializers.ModelSerializer):
     class Meta:
         model = FAQ
@@ -555,12 +674,24 @@ class RoleSerializer(serializers.ModelSerializer):
         
 class UserApplicationSerializer(serializers.ModelSerializer):
     competition = serializers.PrimaryKeyRelatedField(
-        queryset=Competition.objects.filter(type='individual')
+        queryset=Competition.objects.filter(type='individual'),
+        write_only=True  # Делаем поле только для записи
     )
+    competition_name = serializers.CharField(source='competition.name', read_only=True)
+    user_info = serializers.SerializerMethodField(read_only=True)
     
     class Meta:
         model = UserApplication
-        fields = ['id', 'competition', 'status', 'reason']
+        fields = ['id', 'competition', 'competition_name', 'user_info', 'status', 'reason']
+        read_only_fields = ['status', 'reason']
+
+    def get_user_info(self, obj):
+        return {
+            'surname': obj.user.surname,
+            'name': obj.user.name,
+            'patronymic': obj.user.patronymic,
+            'nickName': obj.user.user.nickName
+        }
 
     def validate(self, data):
         competition = data['competition']

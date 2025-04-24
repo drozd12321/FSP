@@ -172,9 +172,41 @@ class LoginView(APIView):
         })
     
 class CompetitionCreateView(APIView):
+    
+    """
+    API endpoint для создания новых соревнований.
+    
+    Требуется аутентификация пользователя. При успешном создании автоматически
+    создается запись организатора соревнования (CompetitionOrganizer) для текущего пользователя.
+    
+    Особенности обработки:
+    - Поддерживает передачу названия дисциплины (автоматически конвертирует в ID)
+    - Обрабатывает permissions в двух форматах (список объектов с id или список id)
+    - Автоматически создает связанные CompetitionDate
+    
+    Возможные коды ответов:
+    - 201: Соревнование успешно создано
+    - 400: Ошибка валидации данных
+    - 401: Пользователь не аутентифицирован
+    """
     permission_classes = [IsAuthenticated]
+
     
     def post(self, request):
+        """
+        Обработка POST-запроса на создание соревнования.
+        
+        Параметры:
+        - discipline: может быть строкой (название) или ID дисциплины
+        - permissions: список регионов в формате [{'id': X}] или [X, Y, Z]
+        - dates: объект с датами соревнования (start_date, end_date и др.)
+        
+        Автоматические действия:
+        1. Конвертация названия дисциплины в ID (если передана строка)
+        2. Нормализация формата permissions (в список ID)
+        3. Создание записи CompetitionOrganizer для текущего пользователя
+        4. Создание связанной записи CompetitionDate
+        """
         # Преобразуем название дисциплины в ID если нужно
         if 'discipline' in request.data and isinstance(request.data['discipline'], str):
             try:
@@ -223,9 +255,43 @@ class CompetitionCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class TeamCreateView(APIView):
+    """
+    API endpoint для создания новых команд в соревнованиях.
+    
+    Требуется аутентификация пользователя. При успешном создании возвращает
+    основные данные о созданной команде.
+    
+    Особенности:
+    - Проверяет заполненность профиля пользователя (UserInfo)
+    - Обрабатывает ошибки создания с соответствующими HTTP-статусами
+    - Возвращает структурированный ответ с ключевыми данными команды
+    
+    Возможные коды ответов:
+    - 201: Команда успешно создана
+    - 400: Ошибка валидации данных
+    - 403: Профиль пользователя не заполнен
+    - 500: Ошибка сервера при создании
+    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """
+        POST-запрос для создания новой команды.
+        
+        Параметры запроса (в теле JSON):
+        - competition: ID командного соревнования (обязательное)
+        - name: Название команды (обязательное, макс. 100 символов)
+        - description: Описание команды (необязательное)
+        - is_private: Приватность команды (по умолчанию False)
+        - captain_id: ID капитана (обязательно для модераторов)
+        
+        Возвращает при успехе:
+        - team_id: ID созданной команды
+        - name: Название команды
+        - competition_id: ID соревнования
+        - captain_id: ID капитана
+        - max_members: Максимальное число участников
+        """
         serializer = TeamCreateSerializer(
             data=request.data,
             context={'request': request}
@@ -256,9 +322,42 @@ class TeamCreateView(APIView):
             
             
 class InvitationCreateView(APIView):
+    """
+    API endpoint для создания приглашений в команду.
+    
+    Доступ: 
+    - Разрешен для всех аутентифицированных пользователей (AllowAny)
+    - Но функционально работает только для капитанов команд
+    
+    Логика работы:
+    - Проверяет права капитана на отправку приглашения
+    - Создает приглашение со статусом "Ожидает"
+    - Возвращает основные данные созданного приглашения
+    
+    Возможные коды ответов:
+    - 201: Приглашение успешно создано
+    - 400: Ошибка валидации данных
+    - 403: Пользователь не является капитаном команды
+    """
     permission_classes = [AllowAny]
 
     def post(self, request):
+        """
+        POST-запрос для создания приглашения в команду.
+        
+        Параметры запроса (в теле JSON):
+        - team_id: ID команды (обязательное)
+        - user_id: ID приглашаемого пользователя (обязательное)
+        
+        Возвращает при успехе:
+        - id: ID созданного приглашения
+        - team_id: ID команды
+        - user_id: ID приглашенного пользователя
+        - status: Статус приглашения ("Ожидает")
+        
+        Особые проверки:
+        - Только капитан команды может отправлять приглашения
+        """
         serializer = InvitationCreateSerializer(
             data=request.data,
             context={'request': request}
@@ -284,9 +383,37 @@ class InvitationCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class UserInvitationsView(APIView):
+    """
+    API endpoint для получения списка приглашений пользователя.
+    
+    Доступ:
+    - Только для аутентифицированных пользователей
+    
+    Возвращает:
+    - Список активных приглашений (со статусом "Ожидает")
+    - Расширенные данные по каждому приглашению (команда, соревнование)
+    
+    Коды ответов:
+    - 200: Успешный запрос, возвращает список приглашений
+    - 401: Пользователь не аутентифицирован
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        """
+        GET-запрос для получения списка приглашений текущего пользователя.
+        
+        Фильтрация:
+        - Только приглашения со статусом "Ожидает"
+        - Только приглашения для текущего пользователя
+        
+        Возвращает:
+        - Массив объектов приглашений с расширенной информацией:
+          * Основные данные приглашения
+          * Информация о команде
+          * Название соревнования
+          * Никнейм пользователя
+        """
         invitations = Invitation.objects.filter(
             user=request.user.id,
             status='Ожидает'
@@ -848,13 +975,14 @@ class OrganizerTeamApplicationsListView(ListAPIView):
 class CompetitionDecisionView(APIView):
     permission_classes = [IsAuthenticated]
     
+    
     @transaction.atomic
     def post(self, request):
         serializer = CompetitionDecisionSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-        competition_id = serializer.validated_data['competition']
+        competition_id = serializer.validated_data['competition_id']
         action = serializer.validated_data['action']
         
         # Получаем соревнование
