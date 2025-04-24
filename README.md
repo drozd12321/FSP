@@ -1,29 +1,50 @@
-# .
+# Отборочный этап Кубка России по Продуктовому Программированию 🔥🏆
 
-This template should help get you started developing with Vue 3 in Vite.
+![enter image description here](https://sun9-36.userapi.com/impf/SayLRd_UZz9Eq6ad7fx9Yhwk4KhgyBdq5x5Esg/Z4NXSgaadIQ.jpg?size=1920x768&quality=95&crop=0,0,1330,531&sign=f8513e94fca3a570f86c7313d57fe9bd&type=cover_group)
 
-## Recommended IDE Setup
+-  **Команда**: Аналитик  
+-  **Решаемая проблема**: создать веб-платформу, которая автоматизирует процессы рассылки информации, проверки заявок, формировании команд и учетов результатов, объединив Всероссийскую Федерацию спортивного программирования (далее ФСП),  региональныхпредставителей ФСП и спортсменов в едином цифровом пространстве.
+## 🎯 Цель проекта (функционал)
+- Реализация автоматизированной системы создания соревнований региональными представителями ФСП и  представителями Всероссийской ФСП;
+- Онлайн подача и проверка заявок спортсменов и команд;
+- Учет и публикация результатов в автоматическом режиме;
+- Формирование команд и управление участниками;
+- Автоматизированная рассылка уведомлений и информационная поддержка;
+- Интеграция с мобильными устройствами и веб-интерфейсами.
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
 
-## Customize configuration
+## 💡 Ключевые особенности
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+- 🇷🇺 Интерактивная карта, позволяющая ознакомится с соревнованиями в регионе; 
+- ✈️ Телеграм-бот для рассылки и быстрого поиска соревнований;
+- 📈 Собвственная рейтинговая система, учитывающая достижения спортсмена в различных дисциплинах;
+- ⚙️ Стек-технологий, обеспечивающий работу с отечественным ПО;
+- 🤝 Open-Source.  
 
-## Project Setup
+# ⛓️ Технологический стек
 
-```sh
-npm install
+- **Языки**: Python/JavaScript/Vue.js  
+- **Фреймворки**: Django/DRF/Vue.js
+- **Базы данных**: PostgreSQL
+- **Сревер**: Node.js/Apache/Nginx
+- **Деплой**: Docker/Docker-compose
+
+
+## 🚀 Как запустить проект? 
+
+```bash
+sudo apt install docker-compose
+git clone https://github.com/ваш-репозиторий.git
+cd FSP
+sudo docker-compose build --no-cache
+sudo docker-compose up
+```
+Если возникает ошибка при развертывании выполнить:
+```bash
+sudo docker-compose stop fsp-backend
+sudo docker-compose start fsp-backend
 ```
 
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
+## Ссылки
+Сайт: www.codedepartament.ru
+Бот: https://t.me/FSPCompetitions_Bot
