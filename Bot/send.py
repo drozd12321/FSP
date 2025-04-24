@@ -1,16 +1,23 @@
-# external_sender.py
-
 import asyncio
-
 from bot_app import BotNewsletter
 
-# Токен от BotFather
 BOT_TOKEN = "7396130456:AAG8C8b5R1A_eKGgsbOmjXQ93039wKbSbkQ"
 
 async def main(usernames):
+    """Асинхронная функция для запуска рассылки сообщений через Telegram бота.
     
+    Создает экземпляр BotNewsletter и отправляет заданное сообщение
+    списку пользователей.
+    
+    Args:
+        usernames (list): Список username пользователей Telegram (без @) для рассылки.
+        
+    Example:
+        Рассылка сообщения двум пользователям:
+        >>> asyncio.run(main(['flymalysh', 'Ainsfari']))
+    """
     newsletter = BotNewsletter(BOT_TOKEN)
-    message = "Привет, это сообщение отправлено вне Telegram чата."
+    message = "Привет, это сообщение отправлено вне Telegram."
 
     await newsletter.send_to_users(usernames, message)
 

@@ -9,12 +9,38 @@ DB_CONFIG = {
     "port": "54320"
 }
 class BotNewsletter():
+    """Класс для рассылки сообщений пользователям Telegram через бота.
+    
+    Использует базу данных PostgreSQL для получения user_id по username
+    и Telegram Bot API для отправки сообщений.
+    
+    Attributes:
+        bot (Bot): Экземпляр телеграм-бота для отправки сообщений.
+    """
     def __init__(self,BOT_TOKEN):
+        """Инициализирует экземпляр бота для рассылки.
+        
+        Args:
+            BOT_TOKEN (str): Токен Telegram бота, полученный от @BotFather.
+        """
         self.bot = Bot(token=BOT_TOKEN)
 
 
 
     async def send_to_users(self, usernames: list[str], text: str):
+        """Отправляет текстовое сообщение списку пользователей Telegram.
+        
+        Для каждого username из списка находит соответствующий user_id в базе данных,
+        затем отправляет сообщение через Telegram Bot API.
+        
+        Args:
+            usernames (list[str]): Список username пользователей (без @).
+            text (str): Текст сообщения для рассылки.
+            
+        Note:
+            Логирует результат отправки или ошибки в stdout.
+            Требует наличия таблицы tg_acc с колонками user_id и username в БД.
+        """
         async with asyncpg.create_pool(**DB_CONFIG) as pool:
             async with pool.acquire() as connection:
                 for username in usernames:
