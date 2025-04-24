@@ -28,7 +28,11 @@
             </div>
             <div class="grid-cell user-cell">
               <div class="user-info">
-                <img :src="user.avatar" class="user-avatar" alt="Аватар" />
+                <img
+                  src="/src/assets/user.png"
+                  class="user-avatar"
+                  alt="Аватар"
+                />
                 <span>{{ user.name }}</span>
               </div>
             </div>
