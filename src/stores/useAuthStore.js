@@ -30,7 +30,7 @@ export const useAuthStore = defineStore("auth", () => {
   }
   function setRole(newRole) {
     role.value = newRole.id;
-    localStorage.setItem("role", newRole.id);
+    localStorage.setItem("role", newRole);
     error.value = null;
   }
   function removeToken() {
@@ -71,7 +71,7 @@ export const useAuthStore = defineStore("auth", () => {
       setToken(response.data.token);
       setUser(response.data.user);
       if (response.data.role) {
-        setRole(response.data.role.id || response.data.role);
+        setRole(response.data.role.id);
       } else if (response.data.user?.role) {
         setRole(response.data.user.role.id || response.data.user.role);
       }
@@ -82,7 +82,7 @@ export const useAuthStore = defineStore("auth", () => {
           ? "Вы успешно зарегистрировались"
           : "Вход выполнен успешно",
       });
-
+      console.log(response.data.role.id);
       return true;
     } catch (err) {
       console.error("Auth error:", err);

@@ -146,7 +146,7 @@ onMounted(() => {
   if (role.value === "0") {
     iss.value = true;
   }
-  console.log(isAdmin.value, a);
+  console.log(isAdmin.value);
   console.log(isReg.value);
   console.log(iss.value);
   user.value = JSON.parse(localStorage.getItem("user"));

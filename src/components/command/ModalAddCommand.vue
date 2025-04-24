@@ -39,9 +39,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { competitionStore } from "@/stores/storeComp";
 import { storeToRefs } from "pinia";
+import axios from "axios";
 const props = defineProps({
   isOpen: Boolean,
 });
@@ -51,17 +52,34 @@ const emit = defineEmits(["close", "select"]);
 const inputDisplayValue = ref("");
 const selectedId = ref(null);
 const showDropdown = ref(false);
-const options = [
-  { id: 1, data: "user1" },
-  { id: 2, data: "user2" },
-];
-
+const options = ref([]);
+const loading = ref();
+const isData = ref();
 const filteredOptions = computed(() => {
-  return options.filter((opt) =>
+  return options.value.filter((opt) =>
     opt.data.toLowerCase().includes(inputDisplayValue.value.toLowerCase())
   );
 });
+const getUsers = async () => {
+  try {
+    loading.value = true;
+    const response = await axios.get("http://10.8.0.23:8000/users/");
 
+    if (options.value.length === 0) {
+      isData.value = true;
+    } else {
+      isData.value = false;
+    }
+    options.value = response.data;
+    loading.value = false;
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    loading.value = false;
+    console.error("Error fetching regions:", error);
+    throw error;
+  }
+};
 const closeModal = () => emit("close");
 
 const handleInput = (e) => {
@@ -90,11 +108,15 @@ const sent = () => {
   if (selectedId.value) {
     console.log("Отправлено ID:", selectedId.value);
     emit("select", selectedId.value);
+    emit("close");
     closeModal();
   } else {
     console.warn("Не выбран ни один вариант");
   }
 };
+onMounted(() => {
+  getUsers();
+});
 </script>
 
 <style scoped>
