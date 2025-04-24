@@ -12,20 +12,31 @@
           </button>
         </div>
       </div>
-
       <transition name="fade">
         <AddCompetition v-if="ahow" />
       </transition>
+      <div class="teams-list org">
+        <h2 class="teams-header">Организованные вами сореванования</h2>
+        <Competitions
+          v-for="comp in organized"
+          :name="comp.competition.name"
+          :disciplineName="comp.competition.discipline"
+          :status="comp.competition.status"
+          :rated="comp.rated"
+        />
+      </div>
+
       <div class="teams-list">
         <div v-if="loading" class="loader-container">
           <Loader />
         </div>
-        <div v-if="isData" class="empty-state">
+        <div v-if="isDataHistory && isData" class="empty-state">
           <img src="/src/assets/user.png" alt="Нет команд" class="empty-icon" />
           <p>Вы пока не учавствовали в соревнованиях</p>
           <button class="primary-btn" @click="gotoComp">Учавствовать</button>
         </div>
-        <div v-else class="teams-list">
+        <div v-else-if="isDataHistory" class="teams-list">
+          <h2 class="teams-header">Сореванования в которых вы учавствовали</h2>
           <Competitions
             v-for="comp in commpet.history"
             :name="comp.competition.name"
@@ -55,6 +66,7 @@ const commpet = ref({
 const ahow = ref(false);
 const loading = ref(false);
 const isData = ref(false);
+const isDataHistory = ref(false);
 const token = ref();
 const role = ref();
 const organized = ref();
@@ -77,9 +89,9 @@ const getCompetitions = async () => {
     commpet.value.stats = response.data.stats;
     commpet.value.history = response.data.history;
     if (commpet.value.history.length === 0) {
-      isData.value = true;
+      isDataHistory.value = true;
     } else {
-      isData.value = false;
+      isDataHistory.value = false;
     }
     console.log(commpet.value);
     loading.value = false;
@@ -103,8 +115,12 @@ const getCompetitionsOrganized = async () => {
         },
       }
     );
-    isData.value = true;
-    organized.value = response.data;
+    if (response.data.length === 0) {
+      isData.value = true;
+    } else {
+      isData.value = false;
+    }
+    organized.value = response.data.competitions;
     console.log("org", organized.value);
     loading.value = false;
     return response.data;
@@ -167,6 +183,10 @@ onMounted(() => {
   justify-content: space-around;
   width: 100%;
   gap: 20px;
+}
+.teams-list.org {
+  display: flex;
+  flex-direction: column;
 }
 .teams-container {
   margin-top: 20px;

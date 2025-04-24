@@ -12,7 +12,7 @@
       </div>
     </div>
 
-    <div class="card-footer">
+    <div v-if="type" class="card-footer">
       <div class="card-type">
         <span> Тип проведения: </span>
       </div>
@@ -20,12 +20,20 @@
         {{ type === "team" ? "Командное" : "Личное" }}
       </button>
     </div>
-    <div class="card-footer">
+    <div v-if="res" class="card-footer">
       <div class="card-type">
         <span> Mecто: </span>
       </div>
       <button class="details-btn">
         {{ res }}
+      </button>
+    </div>
+    <div class="card-footer">
+      <div class="card-type">
+        <span> Оценка: </span>
+      </div>
+      <button class="details-btn">
+        {{ rated ? "Оценено" : "Не оценено" }}
       </button>
     </div>
   </div>
@@ -41,6 +49,7 @@ const props = defineProps({
   status: String,
   type: String,
   res: Number,
+  rated: Boolean,
 });
 
 const showDetails = ref(false);
