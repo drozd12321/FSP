@@ -379,7 +379,7 @@ class InvitationSerializer(serializers.ModelSerializer):
     team_id = serializers.IntegerField(source='team.id')
     team_name = serializers.CharField(source='team.name')
     competition_name = serializers.CharField(source='team.competition.name')
-    user_nickname = serializers.CharField(source='user.nickName')  # Исправлено на nickName
+    user_nickname = serializers.CharField(source='user.user.nickName')
     
     class Meta:
         model = Invitation
@@ -880,7 +880,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
     nickName = serializers.CharField(source='user.nickName')  # Доступ к полю из связанной модели User
     class Meta:
         model = UserInfo
-        fields = ['surname', 'name', 'nickName', 'rating']
+        fields = ['id' ,'surname', 'name', 'nickName', 'rating']
         
 class VacancyResponseSerializer(serializers.ModelSerializer):
     """
