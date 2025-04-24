@@ -345,7 +345,7 @@ class InvitationCreateView(APIView):
     - 400: Ошибка валидации данных
     - 403: Пользователь не является капитаном команды
     """
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         """
@@ -372,7 +372,9 @@ class InvitationCreateView(APIView):
         if serializer.is_valid():
             # Проверяем что текущий пользователь - капитан команды
             team = serializer.validated_data['team']
-            if team.captain != request.user.id:
+            logger.debug(team.captain.id)
+            logger.debug(request.user.id)
+            if team.captain.id != request.user.id:
                 return Response(
                     {"detail": "Только капитан команды может отправлять приглашения"},
                     status=status.HTTP_403_FORBIDDEN
@@ -984,7 +986,8 @@ class CompetitionDecisionView(APIView):
     
     @transaction.atomic
     def post(self, request):
-        serializer = CompetitionDecisionSerializer(data=request.data)
+        request.data['status'] = 'pending'  # Жёстко перезаписываем
+        serializer = CompetitionSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         

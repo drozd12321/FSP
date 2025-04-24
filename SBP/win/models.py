@@ -109,7 +109,7 @@ class Competition(models.Model):
     max_age = models.PositiveIntegerField()
     name = models.CharField(max_length=50)
     competition_type = models.CharField(max_length=10, choices=COMPETITION_TYPE_CHOICES)
-    status = models.CharField(max_length=25)
+    status = models.CharField(max_length=25, default='pending')
     discipline = models.ForeignKey(Discipline, on_delete=models.PROTECT, related_name='competitions')
     description = models.TextField(blank=True)
     type = models.CharField(max_length=10, choices=TYPE_CHOICES)

@@ -577,6 +577,7 @@ class CompetitionSerializer(serializers.ModelSerializer):
     - create: переопределен для обработки вложенных дат
     - get_permissions_status: вычисляет статус permissions
     """
+    status = serializers.CharField(default='pending')  # ← Принудительно задаём default
     dates = CompetitionDateSerializer()
     discipline = serializers.PrimaryKeyRelatedField(queryset=Discipline.objects.all())
     discipline_name = serializers.CharField(source='discipline.name', read_only=True)
@@ -613,6 +614,14 @@ class CompetitionSerializer(serializers.ModelSerializer):
             'permissions_status',  # Добавляем новое поле
         ]
 
+    def validate(self, data):
+        # Запрещаем изменение статуса через API, если он уже pending
+        instance = getattr(self, 'instance', None)
+        if instance and instance.status == 'pending' and 'status' in data:
+            raise serializers.ValidationError(
+                {"status": "Нельзя изменить статус соревнования, ожидающего модерации"}
+            )
+        return data
     def get_permissions_status(self, obj):
         if not obj.permissions:  # Если permissions пустое
             return 0
@@ -624,16 +633,18 @@ class CompetitionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         dates_data = validated_data.pop('dates')
 
-        
+        # Принудительно устанавливаем статус 'pending' при создании
+        validated_data['status'] = 'pending'
+
         competition = Competition.objects.create(**validated_data)
 
-        
         CompetitionDate.objects.create(
             competition=competition,
             **dates_data
         )
-        
+
         return competition
+
     
     
 class FAQSerializer(serializers.ModelSerializer):
