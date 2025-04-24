@@ -12,6 +12,7 @@ urlpatterns = [
     path('approvals/', UserApprovalView.as_view(), name='user-approvals'),  # Одобрение/отклонение регистрации пользователей
     
     # Соревнования
+    path('competitions/download/', CompetitionParticipantsStructuredExportAPI.as_view()), # Выгрузка соревнований и их результатов в файл
     path('competitions/create/', CompetitionCreateView.as_view(), name='create-competition'),  # Создание соревнования
     path('competitions/', CompetitionListView.as_view(), name='competition-list'),  # Список всех соревнований
     path('competitions/history/', ParticipationHistoryView.as_view(), name='participation-history'),  # История участий в соревнованиях
@@ -53,5 +54,4 @@ urlpatterns = [
     path('disciplines/', DisciplineListView.as_view(), name='disciplines-list'),  # Список дисциплин
     path('regional-representatives/', RegionalRepresentativesView.as_view(), name='regional-representatives'),  # Региональные представители
 
-    path('download/', CompetitionParticipantsStructuredExportAPI.as_view())
 ]
