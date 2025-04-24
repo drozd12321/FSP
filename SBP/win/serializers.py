@@ -456,7 +456,7 @@ class TeamApplicationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TeamApplication
-        fields = ['team_id', 'status', 'reason', 'competition', 
+        fields = ['id','team_id', 'status', 'reason', 'competition', 
                  'competition_name', 'team_name', 'team_members']
         extra_kwargs = {
             'team_id': {'required': True},
@@ -751,7 +751,7 @@ class UserApplicationSerializer(serializers.ModelSerializer):
         )
         
 class ApplicationDecisionSerializer(serializers.Serializer):
-    action = serializers.ChoiceField(choices=['approve', 'reject'], required=True)
+    action = serializers.ChoiceField(choices=['accept', 'reject'], required=True)
     reason = serializers.CharField(required=False, allow_blank=True)
     
 class UserInfoSerializer(serializers.ModelSerializer):
