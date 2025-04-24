@@ -68,9 +68,13 @@ const getzavkaProved = async () => {
         },
       }
     );
-    isData.value = false;
     zavkaProved.value = response.data.competitions;
     loading.value = false;
+    if (zavkaProved.value.length === 0) {
+      isData.value = true;
+    } else {
+      isData.value = false;
+    }
     console.log(zavkaProved.value);
     return response.data;
   } catch (error) {
@@ -110,6 +114,7 @@ const approveApplication = async (id) => {
       }
     );
     getzavkaProved();
+
     msgStore.setMesg({
       show: true,
       type: "succses",

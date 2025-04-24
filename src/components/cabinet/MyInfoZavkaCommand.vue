@@ -23,6 +23,9 @@
             :userName="zavka.user_name"
             :userSurname="zavka.user_surname"
             :userNickname="zavka.user_nickname"
+            :id="zavka.id"
+            @acceptvacancyresponse="acceptvacancyresponse"
+            @rejectvacancyresponse="rejectvacancyresponse"
           />
         </div>
       </div>
@@ -90,7 +93,58 @@ const msg = ref({
 const close = () => {
   msg.value = { show: false, type: "", title: "" };
 };
-
+const acceptvacancyresponse = async (id) => {
+  try {
+    const response = await axios.post(
+      "http://10.8.0.23:8000/response-action/",
+      {
+        action: "accept",
+        response_id: id,
+      },
+      {
+        headers: {
+          Authorization: `Token ${token.value}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    getIzavka();
+    msgStore.setMesg({
+      show: true,
+      type: "succses",
+      title: response.data.detail,
+    });
+    console.log(response.data);
+  } catch (error) {
+    console.log(error);
+  }
+};
+const rejectvacancyresponse = async (id) => {
+  try {
+    const response = await axios.post(
+      "http://10.8.0.23:8000/response-action/",
+      {
+        action: "reject",
+        response_id: id,
+      },
+      {
+        headers: {
+          Authorization: `Token ${token.value}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    msgStore.setMesg({
+      show: true,
+      type: "succses",
+      title: response.data.detail,
+    });
+    getIzavka();
+    console.log(response.data);
+  } catch (error) {
+    console.log(error);
+  }
+};
 onMounted(() => {
   token.value = localStorage.getItem("jwtToken").trim();
   getIzavka();

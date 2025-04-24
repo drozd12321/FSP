@@ -62,16 +62,8 @@
     </div>
 
     <div v-if="!discipline_name" class="card-actions">
-      <button
-        class="action-btn reject-btn"
-        @click="$emit('rejectApplication', id)"
-      >
-        Отклонить
-      </button>
-      <button
-        class="action-btn approve-btn"
-        @click="$emit('approveApplication', id)"
-      >
+      <button class="action-btn reject-btn" @click="reject">Отклонить</button>
+      <button class="action-btn approve-btn" @click="approve">
         Подтвердить
       </button>
     </div>
@@ -82,7 +74,12 @@
 import { computed, onMounted, ref } from "vue";
 import formatDateRange from "@/use/useFilterData";
 import axios from "axios";
-const emit = defineEmits(["approveApplication", "rejectApplication"]);
+const emit = defineEmits([
+  "approveApplication",
+  "rejectApplication",
+  "acceptvacancyresponse",
+  "rejectvacancyresponse",
+]);
 const props = defineProps({
   name: String,
   competition_type_display: String,
@@ -103,6 +100,14 @@ const token = ref();
 onMounted(() => {
   token.value = localStorage.getItem("jwtToken");
 });
+const reject = () => {
+  emit("rejectApplication", props.id);
+  emit("rejectvacancyresponse", props.id);
+};
+const approve = () => {
+  emit("approveApplication", props.id);
+  emit("acceptvacancyresponse", props.id);
+};
 </script>
 
 <style scoped>
