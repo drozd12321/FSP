@@ -22,8 +22,8 @@
           <div v-if="type === 'Командное'" class="form-group">
             <label class="label" for="email">Вид команды</label>
             <select name="comand" id="comand" v-model="comand">
-              <option value="0">Публичная</option>
-              <option value="1">Приватная</option>
+              <option value="1">Публичная</option>
+              <option value="0">Приватная</option>
             </select>
           </div>
           <div v-if="type === 'Командное'" class="form-group">

@@ -1,38 +1,30 @@
 <template>
   <div v-if="loading" class="loader-overlay"><Loader /></div>
   <div v-else>
+    <div v-if="msgE"><AppMsg :act="msgE" @close="close" /></div>
     <div class="teams-container">
       <div class="teams-header">
-        <div>
-          <h2>Мои соревнования</h2>
-        </div>
-        <div>
-          <button class="primary-btn" @click="showAdd">
-            Создать соревнование
-          </button>
-        </div>
+        <h2>Мои сообщения</h2>
       </div>
 
-      <transition name="fade">
-        <AddCompetition v-if="ahow" />
-      </transition>
       <div class="teams-list">
         <div v-if="loading" class="loader-container">
           <Loader />
         </div>
         <div v-if="isData" class="empty-state">
           <img src="/src/assets/user.png" alt="Нет команд" class="empty-icon" />
-          <p>Вы пока не учавствовали в соревнованиях</p>
-          <button class="primary-btn" @click="gotoComp">Учавствовать</button>
+          <p>Вы пока не подавали заявок на участие в командах</p>
+          <button class="primary-btn" @click="gotoComm">Найти команду</button>
         </div>
-        <div v-else class="teams-list">
-          <Competitions
-            v-for="comp in commpet.history"
-            :name="comp.competition.name"
-            :disciplineName="comp.competition.discipline"
-            :status="comp.competition.status"
-            :type="comp.competition.type"
-            :res="comp.result"
+        <div v-else class="poch">
+          <AppPochta
+            v-for="poch in izavka"
+            :key="poch.id"
+            :name="poch.competition_name"
+            :status="poch.status"
+            :teamName="poch.team_name"
+            :id="poch.id"
+            @feh="fet"
           />
         </div>
       </div>
@@ -42,30 +34,27 @@
 
 <script setup>
 import axios from "axios";
-import { onMounted, ref } from "vue";
-import Competitions from "./Competitions.vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import { useMsgStore } from "@/stores/useMessageStore";
+import { storeToRefs } from "pinia";
+
 import Loader from "../Loader.vue";
-import AddCompetition from "../compititions/AddCompetition.vue";
+import AppMsg from "../message/AppMsg.vue";
+import AppPochta from "./AppPochta.vue";
+
 const router = useRouter();
-const commpet = ref({
-  stats: null,
-  history: null,
-});
-const ahow = ref(false);
+const izavka = ref();
+const msgStore = useMsgStore();
+const { getMsg } = storeToRefs(useMsgStore());
 const loading = ref(false);
 const isData = ref(false);
 const token = ref();
-const role = ref();
-const organized = ref();
-const showAdd = () => {
-  ahow.value = !ahow.value;
-};
-const getCompetitions = async () => {
+const getIzavka = async () => {
   try {
     loading.value = true;
     const response = await axios.get(
-      "http://10.8.0.23:8000/competitions/history/",
+      "http://10.8.0.23:8000/user/invitations/",
       {
         headers: {
           Authorization: `Token ${token.value}`,
@@ -73,109 +62,60 @@ const getCompetitions = async () => {
         },
       }
     );
-
-    commpet.value.stats = response.data.stats;
-    commpet.value.history = response.data.history;
-    if (commpet.value.history.length === 0) {
+    izavka.value = response.data;
+    console.log(response);
+    if (izavka.value.length === 0) {
       isData.value = true;
     } else {
       isData.value = false;
     }
-    console.log(commpet.value);
     loading.value = false;
+    console.log("zavka", izavka.value);
     return response.data;
   } catch (error) {
-    loading.value = false;
-    isData.value = false;
-    console.error("Error fetching regions:", error);
-    throw error;
-  }
-};
-const getCompetitionsOrganized = async () => {
-  try {
-    loading.value = true;
-    const response = await axios.get(
-      "http://10.8.0.23:8000/competitions/organized/",
-      {
-        headers: {
-          Authorization: `Token ${token.value}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
     isData.value = true;
-    organized.value = response.data;
-    console.log("org", organized.value);
-    loading.value = false;
-    return response.data;
-  } catch (error) {
     loading.value = false;
     console.error("Error fetching regions:", error);
     throw error;
   }
 };
-const gotoComp = () => {
-  router.push("/competitions");
+const gotoComm = () => {
+  router.push("/command");
 };
+const msgE = computed(() => {
+  return getMsg.value;
+});
+const msg = ref({
+  show: false,
+  type: "",
+  title: "",
+});
+const fet = () => {
+  getIzavka();
+};
+const close = () => {
+  msg.value = { show: false, type: "", title: "" };
+};
+
 onMounted(() => {
   token.value = localStorage.getItem("jwtToken").trim();
-  role.value = localStorage.getItem("role").trim();
-
-  getCompetitions();
-  getCompetitionsOrganized();
+  getIzavka();
 });
 </script>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.fade-enter-to,
-.fade-leave-from {
-  opacity: 1;
-  transform: translateY(0);
-}
-.stats {
-  display: grid;
-  grid-template-areas: "one two five", "three foo";
-}
-.one {
-  grid-area: one;
-}
-.two {
-  grid-area: two;
-}
-.five {
-  grid-area: five;
-}
-.three {
-  grid-area: three;
-}
-.one {
-  grid-area: one;
-}
-.teams-list {
+.poch {
   display: flex;
-  justify-content: space-around;
-  width: 100%;
-  gap: 20px;
+  flex-direction: column;
+  justify-content: center;
 }
 .teams-container {
-  margin-top: 20px;
+  padding: 6rem;
+
   max-width: 1500px;
-  padding: 2rem;
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-right: 80px;
 }
 
 .teams-header {
@@ -184,6 +124,7 @@ onMounted(() => {
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
+  margin-left: 2rem;
   border-bottom: 2px solid #9b9b9b;
 }
 

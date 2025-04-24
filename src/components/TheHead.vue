@@ -33,7 +33,7 @@
         </div>
       </nav>
       <div class="user-actions">
-        <RouterLink to="" class="icon-link" title="Сообщения">
+        <RouterLink to="/cabinet/message" class="icon-link" title="Сообщения">
           <svg
             class="icon"
             xmlns="http://www.w3.org/2000/svg"
