@@ -102,6 +102,9 @@
 
       <div class="filter-item actions">
         <button class="reset-btn" @click="resetFilters">Сбросить</button>
+        <button class="export-btn" @click="exportToFile">
+          Выгрузить в файл
+        </button>
       </div>
     </div>
   </div>
@@ -123,6 +126,7 @@ const endDate = ref("");
 const props = defineProps({
   comp: Array,
 });
+
 const formatOptions = [
   { value: "individual", label: "Личное" },
   { value: "team", label: "Командное" },
@@ -139,8 +143,8 @@ const oflOptions = [
 const handleSearch = () => {
   emitFilters();
 };
+
 const emitFilters = () => {
-  console.log(selectedRegion);
   emit("filter-change", {
     search: searchQuery.value,
     status: selectedStatus.value,
@@ -151,11 +155,13 @@ const emitFilters = () => {
     end_date: endDate.value,
   });
 };
+
 watch([startDate, endDate], () => {
   if (startDate.value || endDate.value) {
     emitFilters();
   }
 });
+
 const resetFilters = () => {
   searchQuery.value = "";
   selectedStatus.value = "";
@@ -166,11 +172,55 @@ const resetFilters = () => {
   selectedformatOfl.value = "";
   emit("filter-change", {});
 };
+
+const exportToFile = async () => {
+  try {
+    const response = await axios.get(
+      "http://10.8.0.23:8000/competitions/download/",
+      {
+        params: {
+          search: searchQuery.value,
+          status: selectedStatus.value,
+          format: selectedformat.value,
+          ofline: selectedformatOfl.value,
+          region: selectedRegion.value,
+          start_date: startDate.value,
+          end_date: endDate.value,
+        },
+        responseType: "blob",
+      }
+    );
+
+    // Создаем URL для скачивания файла
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+
+    // Получаем имя файла из заголовков или используем стандартное
+    const contentDisposition = response.headers["content-disposition"];
+    let fileName = "competitions_export.xlsx";
+    if (contentDisposition) {
+      const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/);
+      if (fileNameMatch && fileNameMatch[1]) {
+        fileName = fileNameMatch[1];
+      }
+    }
+
+    link.setAttribute("download", fileName);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Ошибка при выгрузке файла:", error);
+    alert("Произошла ошибка при выгрузке файла");
+  }
+};
+
 const regions = ref();
 const getRegion = async () => {
   try {
     const response = await axios.get("http://10.8.0.23:8000/regions/");
-
     regions.value = response.data;
     return response.data;
   } catch (error) {
@@ -178,6 +228,7 @@ const getRegion = async () => {
     throw error;
   }
 };
+
 onMounted(() => {
   getRegion();
 });
@@ -232,15 +283,6 @@ onMounted(() => {
   padding: 8px 8px 8px 30px;
   border: 1px solid #ddd;
   border-radius: 5px;
-  font-size: 0.9rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #7f8c8d;
   font-size: 0.9rem;
 }
 
@@ -324,21 +366,21 @@ onMounted(() => {
   background: #fdeaea;
 }
 
-.apply-btn {
+.export-btn {
   padding: 8px 12px;
-  background: #3498db;
-  color: white;
-  border: none;
+  background: white;
+  color: #2ecc71;
+  border: 1px solid #2ecc71;
   border-radius: 5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
   font-size: 0.9rem;
   flex: 1;
 }
 
-.apply-btn:hover {
-  background: #2980b9;
+.export-btn:hover {
+  background: #e8f8f0;
 }
 
 @media (max-width: 992px) {
