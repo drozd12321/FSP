@@ -463,6 +463,18 @@ class RegionSerializer(serializers.ModelSerializer):
 
         
 class TeamApplicationSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для создания и просмотра заявок команд.
+    
+    Включает:
+    - Основную информацию о заявке
+    - Название команды и соревнования
+    - Список участников команды
+    
+    Валидация:
+    - Проверяет, что пользователь является участником команды
+    - Удаляет все приглашения для команды при создании заявки
+    """
     team_id = serializers.PrimaryKeyRelatedField(
         queryset=Team.objects.all(),
         source='team',
@@ -483,6 +495,7 @@ class TeamApplicationSerializer(serializers.ModelSerializer):
         }
 
     def get_team_members(self, obj):
+        """Возвращает список участников команды"""
         members = obj.team.members.all()
         return [{
             'surname': member.surname,
@@ -492,12 +505,11 @@ class TeamApplicationSerializer(serializers.ModelSerializer):
         } for member in members]
 
     def validate(self, attrs):
-        # Проверяем, что команда существует
+        """Проверяет, что пользователь является участником команды"""
         team = attrs.get('team')
         if not team:
             raise serializers.ValidationError("Команда не найдена")
         
-        # Проверяем, что у пользователя есть права на создание заявки для этой команды
         user = self.context['request'].user
         if not team.members.filter(user=user).exists():
             raise serializers.ValidationError("Вы не являетесь участником этой команды")
@@ -505,6 +517,7 @@ class TeamApplicationSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        """Создает заявку с статусом 'pending' и удаляет все приглашения для команды"""
         team = validated_data['team']
         
         # Удаляем все приглашения для этой команды
@@ -521,6 +534,13 @@ class TeamApplicationSerializer(serializers.ModelSerializer):
         )
         
 class TeamApplicationResponseSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для обработки заявки команды.
+    
+    Валидация:
+    - Проверяет, что заявка имеет статус 'pending'
+    - Для действия 'reject' требует указания причины
+    """
     action = serializers.ChoiceField(
         choices=['accept', 'reject'],
         write_only=True,
@@ -551,6 +571,7 @@ class TeamApplicationResponseSerializer(serializers.ModelSerializer):
         return attrs
 
     def update(self, instance, validated_data):
+        """Обновляет статус заявки и выполняет соответствующие действия"""
         action = validated_data['action']
         
         if action == 'accept':
@@ -573,6 +594,18 @@ class TeamApplicationResponseSerializer(serializers.ModelSerializer):
     
 
 class DisciplineSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели Discipline (Дисциплина).
+    
+    Используется для:
+    - Сериализации данных дисциплины (преобразование в JSON)
+    - Десериализации данных (проверка и преобразование JSON в модель)
+    
+    Поля:
+    - id (int): уникальный идентификатор дисциплины (автоматически генерируется)
+    - name (str): название дисциплины (обязательное поле)
+
+    """
     class Meta:
         model = Discipline
         fields = ['id', 'name']
@@ -666,32 +699,37 @@ class CompetitionSerializer(serializers.ModelSerializer):
     
     
 class FAQSerializer(serializers.ModelSerializer):
+    """Сериализатор FAQ (вопрос-ответ)"""
     class Meta:
         model = FAQ
         fields = ['id', 'question', 'answer']
         read_only_fields = ['id']
-        
+
+
 class NewsSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор новостей
+    Поля:
+    - id, title, content
+    - image_url (полный URL изображения)
+    - date (в формате DD.MM.YYYY)
+    """
     image_url = serializers.SerializerMethodField()
     date = serializers.SerializerMethodField()
 
     class Meta:
         model = News
-        fields = [
-            'id',
-            'title',
-            'content',
-            'image_url',
-            'date'
-        ]
+        fields = ['id', 'title', 'content', 'image_url', 'date']
         read_only_fields = fields
 
     def get_image_url(self, obj):
+        """Возвращает полный URL изображения или None"""
         if obj.image:
             return self.context['request'].build_absolute_uri(obj.image.url)
         return None
 
     def get_date(self, obj):
+        """Форматирует дату в DD.MM.YYYY"""
         return obj.created_at.strftime("%d.%m.%Y")
     
 class UserDisciplineStatsSerializer(serializers.ModelSerializer):
@@ -707,9 +745,23 @@ class RoleSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
         
 class UserApplicationSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для заявок пользователей на индивидуальные соревнования.
+    
+    Включает:
+    - Основные данные заявки
+    - Название соревнования (read-only)
+    - Информацию о пользователе (read-only)
+    
+    Валидация:
+    - Проверка возрастных ограничений
+    - Проверка региональных ограничений
+    - Проверка дублирования заявок
+    - Проверка типа соревнования
+    """
     competition = serializers.PrimaryKeyRelatedField(
         queryset=Competition.objects.filter(type='individual'),
-        write_only=True  # Делаем поле только для записи
+        write_only=True  # Скрываем в ответе, так как есть competition_name
     )
     competition_name = serializers.CharField(source='competition.name', read_only=True)
     user_info = serializers.SerializerMethodField(read_only=True)
@@ -717,9 +769,10 @@ class UserApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserApplication
         fields = ['id', 'competition', 'competition_name', 'user_info', 'status', 'reason']
-        read_only_fields = ['status', 'reason']
+        read_only_fields = ['status', 'reason']  # Эти поля заполняются автоматически
 
     def get_user_info(self, obj):
+        """Возвращает основную информацию о пользователе"""
         return {
             'surname': obj.user.surname,
             'name': obj.user.name,
@@ -728,16 +781,17 @@ class UserApplicationSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, data):
+        """Основная валидация заявки перед созданием"""
         competition = data['competition']
         user = self.context['request'].user
         
-        # Получаем информацию о пользователе
+        # Получаем профиль пользователя
         try:
             user_info = UserInfo.objects.get(user=user)
         except UserInfo.DoesNotExist:
             raise serializers.ValidationError("Профиль пользователя не найден")
 
-        # 1. Проверка возрастных ограничений
+        # 1. Проверка возраста
         today = date.today()
         age = today.year - user_info.birthday.year - ((today.month, today.day) < 
                                                      (user_info.birthday.month, user_info.birthday.day))
@@ -747,7 +801,7 @@ class UserApplicationSerializer(serializers.ModelSerializer):
                 f"Возрастные ограничения: от {competition.min_age} до {competition.max_age} лет"
             )
 
-        # 2. Проверка региональных ограничений
+        # 2. Проверка региона (если есть ограничения)
         if hasattr(competition, 'permissions') and isinstance(competition.permissions, list):
             if user_info.region.id not in competition.permissions:
                 allowed_regions = Region.objects.filter(
@@ -762,13 +816,13 @@ class UserApplicationSerializer(serializers.ModelSerializer):
                     }
                 })
 
-        # 3. Проверка существующей заявки
+        # 3. Проверка на дубликат заявки
         if UserApplication.objects.filter(user=user_info, competition=competition).exists():
             raise serializers.ValidationError(
                 "Вы уже подавали заявку на это соревнование"
             )
 
-        # 4. Проверка что соревнование действительно индивидуальное
+        # 4. Проверка типа соревнования
         if competition.type != 'individual':
             raise serializers.ValidationError(
                 "Заявки подаются только на индивидуальные соревнования"
@@ -777,6 +831,7 @@ class UserApplicationSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        """Создание заявки с привязкой к пользователю"""
         user = self.context['request'].user
         user_info = UserInfo.objects.get(user=user)
         return UserApplication.objects.create(
@@ -785,20 +840,65 @@ class UserApplicationSerializer(serializers.ModelSerializer):
         )
         
 class ApplicationDecisionSerializer(serializers.ModelSerializer):
-    action = serializers.ChoiceField(choices=['accept', 'reject'], write_only=True)
-    reason = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    """
+    Сериализатор для обработки решения по заявке пользователя
+    
+    Поля:
+    - action: accept/reject - решение организатора
+    - reason: причина отказа (требуется для reject)
+    - status: текущий статус заявки (read-only)
+    
+    Валидация:
+    - Проверяет наличие причины при отклонении
+    - Запрещает изменять уже обработанные заявки
+    """
+    action = serializers.ChoiceField(
+        choices=['accept', 'reject'], 
+        write_only=True,
+        help_text="Действие: accept - принять, reject - отклонить"
+    )
+    reason = serializers.CharField(
+        required=False, 
+        allow_blank=True, 
+        write_only=True,
+        help_text="Причина отказа"
+    )
 
     class Meta:
         model = UserApplication
-        fields = ['status', 'reason', 'action']  # добавьте другие нужные поля
+        fields = ['status', 'reason', 'action']
+        read_only_fields = ['status']
     
 class UserInfoSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор основной информации о пользователе
+    Включает:
+    - Фамилию, имя
+    - Никнейм из связанной модели User
+    - Рейтинг пользователя
+    """
     nickName = serializers.CharField(source='user.nickName')  # Доступ к полю из связанной модели User
     class Meta:
         model = UserInfo
         fields = ['surname', 'name', 'nickName', 'rating']
         
 class VacancyResponseSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для откликов на вакансии в командах
+    
+    Поля только для чтения:
+    - Информация о команде (название)
+    - Данные пользователя (ФИО, никнейм)
+    - Статус отклика
+    
+    Поля для записи:
+    - ID команды (передается как team_id)
+    - Описание (передается как description, сохраняется в text)
+    
+    Логика:
+    - При создании преобразует team_id в объект Team
+    - Сохраняет description в поле text
+    """
     team_name = serializers.CharField(source='team.name', read_only=True)
     user_surname = serializers.CharField(source='user.surname', read_only=True)
     user_name = serializers.CharField(source='user.name', read_only=True)
@@ -842,10 +942,18 @@ class VacancyResponseSerializer(serializers.ModelSerializer):
         )
         
 class ResponseActionSerializer(serializers.Serializer):
+    """
+    Сериализатор для действий с откликами (принять/отклонить)
+    
+    Поля:
+    - action: accept/reject
+    - response_id: ID отклика
+    """
     action = serializers.ChoiceField(choices=['accept', 'reject'])
     response_id = serializers.IntegerField()
     
 class UserUpdateSerializer(serializers.ModelSerializer):
+    """Сериализатор для обновления данных пользователя (email, nickName)"""
     class Meta:
         model = User
         fields = ['email', 'nickName']
@@ -855,6 +963,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         }
 
 class UserInfoUpdateSerializer(serializers.ModelSerializer):
+    """Сериализатор для обновления данных профиля (ФИО, регион, роль, дата рождения)"""
     class Meta:
         model = UserInfo
         fields = ['surname', 'name', 'patronymic', 'region', 'role', 'birthday',  'user_id']
@@ -865,10 +974,27 @@ class UserInfoUpdateSerializer(serializers.ModelSerializer):
         }
 
 class UserProfileUpdateSerializer(serializers.Serializer):
+    """
+    Композитный сериализатор для обновления профиля
+    
+    Позволяет обновлять:
+    - Данные пользователя (через user)
+    - Данные профиля (через info)
+    """
     user = UserUpdateSerializer(required=False)
     info = UserInfoUpdateSerializer(required=False)
     
 class CompetitionShortSerializer(serializers.ModelSerializer):
+    """
+    Краткий сериализатор соревнований для истории участия
+    
+    Поля:
+    - id: идентификатор соревнования
+    - name: название соревнования
+    - discipline: название дисциплины
+    - type: тип соревнования (индивидуальное/командное)
+    - status: текущий статус
+    """
     discipline = serializers.CharField(source='discipline.name')
     
     class Meta:
@@ -876,6 +1002,13 @@ class CompetitionShortSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'discipline', 'type', 'status']
 
 class ParticipationHistorySerializer(serializers.ModelSerializer):
+    """
+    Сериализатор истории участия в соревнованиях
+    
+    Поля:
+    - competition: краткая информация о соревновании
+    - result: занятое место (null если соревнование еще не завершено)
+    """
     competition = CompetitionShortSerializer()
     
     class Meta:
@@ -883,6 +1016,13 @@ class ParticipationHistorySerializer(serializers.ModelSerializer):
         fields = ['competition', 'result']
         
 class OrganizerCompetitionSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для отображения соревнований организатора
+    
+    Особенности:
+    - Формирует удобную структуру данных о соревновании
+    - Включает название дисциплины вместо ID
+    """
     competition = serializers.SerializerMethodField()
     rated = serializers.BooleanField(source='rated')
     
@@ -902,19 +1042,58 @@ class OrganizerCompetitionSerializer(serializers.ModelSerializer):
         }
         
 class ResultDistributionSerializer(serializers.Serializer):
+    """
+    Сериализатор для данных о результате участника
+    
+    Поля:
+    - user_id: ID участника (обязательное)
+    - result: занятое место (целое число ≥ 1, обязательное)
+    """
     user_id = serializers.IntegerField()
     result = serializers.IntegerField(min_value=1)
 
 class CompetitionResultsSerializer(serializers.Serializer):
+    """
+    Сериализатор для запроса на распределение результатов
+    
+    Поля:
+    - competition_id: ID соревнования (обязательное)
+    - results: массив результатов участников (обязательное)
+    """
     competition_id = serializers.IntegerField()
     results = ResultDistributionSerializer(many=True)
     
 class MemberNicknameSerializer(serializers.ModelSerializer):
+    """
+    Упрощенный сериализатор для отображения ника участника
+    
+    Поля:
+    - id: ID пользователя
+    - nickName: никнейм пользователя
+    """
     class Meta:
         model = User
         fields = ['id', 'nickName']
 
 class TeamListSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для отображения списка команд пользователя
+    
+    Поля:
+    - id: ID команды
+    - name: название команды
+    - competition_id: ID соревнования
+    - competition_name: название соревнования
+    - competition_status: статус соревнования
+    - discipline_name: название дисциплины
+    - members: список участников (ID и никнейм)
+    - captain: ID капитана
+    - is_register: флаг регистрации команды
+    
+    Особенности:
+    - Использует оптимизированные методы для получения данных
+    - Поддерживает аннотированное поле is_register
+    """
     competition_name = serializers.CharField(source='competition.name')
     competition_status = serializers.CharField(source='competition.status')
     discipline_name = serializers.CharField(source='competition.discipline.name')
@@ -950,11 +1129,18 @@ class TeamListSerializer(serializers.ModelSerializer):
         # Иначе делаем отдельный запрос
         return TeamApplication.objects.filter(team=obj).exists()
         
-class CompetitionDecisionSerializer(serializers.Serializer):
-    competition_id = serializers.IntegerField()
-    action = serializers.ChoiceField(choices=['accept', 'reject'])
     
 class IndividualParticipantSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор участников индивидуальных соревнований
+    
+    Поля:
+    - user_id: ID пользователя
+    - nickName: никнейм пользователя
+    - name: имя участника
+    - surname: фамилия участника
+    - status: статус заявки (всегда 'approved')
+    """
     user_id = serializers.IntegerField(source='user.id')
     nickName = serializers.CharField(source='user.user.nickName')
     name = serializers.CharField(source='user.name')
@@ -965,6 +1151,16 @@ class IndividualParticipantSerializer(serializers.ModelSerializer):
         fields = ['user_id', 'nickName', 'name', 'surname', 'status']
 
 class TeamParticipantSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор участников командных соревнований
+    
+    Поля:
+    - team_id: ID команды
+    - team_name: название команды
+    - captain: информация о капитане
+    - members: список участников команды
+    - status: статус заявки (всегда 'approved')
+    """
     team_id = serializers.IntegerField(source='team.id')
     team_name = serializers.CharField(source='team.name')
     captain_name = serializers.SerializerMethodField()
@@ -989,6 +1185,20 @@ class TeamParticipantSerializer(serializers.ModelSerializer):
         
         
 class RegionalRepresentativeSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для представления данных регионального представителя
+    
+    Поля:
+    - surname: Фамилия представителя
+    - name: Имя представителя
+    - patronymic: Отчество представителя
+    - email: Email из связанной модели User
+    - region_name: Название региона из связанной модели Region
+    
+    Особенности:
+    - Объединяет данные из UserInfo, User и Region
+    - Использует source для доступа к связанным полям
+    """
     email = serializers.EmailField(source='user.email')
     region_name = serializers.CharField(source='region.name')
     
@@ -997,6 +1207,19 @@ class RegionalRepresentativeSerializer(serializers.ModelSerializer):
         fields = ['surname', 'name', 'patronymic', 'email', 'region_name']
         
 class TeamWithCompetitionSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для команды с информацией о соревновании
+    
+    Поля:
+    - id: ID команды
+    - name: Название команды
+    - description: Описание команды
+    - competition: Краткая информация о соревновании (использует CompetitionShortSerializer)
+    
+    Особенности:
+    - Включает вложенную информацию о соревновании
+    - Используется для отображения команд с контекстом их участия
+    """
     competition = CompetitionShortSerializer()
     
     class Meta:
@@ -1004,6 +1227,21 @@ class TeamWithCompetitionSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'competition']
 
 class UserVacancyResponseSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для откликов пользователя на вакансии в командах
+    
+    Поля:
+    - id: ID отклика
+    - text: Текст отклика
+    - status: Статус отклика (код)
+    - status_display: Человекочитаемое название статуса
+    - team: Информация о команде с соревнованием
+    
+    Особенности:
+    - Включает человекочитаемое отображение статуса через get_status_display()
+    - Предоставляет полную информацию о команде и связанном соревновании
+    - Используется для отображения истории откликов пользователя
+    """
     team = TeamWithCompetitionSerializer()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     

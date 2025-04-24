@@ -478,6 +478,21 @@ class RoleListView(ListAPIView):
     permission_classes = [AllowAny]  # Доступно всем пользователям
     
 class TeamApplicationCreateView(APIView):
+    """
+    API endpoint для создания заявки команды на участие в соревновании.
+    
+    Требуется аутентификация. Пользователь должен быть участником команды, 
+    для которой создается заявка.
+    
+    Параметры запроса:
+    - team_id (обязательный) - ID команды
+    - competition (обязательный) - ID соревнования
+    
+    Возвращает:
+    - 201 Created: при успешном создании заявки
+    - 400 Bad Request: при ошибках валидации
+    - 403 Forbidden: если пользователь не участник команды
+    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -497,7 +512,28 @@ class TeamApplicationCreateView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
 class TeamApplicationResponseView(UpdateAPIView):
+    """
+    API endpoint для обработки заявки команды (принятие/отклонение).
+    
+    Доступные действия:
+    - accept - принять заявку (добавляет всех участников команды в соревнование)
+    - reject - отклонить заявку (требуется указать причину)
+    
+    Требуется аутентификация. Доступно только для заявок со статусом 'pending'.
+    
+    Метод: PATCH
+    
+    Параметры:
+    - action (обязательный) - действие (accept/reject)
+    - reason (обязательный для reject) - причина отклонения
+    
+    Возвращает:
+    - 200 OK: при успешном обновлении
+    - 400 Bad Request: при ошибках валидации
+    - 403 Forbidden: если заявка уже обработана
+    """
     serializer_class = TeamApplicationResponseSerializer
     permission_classes = [IsAuthenticated]
     queryset = TeamApplication.objects.all()
@@ -506,7 +542,18 @@ class TeamApplicationResponseView(UpdateAPIView):
     def perform_update(self, serializer):   
         serializer.save()
         
+
 class CompetitionListView(ListAPIView):
+    """
+    API endpoint для получения списка доступных соревнований.
+    
+    Доступно без аутентификации. Не включает соревнования со статусом 'pending'.
+    
+    Возвращает список соревнований с детальной информацией:
+    - ID, название, описание, статус
+    - Дисциплина
+    - Даты проведения
+    """
     permission_classes = [AllowAny]
     serializer_class = CompetitionSerializer
     queryset = Competition.objects.exclude(status='pending').select_related(
@@ -515,23 +562,38 @@ class CompetitionListView(ListAPIView):
     )
     
 class StandardResultsSetPagination(PageNumberPagination):
+    """Стандартная пагинация с размером страницы 10 (макс. 100)"""
     page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 100
 
+
 class FAQListView(ListAPIView):
+    """
+    Список часто задаваемых вопросов (FAQ)
+    Доступ: без авторизации
+    Пагинация: 10 на страницу (настраивается через page_size)
+    """
     permission_classes = [AllowAny]
     queryset = FAQ.objects.all()
     serializer_class = FAQSerializer
     pagination_class = StandardResultsSetPagination
-    
+
+
 class NewsPagination(PageNumberPagination):
-    permission_classes = [AllowAny]
+    """Пагинация новостей: 10 на страницу (макс. 100)"""
     page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 100
 
+
 class NewsListView(ListAPIView):
+    """
+    Список новостей с сортировкой по дате (новые сначала)
+    Доступ: без авторизации
+    Поиск: по title и content
+    Пагинация: 10 на страницу
+    """
     permission_classes = [AllowAny]
     queryset = News.objects.all().order_by('-created_at')
     serializer_class = NewsSerializer
@@ -539,31 +601,61 @@ class NewsListView(ListAPIView):
     search_fields = ['title', 'content']
     
 class UserApplicationCreateView(CreateAPIView):
+    """
+    Создание заявки пользователя на индивидуальное соревнование.
+    Доступ: только для аутентифицированных пользователей.
+    
+    Ошибки:
+    - 400: Если заявка уже существует или данные невалидны
+    - 403: Если пользователь не соответствует требованиям соревнования
+    """
     serializer_class = UserApplicationSerializer
     permission_classes = [IsAuthenticated]
     queryset = UserApplication.objects.all()
 
     def perform_create(self, serializer):
+        """Обработка создания заявки с проверкой уникальности"""
         try:
             serializer.save()
         except IntegrityError:
             raise ValidationError("Вы уже подавали заявку на это соревнование")
 
+
 class DisciplineListView(ListAPIView):
+    """
+    Получение списка всех дисциплин.
+    Доступ: без авторизации.
+    Сортировка: по ID.
+    """
     queryset = Discipline.objects.all().order_by('id')
     serializer_class = DisciplineSerializer
     permission_classes = [AllowAny]
     
 class ApplicationDecisionView(UpdateAPIView):
+    """
+    API для принятия решения по заявке пользователя на соревнование.
+    
+    Доступ:
+    - Только для аутентифицированных организаторов данного соревнования
+    
+    Параметры:
+    - action (обязательный): accept/reject - решение по заявке
+    - reason (опционально): причина отказа (обязателен при reject)
+    
+    Ошибки:
+    - 403: Если пользователь не организатор
+    - 400: При превышении лимита участников или невалидных данных
+    """
     serializer_class = ApplicationDecisionSerializer
     permission_classes = [IsAuthenticated]
     queryset = UserApplication.objects.all()
 
     def get_object(self):
+        """Получает заявку и проверяет права организатора"""
         application = get_object_or_404(UserApplication, pk=self.kwargs['pk'])
         user_info = self.request.user
         
-        # Проверяем что пользователь организатор этого соревнования
+        # Проверка прав организатора
         if not CompetitionOrganizer.objects.filter(
             user=user_info.id,
             competition=application.competition
@@ -573,35 +665,52 @@ class ApplicationDecisionView(UpdateAPIView):
         return application
 
     def perform_update(self, serializer):
+        """Обрабатывает решение по заявке"""
         application = self.get_object()
         action = serializer.validated_data['action']
         reason = serializer.validated_data.get('reason', '')
 
         if action == 'accept':
+            # Проверка лимита участников
             if application.competition.participants.count() >= application.competition.max_participants:
                 raise ValidationError("Достигнуто максимальное количество участников")
             
-        if action == 'accept':
+            # Принятие заявки
             application.status = 'accepted'
             application.reason = None
-            # Создаем запись об участии
+            # Добавление участника
             CompetitionParticipant.objects.get_or_create(
                 competition=application.competition,
                 participant=application.user
             )
         else:
+            # Отклонение заявки
             application.status = 'rejected'
             application.reason = reason
         
         application.save()
         
 class OrganizerUserApplicationsListView(ListAPIView):
+    """
+    API для получения списка заявок на соревнования, где пользователь является организатором.
+    
+    Возвращает:
+    - Список заявок со статусом 'pending' для соревнований, где пользователь организатор
+    - Информацию о пользователях и соревнованиях
+    
+    Доступ:
+    - Только для аутентифицированных организаторов
+    
+    Фильтрация:
+    - Только ожидающие рассмотрения заявки (status='pending')
+    """
     serializer_class = UserApplicationSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        """Возвращает заявки на соревнования, где пользователь организатор"""
         user_info = self.request.user
-        # Получаем соревнования, где пользователь организатор
+        # Получаем ID соревнований пользователя как организатора
         organized_competitions = CompetitionOrganizer.objects.filter(
             user=user_info.id
         ).values_list('competition', flat=True)
@@ -609,15 +718,55 @@ class OrganizerUserApplicationsListView(ListAPIView):
         return UserApplication.objects.filter(
             competition__in=organized_competitions,
             status='pending'
-        ).select_related('user','competition')
+        ).select_related('user', 'competition')  # Оптимизация запросов
 
 class UserListView(ListAPIView):
-    queryset = UserInfo.objects.filter(role_id=0).order_by('id')  # Фильтр по role_id=0
+    """
+    API для получения списка обычных пользователей (role_id=0)
+    
+    Возвращает:
+    - Список пользователей с основной информацией
+    - Сортировка по ID
+    
+    Доступ:
+    - Без авторизации
+    
+    Фильтрация:
+    - Только пользователи с role_id=0 (обычные пользователи)
+    """
+    queryset = UserInfo.objects.filter(role_id=0).order_by('id')
     serializer_class = UserInfoSerializer
     permission_classes = [AllowAny]
     
 
 class PublicTeamsView(APIView):
+    """
+    API для получения списка публичных команд
+    
+    Возвращает:
+    - Полную информацию о публичных командах (is_private=False)
+    - Данные о соревновании и датах проведения
+    - Информацию о капитане команды
+    - Количество участников
+    
+    Поля ответа:
+    - id: ID команды
+    - name: Название команды
+    - description: Описание команды
+    - competition: Данные соревнования (id, name, dates)
+    - captain: Данные капитана (id, nickName)
+    - max_members: Максимальное количество участников
+    - current_members: Текущее количество участников
+    - is_private: Флаг приватности (всегда False)
+    
+    Оптимизации:
+    - select_related для связей competition, captain, dates
+    - prefetch_related для members
+    - annotate для подсчета участников
+    
+    Доступ:
+    - Без авторизации
+    """
     permission_classes = [AllowAny]
     
     def get(self, request):
@@ -665,6 +814,26 @@ class PublicTeamsView(APIView):
         }, status=status.HTTP_200_OK)
         
 class CaptainVacancyResponsesView(APIView):
+    """
+    API для капитанов команд по управлению откликами на вакансии
+    
+    Возвращает:
+    - Список ожидающих (pending) откликов на вакансии в командах, где пользователь является капитаном
+    
+    Поля ответа:
+    - count: общее количество откликов
+    - responses: список откликов (сериализованные данные VacancyResponse)
+    
+    Ошибки:
+    - 403: если пользователь не является капитаном ни одной команды
+    
+    Оптимизации:
+    - select_related для связи с командой
+    - фильтрация только pending-откликов
+    
+    Доступ:
+    - Только для аутентифицированных капитанов команд
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -691,6 +860,23 @@ class CaptainVacancyResponsesView(APIView):
         }, status=status.HTTP_200_OK)
         
 class ResponseToPublicView(APIView):
+    """
+    API для отправки отклика на публичную вакансию в команде
+    
+    Позволяет пользователю:
+    - Отправить отклик на участие в команде
+    - Автоматически привязывает отклик к профилю пользователя
+    
+    Параметры запроса:
+    - team_id (обязательный): ID команды
+    - message (опциональный): сопроводительное сообщение
+    
+    Возвращает:
+    - 201: при успешном создании отклика (возвращает данные отклика)
+    - 400: при ошибках валидации или отсутствии профиля
+    - 401: для неаутентифицированных пользователей
+
+    """
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
@@ -716,6 +902,32 @@ class ResponseToPublicView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ResponseActionView(APIView):
+    """
+    API для обработки откликов на вакансии в команде (принять/отклонить)
+    
+    Доступ:
+    - Только для аутентифицированных капитанов команды
+    
+    Параметры запроса:
+    - response_id (обязательный): ID отклика на вакансию
+    - action (обязательный): accept/reject - действие по отклику
+    
+    Возможные ответы:
+    - 200: Успешное выполнение действия
+    - 400: Неверные данные или нет мест в команде
+    - 403: Пользователь не является капитаном
+    - 404: Отклик не найден
+    
+    Логика работы:
+    - При accept: добавляет пользователя в команду (если есть места)
+    - При reject: отклоняет заявку без дополнительных действий
+    - Ведет логирование для отладки
+    
+    Валидации:
+    - Проверка прав капитана
+    - Проверка наличия мест в команде
+    - Проверка существования отклика
+    """
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
@@ -770,6 +982,29 @@ class ResponseActionView(APIView):
             )
             
 class UserProfileView(APIView):
+    """
+    API для работы с профилем пользователя
+    
+    GET:
+    - Возвращает полную информацию о пользователе и его профиле
+    - Включает данные:
+      * Основные данные пользователя (email, nickName)
+      * Информацию профиля (ФИО, регион, роль, дата рождения)
+      * Названия региона и роли (в дополнение к ID)
+    
+    PATCH:
+    - Частичное обновление данных пользователя и профиля
+    - Принимает данные в формате:
+      {
+        "user": {"email": "...", "nickName": "..."},
+        "info": {"surname": "...", "region": id, ...}
+      }
+    - Обновляет только переданные поля
+    
+    Доступ:
+    - Только для аутентифицированных пользователей
+    - Каждый пользователь может работать только со своим профилем
+    """
     permission_classes = [IsAuthenticated]
     def get(self, request):
         user = request.user  # Получаем объект пользователя, а не только ID
@@ -838,6 +1073,31 @@ class UserProfileView(APIView):
         )
         
 class ParticipationHistoryView(APIView):
+    """
+    API для получения истории участия пользователя в соревнованиях
+    
+    Возвращает:
+    - Статистику участий (общее количество, победы, подиумы, текущий рейтинг)
+    - Подробную историю участия с результатами
+    
+    Поля ответа:
+    - stats: {
+        total_participations: общее количество участий
+        wins: количество побед (1 место)
+        podiums: количество попаданий в топ-3
+        current_rating: текущий рейтинг пользователя
+      }
+    - history: список участий {
+        competition: краткая информация о соревновании
+        result: занятое место
+      }
+    
+    Доступ:
+    - Только для аутентифицированных пользователей
+    
+    Ошибки:
+    - 404: если профиль пользователя не найден
+    """
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
@@ -870,6 +1130,19 @@ class ParticipationHistoryView(APIView):
         })
         
 class OrganizedCompetitionsView(APIView):
+    """
+    API для получения списка соревнований, где пользователь является организатором
+    
+    Возвращает:
+    - Список соревнований с основной информацией:
+      * ID, название, дисциплина
+      * Тип (индивидуальное/командное)
+      * Статус соревнования
+      * Флаг rated (оценено ли соревнование)
+    
+    Ошибки:
+    - 404: если профиль пользователя не найден
+    """
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
@@ -888,6 +1161,30 @@ class OrganizedCompetitionsView(APIView):
         })
         
 class DistributeResultsView(APIView):
+    """
+    API для распределения результатов завершенного соревнования
+    
+    Требования:
+    - Пользователь должен быть организатором соревнования
+    - Соревнование должно быть в статусе 'completed'
+    
+    Параметры запроса:
+    - competition_id: ID соревнования
+    - results: массив объектов с user_id и result (занятое место)
+    
+    Логика работы:
+    1. Проверяет валидность данных
+    2. Проверяет права доступа (организатор)
+    3. Проверяет статус соревнования
+    4. Обновляет результаты участников в транзакции
+    5. Помечает соревнование как оцененное
+    
+    Возвращает:
+    - 200: при успешном обновлении
+    - 400: при ошибках валидации или неверном статусе
+    - 403: если пользователь не организатор
+    - 404: если соревнование не найдено
+    """
     permission_classes = [IsAuthenticated]
     
     @transaction.atomic
@@ -946,6 +1243,22 @@ class DistributeResultsView(APIView):
         )
         
 class UserTeamsView(APIView):
+    """
+    API для получения списка команд пользователя
+    
+    Возвращает:
+    - Количество команд пользователя
+    - Подробную информацию о каждой команде
+    
+    Особенности:
+    - Добавляет аннотацию is_register для проверки регистрации
+    
+    Доступ:
+    - Только для аутентифицированных пользователей
+    
+    Ошибки:
+    - 404: если профиль пользователя не найден
+    """
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
@@ -972,6 +1285,22 @@ class UserTeamsView(APIView):
         })
         
 class PendingCompetitionsView(APIView):
+    """
+    API для получения списка соревнований, ожидающих подтверждения (со статусом 'pending')
+    
+    Возвращает:
+    - Список соревнований с полной информацией:
+      * Основные данные (ID, название, описание)
+      * Информацию о дисциплине
+      * Даты проведения
+    
+    Особенности:
+    - Использует оптимизированные запросы (select_related, prefetch_related)
+    - Возвращает только соревнования в статусе 'pending'
+    
+    Доступ:
+    - Только для аутентифицированных пользователей
+    """
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
@@ -987,6 +1316,23 @@ class PendingCompetitionsView(APIView):
         })
         
 class OrganizerTeamApplicationsListView(ListAPIView):
+    """
+    API для получения списка заявок команд на соревнования, где пользователь является организатором
+    
+    Возвращает:
+    - Список заявок команд с полной информацией:
+      * Данные о команде
+      * Информацию о соревновании
+      * Статус заявки
+    
+    Особенности:
+    - Фильтрует только заявки со статусом 'pending'
+    - Использует оптимизированные запросы (select_related)
+    - Возвращает только заявки на соревнования, где пользователь организатор
+    
+    Доступ:
+    - Только для аутентифицированных организаторов
+    """
     serializer_class = TeamApplicationSerializer
     permission_classes = [IsAuthenticated]
 
@@ -1003,6 +1349,34 @@ class OrganizerTeamApplicationsListView(ListAPIView):
         ).select_related('team', 'competition')
         
 class CompetitionDecisionView(APIView):
+    """
+    API для подтверждения или отклонения соревнований модератором
+    
+    Требования:
+    - Пользователь должен иметь роль модератора (role.id = 2)
+    - Соревнование должно быть в статусе 'pending'
+    
+    Параметры запроса:
+    - competition_id: ID соревнования
+    - action: 'accept' (подтвердить) или 'reject' (отклонить)
+    
+    Логика работы:
+    - При подтверждении (accept):
+      * Меняет статус соревнования на 'upcoming'
+    - При отклонении (reject):
+      * Удаляет все связанные записи организаторов
+      * Удаляет само соревнование
+    
+    Возвращает:
+    - 200: при успешном выполнении действия
+    - 400: при ошибках валидации
+    - 403: если пользователь не модератор
+    - 404: если соревнование или профиль не найдены
+    
+    Особенности:
+    - Использует атомарную транзакцию для безопасности данных
+    - Жёстко устанавливает статус 'pending' для входящих данных
+    """
     permission_classes = [IsAuthenticated]
     
     
@@ -1056,6 +1430,26 @@ class CompetitionDecisionView(APIView):
             )
             
 class CompetitionParticipantsView(APIView):
+    """
+    API для получения списка участников соревнования
+    
+    Возвращает:
+    - Основную информацию о соревновании (ID, название, тип)
+    - Список участников:
+      * Для индивидуальных соревнований - список пользователей
+      * Для командных соревнований - список команд с участниками
+    
+    Особенности:
+    - Разные форматы данных для индивидуальных и командных соревнований
+    - Использует оптимизированные запросы (select_related, prefetch_related)
+    - Возвращает только подтвержденных участников (status='approved')
+    
+    Доступ:
+    - Только для аутентифицированных пользователей
+    
+    Ошибки:
+    - 404: если соревнование не найдено
+    """
     permission_classes = [IsAuthenticated]
     
     def get(self, request, competition_id):
@@ -1087,6 +1481,23 @@ class CompetitionParticipantsView(APIView):
         })
         
 class RegionalRepresentativesView(ListAPIView):
+    """
+    API для получения списка региональных представителей
+    
+    Возвращает:
+    - Список подтвержденных пользователей с ролью регионального представителя (role_id=1)
+    - Основную информацию о представителях:
+      * ФИО
+      * Email
+      * Название региона
+    
+    Особенности:
+    - Использует оптимизированные запросы (select_related)
+    - Фильтрует только подтвержденных представителей (is_approved=True)
+    
+    Доступ:
+    - Без авторизации (можно изменить на IsAuthenticated при необходимости)
+    """
     permission_classes = [AllowAny]  # Или [IsAuthenticated] если нужно ограничить доступ
     serializer_class = RegionalRepresentativeSerializer
     
@@ -1097,6 +1508,37 @@ class RegionalRepresentativesView(ListAPIView):
         ).select_related('user', 'region')  # Оптимизация запросов
         
 class CompetitionStatusView(APIView):
+    """
+    API для обновления статусов соревнований на основе текущего времени
+    
+    Принимает:
+    - Временную метку в ISO 8601 формате (например, "2025-03-02T21:00:00Z")
+    
+    Возвращает:
+    - Информацию о каждом соревновании:
+      * ID и название
+      * Старый и новый статус
+      * Флаг изменения статуса
+    - Общее количество обновленных соревнований
+    - Временные метки клиента и сервера
+    
+    Логика работы:
+    1. Проверяет корректность переданного времени
+    2. Для каждого соревнования определяет актуальный статус:
+       - registration: если текущее время в периоде регистрации
+       - running: если время проведения соревнования
+       - finished: если время окончания прошло
+       - waiting: если до начала регистрации
+    3. Обновляет статусы при необходимости
+    
+    Особенности:
+    - Не изменяет статус 'pending' (ожидающие подтверждения)
+    - Использует оптимизированные запросы (select_related, only)
+    - Поддерживает временные зоны (UTC)
+    
+    Доступ:
+    - Без авторизации
+    """
     permission_classes = [AllowAny]
     
     def post(self, request):
@@ -1182,6 +1624,27 @@ class CompetitionStatusView(APIView):
         })
         
 class UserVacancyResponsesView(APIView):
+    """
+    API для получения списка откликов пользователя на вакансии в командах
+    
+    Возвращает:
+    - Общее количество откликов
+    - Список откликов с детальной информацией:
+      * Данные о команде и соревновании
+      * Текст отклика
+      * Статус и его текстовое представление
+    
+    Особенности:
+    - Использует оптимизированные запросы (select_related)
+    - Возвращает только отклики текущего пользователя
+    - Включает человекочитаемые названия статусов
+    
+    Доступ:
+    - Только для аутентифицированных пользователей
+    
+    Ошибки:
+    - 404: если профиль пользователя не найден
+    """
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
@@ -1210,6 +1673,30 @@ class UserVacancyResponsesView(APIView):
         })
         
 class RegionCompetitionsView(APIView):
+    """
+    API для получения активных соревнований в указанном регионе
+    
+    Параметры:
+    - region_id: числовой идентификатор региона
+    
+    Возвращает:
+    - ID запрошенного региона
+    - Количество доступных соревнований
+    - Список соревнований с краткой информацией:
+      * ID, название, дисциплина
+      * Тип и статус соревнования
+    
+    Особенности:
+    - Фильтрует соревнования по наличию региона в permissions
+    - Исключает соревнования в статусах 'pending' и 'finished'
+    - Использует оптимизированные запросы (select_related)
+    
+    Доступ:
+    - Без авторизации
+    
+    Ошибки:
+    - 400: если region_id не является числом
+    """
     permission_classes = [AllowAny]
     
     def get(self, request, region_id):
@@ -1239,8 +1726,33 @@ class RegionCompetitionsView(APIView):
         })
         
 
-
 class CompetitionParticipantsStructuredExportAPI(APIView):
+    """
+    API для экспорта структурированных данных о соревнованиях и участниках в Excel
+    
+    Параметры:
+    - competition_id (опциональный): ID конкретного соревнования
+    
+    Возвращает:
+    - Excel файл с детализированной информацией:
+      * Основные данные соревнования
+      * Список индивидуальных участников с результатами
+      * Состав команд с информацией об участниках
+    
+    Особенности:
+    - Поддерживает экспорт как одного соревнования, так и всех соревнований
+    - Форматирует данные с заголовками, стилями и границами
+    - Автоматически настраивает ширину столбцов
+    - Оптимизирует запросы к базе данных (select_related, prefetch_related)
+    - Группирует участников по типу участия (индивидуальные/командные)
+    
+    Доступ:
+    - Без авторизации
+    
+    Ошибки:
+    - 404: если соревнование не найдено
+    - 500: при внутренних ошибках сервера
+    """
     permission_classes = [AllowAny]
 
     def get(self, request, competition_id=None):
