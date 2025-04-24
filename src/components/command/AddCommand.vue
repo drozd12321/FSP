@@ -56,9 +56,10 @@
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import Loader from "./Loader.vue";
+
 import { useCommandStore } from "@/stores/storeCommand";
 import { storeToRefs } from "pinia";
+import Loader from "../Loader.vue";
 const { getLoading, getId, getType } = storeToRefs(useCommandStore());
 const comStore = useCommandStore();
 const emit = defineEmits(["close"]);

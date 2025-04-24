@@ -1,5 +1,5 @@
 <template>
-  <div><AppMsg v-if="act1?.show" :act="act1" />Home</div>
+  <div><AppMsg v-if="act1?.show" :act="act1" /> <CardRussia /></div>
 </template>
 <script setup>
 import AppMsg from "@/components/message/AppMsg.vue";
@@ -7,12 +7,13 @@ import { computed, onMounted, ref } from "vue";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { storeToRefs } from "pinia";
 import axios from "axios";
+import CardRussia from "@/components/home/CardRussia.vue";
 const { getMsg } = storeToRefs(useAuthStore());
 const act1 = computed(() => {
   return getMsg.value;
 });
 function getISODateTime() {
-  return new Date().toISOString().replace(/\.\d+Z$/, "");
+  return new Date().toISOString().replace(/\.\d{3}/, "");
 }
 const getDat = async () => {
   try {
@@ -30,8 +31,8 @@ const getDat = async () => {
     throw error;
   }
 };
-// onMounted(() => {
-//   getDat();
-// });
+onMounted(() => {
+  getDat();
+});
 </script>
 <style scoped></style>

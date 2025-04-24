@@ -68,7 +68,8 @@
 import { usePagination } from "@/use/usePagination";
 import axios from "axios";
 import { computed, onMounted, ref } from "vue";
-import Loader from "./Loader.vue";
+import Loader from "../Loader.vue";
+
 const users = ref([]);
 const itemsPerPage = 10;
 const totalPages = Math.ceil(users.length / itemsPerPage);

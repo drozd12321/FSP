@@ -18,7 +18,6 @@
   </div>
 </template>
 <script setup>
-import AddCommand from "@/components/AddCommand.vue";
 import AppCardInfoCommand from "@/components/command/AppCardInfoCommand.vue";
 import axios from "axios";
 import { computed, onMounted, ref } from "vue";

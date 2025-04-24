@@ -140,10 +140,12 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import Multiselect from "vue-multiselect";
-import Loader from "./Loader.vue";
+
 import { competitionStore } from "@/stores/storeComp";
 import { storeToRefs } from "pinia";
 import axios from "axios";
+import Loader from "../Loader.vue";
+
 const compStore = competitionStore();
 const { loading } = storeToRefs(competitionStore());
 const distiplines = ref();

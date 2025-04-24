@@ -1,7 +1,7 @@
 <template>
   <AppFilterCompititions :comp="filteredData" @filterChange="handleFilter" />
+  <AppMsg v-if="act" :act="act" />
   <div class="container">
-    <AppMsg v-if="act" :act="act" />
     <div v-if="getCreating" class="loader-overlay">
       <AddCommand @close="close" />
     </div>
@@ -24,16 +24,16 @@
   </div>
 </template>
 <script setup>
-import ListCard from "@/components/ListCard.vue";
-import Loader from "@/components/Loader.vue";
 import { useCommandStore } from "@/stores/storeCommand";
 import { storeToRefs } from "pinia";
 import { debounce } from "lodash-es";
 import axios from "axios";
 import { computed, onMounted, ref } from "vue";
-import AddCommand from "@/components/AddCommand.vue";
-import AppMsg from "@/components/message/AppMsg.vue";
 import AppFilterCompititions from "@/components/compititions/AppFilterCompititions.vue";
+import ListCard from "@/components/compititions/ListCard.vue";
+import AddCommand from "@/components/command/AddCommand.vue";
+import Loader from "@/components/Loader.vue";
+
 const { getCreating, getMsg } = storeToRefs(useCommandStore());
 const comStore = useCommandStore();
 const comp = ref();

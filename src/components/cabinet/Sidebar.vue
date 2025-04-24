@@ -99,8 +99,8 @@
           <img :src="user.avatar" alt="User Avatar" />
         </div>
         <div class="user-details">
-          <div class="user-name">{{ user.info.name }}</div>
-          <div class="user-role">{{ user.role }}</div>
+          <div class="user-name"></div>
+          <div class="user-role"></div>
         </div>
       </div>
     </div>

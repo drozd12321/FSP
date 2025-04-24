@@ -9,7 +9,7 @@ import FAQ from "@/views/FAQ.vue";
 import Rating from "@/views/Rating.vue";
 import News from "@/views/News.vue";
 import Cabinet from "@/views/Cabinet.vue";
-import CardInfoComp from "@/components/CardInfoComp.vue";
+import CardInfoComp from "@/components/compititions/CardInfoComp.vue";
 import CompLayuot from "@/views/CompLayuot.vue";
 import LayoutCabinet from "@/components/cabinet/LayoutCabinet.vue";
 import InfoCommandUser from "@/components/user/infoCommandUser.vue";

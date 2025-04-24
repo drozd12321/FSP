@@ -1,7 +1,7 @@
 <template>
-  <div><Rating /></div>
+  <div><RatingR /></div>
 </template>
 <script setup>
-import Rating from "@/components/Rating.vue";
+import RatingR from "@/components/rating/RatingR.vue";
 </script>
 <style scoped></style>
