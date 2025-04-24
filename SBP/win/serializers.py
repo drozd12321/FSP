@@ -883,28 +883,38 @@ class MemberNicknameSerializer(serializers.ModelSerializer):
 class TeamListSerializer(serializers.ModelSerializer):
     competition_name = serializers.CharField(source='competition.name')
     competition_status = serializers.CharField(source='competition.status')
-    discipline_name = serializers.CharField(source='competition.discipline.name')  # Новое поле
+    discipline_name = serializers.CharField(source='competition.discipline.name')
     members = serializers.SerializerMethodField()
+    is_register = serializers.SerializerMethodField()
+    competition_id = serializers.IntegerField(source='competition.id')  # Добавляем ID соревнования
     
     class Meta:
         model = Team
         fields = [
-            'id', 
+            'id',  # ID команды уже здесь
             'name', 
+            'competition_id',  # Добавляем ID соревнования
             'competition_name', 
             'competition_status',
-            'discipline_name',  # Добавлено новое поле
+            'discipline_name',
             'members',
             'captain',
+            'is_register',
         ]
     
     def get_members(self, obj):
-        # Оптимизация запроса с select_related
         members = obj.members.all().select_related('user')
         return [{
             'id': member.user.id,
             'nickName': member.user.nickName
         } for member in members]
+    
+    def get_is_register(self, obj):
+        # Используем аннотацию из представления, если она есть
+        if hasattr(obj, 'is_register'):
+            return obj.is_register
+        # Иначе делаем отдельный запрос
+        return TeamApplication.objects.filter(team=obj).exists()
         
 class CompetitionDecisionSerializer(serializers.Serializer):
     competition_id = serializers.IntegerField()

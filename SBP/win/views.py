@@ -20,6 +20,7 @@ from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, Border, Side
 from io import BytesIO
+from django.db.models import Exists, OuterRef
 logger = logging.getLogger(__name__)
 
 class UserApprovalView(APIView):
@@ -924,19 +925,18 @@ class UserTeamsView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # Оптимизированный запрос с select_related
         user_info = get_object_or_404(UserInfo, user_id=request.user.id)
         
-        # Получаем команды с предзагрузкой связанных данных
         teams = Team.objects.filter(
             members=user_info.user_id
         ).select_related(
             'competition',
-            'competition__discipline'  # Добавлено для оптимизации
+            'competition__discipline'
         ).prefetch_related(
             'members',
             'members__user'
-        )
+        ).annotate(
+            is_register=Exists(TeamApplication.objects.filter(team=OuterRef('pk'))))
         
         logger.debug(f"User ID: {request.user.id}, UserInfo ID: {user_info.id}")
         logger.debug(f"Teams found: {teams.count()}")
