@@ -1,6 +1,7 @@
 <template>
   <div v-if="loading" class="loader-overlay"><Loader /></div>
   <div v-else>
+    <div v-if="msgE"><AppMsg :act="msgE" @close="close" /></div>
     <div class="teams-container">
       <div class="teams-header">
         <h2>Заявки на проведение</h2>
@@ -28,6 +29,9 @@
             :startDate="zavk.dates.start_date"
             :endDate="zavk.dates.end_date"
             :description="zavk.description"
+            :id="zavk.id"
+            @rejectApplication="rejectApplication"
+            @approveApplication="approveApplication"
           />
         </div>
       </div>
@@ -37,13 +41,17 @@
 
 <script setup>
 import axios from "axios";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import { useMsgStore } from "@/stores/useMessageStore";
+import { storeToRefs } from "pinia";
 import InfoZavka from "./InfoZavka.vue";
 import Loader from "../Loader.vue";
+import AppMsg from "../message/AppMsg.vue";
 const router = useRouter();
 const zavkaProved = ref();
-
+const msgStore = useMsgStore();
+const { getMsg } = storeToRefs(useMsgStore());
 const loading = ref(false);
 const isData = ref(false);
 const token = ref();
@@ -74,6 +82,69 @@ const getzavkaProved = async () => {
 const gotoComp = () => {
   router.push("/competitions");
 };
+const msgE = computed(() => {
+  return getMsg.value;
+});
+const msg = ref({
+  show: false,
+  type: "",
+  title: "",
+});
+const close = () => {
+  msg.value = { show: false, type: "", title: "" };
+};
+const approveApplication = async (id) => {
+  try {
+    const response = await axios.post(
+      "http://10.8.0.23:8000/competitions/decision/",
+      {
+        action: "accept",
+        competition_id: id,
+      },
+      {
+        headers: {
+          Authorization: `Token ${token.value}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    getzavkaProved();
+    msgStore.setMesg({
+      show: true,
+      type: "succses",
+      title: response.data.detail,
+    });
+    console.log(response.data);
+  } catch (error) {
+    console.log(error);
+  }
+};
+const rejectApplication = async (id) => {
+  try {
+    const response = await axios.post(
+      "http://10.8.0.23:8000/competitions/decision/",
+      {
+        action: "reject",
+        competition_id: id,
+      },
+      {
+        headers: {
+          Authorization: `Token ${token.value}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    msgStore.setMesg({
+      show: true,
+      type: "succses",
+      title: response.data.detail,
+    });
+    getzavkaProved();
+    console.log(response.data);
+  } catch (error) {
+    console.log(error);
+  }
+};
 onMounted(() => {
   token.value = localStorage.getItem("jwtToken").trim();
   getzavkaProved();
@@ -88,7 +159,6 @@ onMounted(() => {
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-right: 80px;
 }
 
 .teams-header {

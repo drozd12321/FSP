@@ -186,12 +186,13 @@ onMounted(() => {
 <style scoped>
 .horizontal-filter-container {
   background: white;
-  border-radius: 10px;
+  position: sticky;
   padding: 15px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  width: 93%;
+  width: 100%;
   margin: 20px auto;
   display: flex;
+  border-bottom: 3px solid rgb(180, 180, 180);
 }
 
 .filter-row {

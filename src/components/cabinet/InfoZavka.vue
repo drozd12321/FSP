@@ -9,16 +9,18 @@
 
     <div class="card-content">
       <div class="info-row">
-        <span class="info-label">Участник:</span>
-        <span class="info-value">имя польз</span>
+        <span class="info-label"> Формат:</span>
+        <span class="info-value">{{ competition_type_display }}</span>
       </div>
       <div class="info-row">
         <span class="info-label">Тип:</span>
         <span class="info-value">{{ type_display }}</span>
       </div>
       <div class="info-row">
-        <span class="info-label">Дата подачи:</span>
-        <span class="info-value">дата</span>
+        <span class="info-label">Даты проведения:</span>
+        <span class="info-value">{{
+          formatDateRange(startDate, endDate)
+        }}</span>
       </div>
       <div class="info-row descr">
         <span class="info-label">Описание:</span>
@@ -27,10 +29,16 @@
     </div>
 
     <div class="card-actions">
-      <button class="action-btn reject-btn" @click="rejectApplication">
+      <button
+        class="action-btn reject-btn"
+        @click="$emit('rejectApplication', id)"
+      >
         Отклонить
       </button>
-      <button class="action-btn approve-btn" @click="approveApplication">
+      <button
+        class="action-btn approve-btn"
+        @click="$emit('approveApplication', id)"
+      >
         Подтвердить
       </button>
     </div>
@@ -38,8 +46,10 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
-
+import { computed, onMounted, ref } from "vue";
+import formatDateRange from "@/use/useFilterData";
+import axios from "axios";
+const emit = defineEmits(["approveApplication", "rejectApplication"]);
 const props = defineProps({
   name: String,
   competition_type_display: String,
@@ -48,6 +58,11 @@ const props = defineProps({
   startDate: String,
   endDate: String,
   description: String,
+  id: Number,
+});
+const token = ref();
+onMounted(() => {
+  token.value = localStorage.getItem("jwtToken");
 });
 </script>
 
@@ -109,7 +124,8 @@ const props = defineProps({
 }
 
 .info-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 200px auto;
   margin-bottom: 8px;
 }
 .info-row.descr {

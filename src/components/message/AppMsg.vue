@@ -48,8 +48,10 @@
 import { onUnmounted, ref, watch } from "vue";
 import { useCommandStore } from "@/stores/storeCommand";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { useMsgStore } from "@/stores/useMessageStore";
 const commandStore = useCommandStore();
 const authStore = useAuthStore();
+const msgError = useMsgStore();
 const props = defineProps({
   act: Object,
   message: {
@@ -74,6 +76,7 @@ let timeoutId = null;
 const hideNotification = () => {
   commandStore.setMesg({ show: false, type: "", title: "" });
   authStore.setMesg({ show: false, type: "", title: "" });
+  msgError.setMesg({ show: false, type: "", title: "" });
 };
 watch(
   () => props.act.show,
