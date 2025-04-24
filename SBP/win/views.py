@@ -987,3 +987,32 @@ class UserVacancyResponsesView(APIView):
             'count': responses.count(),
             'responses': serializer.data
         })
+        
+class RegionCompetitionsView(APIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request, region_id):
+        try:
+            region_id = int(region_id)  # Преобразуем в число
+        except ValueError:
+            return Response(
+                {"error": "Номер региона должен быть числом"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Ищем соревнования, где:
+        # 1) region_id есть в permissions
+        # 2) статус не 'pending' и не 'finished'
+        competitions = Competition.objects.filter(
+            permissions__contains=[region_id],
+        ).exclude(
+            status__in=['pending', 'finished']
+        ).select_related('discipline')
+        
+        serializer = CompetitionShortSerializer(competitions, many=True)
+        
+        return Response({
+            'region_id': region_id,
+            'count': competitions.count(),
+            'competitions': serializer.data
+        })
