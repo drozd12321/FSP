@@ -43,6 +43,8 @@ import { useRouter } from "vue-router";
 import ModalAddCommand from "../command/ModalAddCommand.vue";
 import { storeToRefs } from "pinia";
 import { competitionStore } from "@/stores/storeComp";
+import { useMsgStore } from "@/stores/useMessageStore";
+const msgStore = useMsgStore();
 const router = useRouter();
 const isData = ref(false);
 const teams = ref();
@@ -143,10 +145,20 @@ const sentAddCom = async (action) => {
     } else {
       isData.value = false;
     }
+    msgStore.setMesg({
+      show: true,
+      type: "succses",
+      title: "Вы успешно добавили пользователя",
+    });
     loading.value = false;
     console.log(teams.value);
     return response.data;
   } catch (error) {
+    msgStore.setMesg({
+      show: true,
+      type: "error",
+      title: "Вы уже добавили этого пользователя в команду",
+    });
     loading.value = false;
     console.error("Error fetching regions:", error);
     throw error;

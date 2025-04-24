@@ -11,7 +11,7 @@
           <input
             id="input-field"
             type="text"
-            :value="inputDisplayValue"
+            v-model="inputDisplayValue"
             @input="handleInput"
             class="combobox-input"
             placeholder="Введите или выберите"
@@ -28,7 +28,7 @@
               :key="option.id"
               @mousedown="selectOption(option)"
             >
-              {{ option.data }}
+              {{ option.surname }} {{ option.name }} - '{{ option.nickName }}'
             </li>
           </ul>
         </div>
@@ -40,8 +40,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { competitionStore } from "@/stores/storeComp";
-import { storeToRefs } from "pinia";
+
 import axios from "axios";
 const props = defineProps({
   isOpen: Boolean,
@@ -56,9 +55,13 @@ const options = ref([]);
 const loading = ref();
 const isData = ref();
 const filteredOptions = computed(() => {
-  return options.value.filter((opt) =>
-    opt.data.toLowerCase().includes(inputDisplayValue.value.toLowerCase())
-  );
+  return options.value.filter((opt) => {
+    const data = opt?.data ?? "";
+    console.log("data", data);
+    const searchValue = inputDisplayValue.value?.toLowerCase() ?? "";
+    console.log("searchValue", searchValue);
+    return data.toLowerCase().includes(searchValue);
+  });
 });
 const getUsers = async () => {
   try {
@@ -70,9 +73,10 @@ const getUsers = async () => {
     } else {
       isData.value = false;
     }
+
     options.value = response.data;
     loading.value = false;
-    console.log(response.data);
+    console.log(options.value);
     return response.data;
   } catch (error) {
     loading.value = false;
@@ -98,10 +102,9 @@ const handleBlur = () => {
 };
 
 const selectOption = (option) => {
-  inputDisplayValue.value = option.data;
+  inputDisplayValue.value = `${option.surname} ${option.name} - '${option.nickName}'`;
   selectedId.value = option.id;
   showDropdown.value = false;
-  console.log("Выбрано:", option.id, option.data);
 };
 
 const sent = () => {
