@@ -453,7 +453,8 @@ class TeamApplicationSerializer(serializers.ModelSerializer):
     competition_name = serializers.CharField(source='competition.name', read_only=True)
     team_name = serializers.CharField(source='team.name', read_only=True)
     team_members = serializers.SerializerMethodField()
-
+    status = serializers.CharField(default='pending')  # Устанавливаем значение по умолчанию
+    
     class Meta:
         model = TeamApplication
         fields = ['id','team_id', 'status', 'reason', 'competition', 
@@ -490,7 +491,11 @@ class TeamApplicationSerializer(serializers.ModelSerializer):
         
         # Удаляем все приглашения для этой команды
         Invitation.objects.filter(team=team).delete()
-        # Устанавливаем статус "На модерации" и пустое поле reason
+        
+        # Удаляем status из validated_data, если он там есть
+        validated_data.pop('status', None)
+        
+        # Создаем заявку с явно указанным статусом
         return TeamApplication.objects.create(
             status='pending',
             reason=None,
