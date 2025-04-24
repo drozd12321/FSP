@@ -1022,9 +1022,10 @@ class OrganizerCompetitionSerializer(serializers.ModelSerializer):
     Особенности:
     - Формирует удобную структуру данных о соревновании
     - Включает название дисциплины вместо ID
+    - Убрано избыточное указание source для поля rated
     """
     competition = serializers.SerializerMethodField()
-    rated = serializers.BooleanField(source='rated')
+    rated = serializers.BooleanField()  # Убрано source='rated' так как оно избыточно
     
     class Meta:
         model = CompetitionOrganizer
@@ -1032,7 +1033,7 @@ class OrganizerCompetitionSerializer(serializers.ModelSerializer):
     
     def get_competition(self, obj):
         competition = obj.competition
-        discipline_name = Discipline.objects.get(id = competition.discipline).name
+        discipline_name = competition.discipline.name  # Оптимизировано - используем select_related
         return {
             'id': competition.id,
             'name': competition.name,
@@ -1248,3 +1249,7 @@ class UserVacancyResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = VacancyResponse
         fields = ['id', 'text', 'status', 'status_display', 'team']
+        
+class CompetitionDecisionSerializer(serializers.Serializer):
+    competition_id = serializers.IntegerField()
+    action = serializers.ChoiceField(choices=['accept', 'reject'])
