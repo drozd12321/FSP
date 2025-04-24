@@ -891,9 +891,10 @@ class RegionalRepresentativesView(ListAPIView):
 class CompetitionStatusView(APIView):
     permission_classes = [AllowAny]
     
-    def get(self, request):
+    def post(self, request):
         # Получаем время из запроса
-        client_time_str = request.query_params.get('time', None)
+        client_time_str = request.data.get('time')
+        logger.debug(f"Received time: {client_time_str}")
         
         if not client_time_str:
             return Response(
@@ -902,8 +903,11 @@ class CompetitionStatusView(APIView):
             )
         
         try:
-            client_time = datetime.fromisoformat(client_time_str.replace('Z', '+00:00'))
-            client_time = timezone.make_aware(client_time)
+            # Парсим время напрямую (datetime.fromisoformat в Python 3.11+ поддерживает 'Z')
+            client_time = datetime.fromisoformat(client_time_str)
+            # Если время наивное (без часового пояса), добавляем UTC
+            if client_time.tzinfo is None:
+                client_time = timezone.make_aware(client_time, timezone.utc)
         except ValueError:
             return Response(
                 {"error": "Неверный формат времени. Используйте ISO 8601 (например, 2025-03-02T21:00:00Z)"},
@@ -914,7 +918,7 @@ class CompetitionStatusView(APIView):
         competitions = Competition.objects.filter(
             dates__isnull=False
         ).select_related('dates').only(
-            'id', 'status', 'dates__start_date', 
+            'id', 'status', 'name', 'dates__start_date', 
             'dates__end_date', 'dates__registration_start',
             'dates__registration_end'
         )
