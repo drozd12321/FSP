@@ -7,7 +7,7 @@
           <h2>Мои соревнования</h2>
         </div>
         <div>
-          <button class="primary-btn" @click="showAdd">
+          <button v-if="role != '0'" class="primary-btn" @click="showAdd">
             Создать соревнование
           </button>
         </div>
