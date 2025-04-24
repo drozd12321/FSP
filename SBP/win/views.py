@@ -734,7 +734,7 @@ class UserListView(ListAPIView):
     Фильтрация:
     - Только пользователи с role_id=0 (обычные пользователи)
     """
-    queryset = UserInfo.objects.filter(role_id=0).order_by('id')
+    queryset = UserInfo.objects.filter(role_id=0).order_by('-rating')
     serializer_class = UserInfoSerializer
     permission_classes = [AllowAny]
     
