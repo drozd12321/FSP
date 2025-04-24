@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isIndividual" class="application-card">
+  <div class="application-card">
     <div class="card-header">
       <h3 class="card-title">{{ name }}</h3>
       <span class="card-status" :class="statusClass">{{
@@ -9,58 +9,36 @@
 
     <div class="card-content">
       <div class="info-row">
-        <span class="info-label"> Название соревнования:</span>
+        <span class="info-label"> Формат:</span>
         <span class="info-value">{{ competition_type_display }}</span>
-        <span class="info-value">{{ teamName }} </span>
       </div>
       <div class="info-row">
-        <span class="info-label">Состав команды: </span>
-        <div v-for="us in team_members" class="com">
-          <span class="info-value"
-            >{{ us.name }} {{ us.patronymic }} {{ us.surname }} - '{{
-              us.nickName
-            }}'
-          </span>
-        </div>
+        <span class="info-label">Тип:</span>
+        <span class="info-value">{{ type_display }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Даты проведения:</span>
+        <span class="info-value">{{
+          formatDateRange(startDate, endDate)
+        }}</span>
+      </div>
+      <div class="info-row descr">
+        <span class="info-label">Описание:</span>
+        <span class="info-value">{{ description }}</span>
       </div>
     </div>
 
     <div class="card-actions">
-      <button class="action-btn reject-btn" @click="closeTeam">
+      <button
+        class="action-btn reject-btn"
+        @click="$emit('rejectApplication', id)"
+      >
         Отклонить
       </button>
-      <button class="action-btn approve-btn" @click="openTeam">
-        Подтвердить
-      </button>
-    </div>
-  </div>
-  <div v-else class="application-card">
-    <div class="card-header">
-      <h3 class="card-title">{{ name }}</h3>
-      <span class="card-status" :class="statusClass">{{
-        competition_type_display
-      }}</span>
-    </div>
-
-    <div class="card-content">
-      <div class="info-row">
-        <span class="info-label"> Название соревнований:</span>
-        <span class="info-value">{{ competition_type_display }}</span>
-        <span class="info-value">{{ teamName }}</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">ФИО:</span>
-        <span class="info-value"
-          >{{ user.name }} {{ user.patronymic }} {{ user.surname }}</span
-        >
-      </div>
-    </div>
-
-    <div class="card-actions">
-      <button class="action-btn reject-btn" @click="closeUser">
-        Отклонить
-      </button>
-      <button class="action-btn approve-btn" @click="openUser">
+      <button
+        class="action-btn approve-btn"
+        @click="$emit('approveApplication', id)"
+      >
         Подтвердить
       </button>
     </div>
@@ -71,12 +49,7 @@
 import { computed, onMounted, ref } from "vue";
 import formatDateRange from "@/use/useFilterData";
 import axios from "axios";
-const emit = defineEmits([
-  "approveApplication",
-  "rejectApplication",
-  "close",
-  "open",
-]);
+const emit = defineEmits(["approveApplication", "rejectApplication"]);
 const props = defineProps({
   name: String,
   competition_type_display: String,
@@ -86,50 +59,14 @@ const props = defineProps({
   endDate: String,
   description: String,
   id: Number,
-  isIndividual: Boolean,
-  teamName: String,
-  team_members: Array,
-  user: Object,
-  teamId: Number,
-  userId: Number,
 });
 const token = ref();
-const action = ref({
-  accept: "accept",
-  reject: "reject",
-});
-const closeTeam = () => {
-  emit("rejectApplication", props.id);
-  emit("open", {
-    action: action.value.reject,
-    id: props.teamId,
-    reason: "Отказано в доступе",
-  });
-};
-const openTeam = () => {
-  emit("approveApplication", props.id);
-  emit("open", { action: action.value.accept, id: props.teamId });
-};
-const closeUser = () => {
-  emit("close", {
-    action: action.value.reject,
-    id: props.userId,
-    reason: "Отказано в доступе",
-  });
-};
-const openUser = () => {
-  emit("close", { action: action.value.accept, id: props.userId });
-};
 onMounted(() => {
   token.value = localStorage.getItem("jwtToken");
 });
 </script>
 
 <style scoped>
-.com {
-  display: flex;
-  flex-direction: column;
-}
 .application-card {
   background: white;
   border-radius: 12px;
@@ -188,7 +125,7 @@ onMounted(() => {
 
 .info-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: 200px auto;
   margin-bottom: 8px;
 }
 .info-row.descr {

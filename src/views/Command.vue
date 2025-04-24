@@ -1,9 +1,9 @@
 <template>
   <div>
     <div v-if="load" class="loader-overlay"><Loader /></div>
-    <div class="flt">
+    <!-- <div class="flt">
       <FilterCommand @filter="applyFilters" @reset="resetFilters" />
-    </div>
+    </div> -->
     <div v-for="com in filteredComands" :key="com.id">
       <AppCardInfoCommand
         :nameCommand="com.name"

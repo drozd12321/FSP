@@ -1,21 +1,29 @@
 <template>
-  <div v-if="loading" class="loader-overlay"><Loader /></div>
+  <div v-if="act"><AppMsg :act="act" /></div>
+  <div v-if="loading" class="loader-container">
+    <Loader />
+  </div>
   <div v-else class="container">
     <div class="teams-container">
       <div class="teams-header">
         <h2>Заявки команд</h2>
       </div>
       <div class="teams-list">
-        <div v-if="loading" class="loader-container">
-          <Loader />
-        </div>
-        <div v-if="isData" class="empty-state">
+        <div v-if="isDataTeam" class="empty-state">
           <img src="/src/assets/user.png" alt="Нет команд" class="empty-icon" />
           <p>Команды пока не подали заявки на участия в соревнованиях</p>
           <button class="primary-btn" @click="gotoComp">Учавствовать</button>
         </div>
         <div v-else>
-          <InfoZavka />
+          <InfoZavka
+            v-for="team in zavkateams"
+            :isIndividual="true"
+            :teamName="team.competition_name"
+            :name="team.team_name"
+            :team_members="team.team_members"
+            :teamId="team.id"
+            @open="openTeam"
+          />
         </div>
       </div>
     </div>
@@ -27,13 +35,21 @@
         <div v-if="loading" class="loader-container">
           <Loader />
         </div>
-        <div v-if="isData" class="empty-state">
+        <div v-if="!isDataUser" class="empty-state">
           <img src="/src/assets/user.png" alt="Нет команд" class="empty-icon" />
           <p>Пользователи пока не подали заявки на участия в соревнованиях</p>
           <button class="primary-btn" @click="gotoComp">Учавствовать</button>
         </div>
         <div v-else>
-          <InfoZavka />
+          <InfoZavka
+            v-for="user in zavkauser"
+            :isIndividual="false"
+            :name="user.user_info.nickName"
+            :teamName="user.competition_name"
+            :user="user.user_info"
+            :userId="user.id"
+            @close="openUser"
+          />
         </div>
       </div>
     </div>
@@ -42,16 +58,100 @@
 
 <script setup>
 import axios from "axios";
-import { onMounted, ref } from "vue";
-
+import { computed, onMounted, ref } from "vue";
+import { useMsgStore } from "@/stores/useMessageStore";
+import { storeToRefs } from "pinia";
+const msgStore = useMsgStore();
+const { getMsg } = storeToRefs(useMsgStore());
 import Loader from "../Loader.vue";
 import InfoZavka from "./InfoZavka.vue";
+import AppMsg from "../message/AppMsg.vue";
 
 const zavkateams = ref();
 const zavkauser = ref();
-const isData = ref(false);
+const isDataTeam = ref(false);
+const isDataUser = ref(false);
 const loading = ref(false);
 const token = ref();
+const act = computed(() => {
+  return getMsg.value;
+});
+const openTeam = async (action) => {
+  try {
+    loading.value = true;
+    console.log(action);
+    const response = await axios.patch(
+      `http://10.8.0.23:8000/team-applications/${action.id}/response/`,
+      {
+        action: action.action,
+        reason: action.reason,
+      },
+      {
+        headers: {
+          Authorization: `Token ${token.value}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    getZavka();
+    if (action.action === "accept") {
+      msgStore.setMesg({
+        show: true,
+        type: "succses",
+        title: "Вы успешно подтвердили заявку",
+      });
+    } else {
+      msgStore.setMesg({
+        show: true,
+        type: "succses",
+        title: "Вы успешно отклонили заявку",
+      });
+    }
+    loading.value = false;
+    console.log(response.data);
+  } catch (error) {
+    loading.value = false;
+    console.log(error);
+  }
+};
+const openUser = async (action) => {
+  try {
+    loading.value = true;
+    const response = await axios.patch(
+      `http://10.8.0.23:8000/user-applications/${action.id}/response/`,
+      {
+        action: action.action,
+        reason: action.reason,
+      },
+      {
+        headers: {
+          Authorization: `Token ${token.value}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    getZavkaUsers();
+    console.log("action", action);
+    if (action.action === "accept") {
+      msgStore.setMesg({
+        show: true,
+        type: "succses",
+        title: "Вы успешно подтвердили заявку",
+      });
+    } else {
+      msgStore.setMesg({
+        show: true,
+        type: "succses",
+        title: "Вы успешно отклонили заявку",
+      });
+    }
+    loading.value = false;
+    console.log(response.data);
+  } catch (error) {
+    loading.value = false;
+    console.log(error);
+  }
+};
 const getZavka = async () => {
   try {
     loading.value = true;
@@ -66,11 +166,15 @@ const getZavka = async () => {
     );
     zavkateams.value = response.data;
     loading.value = false;
-    isData.value = false;
-    console.log(zavkateams.value);
+    if (zavkateams.value.length === 0) {
+      isDataTeam.value = true;
+    } else {
+      isDataTeam.value = false;
+    }
+    console.log("teams", zavkateams.value);
     return response.data;
   } catch (error) {
-    isData.value = true;
+    isDataTeam.value = true;
     loading.value = false;
     console.error("Error fetching regions:", error);
     throw error;
@@ -88,13 +192,18 @@ const getZavkaUsers = async () => {
         },
       }
     );
-    zavkauser.value = response.data.teams;
+    zavkauser.value = response.data;
     loading.value = false;
-    isData.value = true;
-    console.log(zavkauser.value);
+    if (zavkauser.value.length === 0) {
+      isDataUser.value = false;
+    } else {
+      isDataUser.value = true;
+    }
+    console.log("user", zavkauser.value);
     return response.data;
   } catch (error) {
     loading.value = false;
+    isDataUser.value = false;
     console.error("Error fetching regions:", error);
     throw error;
   }
@@ -107,11 +216,20 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+display: flex;
+justify-content: center;
+align-items: center;
+background-color: rgba(255, 255, 255, 0.8);
+z-index: 100; */
 .container {
-  display: flex;
-  justify-content: space-around;
-  width: 90%;
-  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(2, 0.7fr);
+  margin-left: 60px;
 }
 .teams-container {
   margin-top: 20px;

@@ -35,6 +35,8 @@ const commpet = ref();
 const loading = ref(false);
 const isData = ref(false);
 const token = ref();
+const role = ref();
+const organized = ref();
 const getCompetitions = async () => {
   try {
     loading.value = true;
@@ -58,12 +60,37 @@ const getCompetitions = async () => {
     throw error;
   }
 };
+const getCompetitionsOrganized = async () => {
+  try {
+    loading.value = true;
+    const response = await axios.get(
+      "http://10.8.0.23:8000/competitions/organized/",
+      {
+        headers: {
+          Authorization: `Token ${token.value}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    isData.value = true;
+    organized.value = response.data;
+    console.log("org", organized.value);
+    loading.value = false;
+    return response.data;
+  } catch (error) {
+    loading.value = false;
+    console.error("Error fetching regions:", error);
+    throw error;
+  }
+};
 const gotoComp = () => {
   router.push("/competitions");
 };
 onMounted(() => {
   token.value = localStorage.getItem("jwtToken").trim();
+  role.value = localStorage.getItem("role").trim();
   getCompetitions();
+  getCompetitionsOrganized();
 });
 </script>
 

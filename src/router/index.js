@@ -16,6 +16,7 @@ import InfoCommandUser from "@/components/user/infoCommandUser.vue";
 import InfoAllCompititions from "@/components/user/infoAllCompititions.vue";
 import InfoCardUserAdmin from "@/components/cabinet/InfoCardUserAdmin.vue";
 import InfoCardZavkaProved from "@/components/cabinet/InfoCardZavkaProved.vue";
+import InfoIZavka from "@/components/cabinet/InfoIZavka.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -115,6 +116,11 @@ const router = createRouter({
           path: "InfoCardZavkaProved",
           name: "InfoCarInfoCardZavkaProveddUserAdmin",
           component: InfoCardZavkaProved,
+        },
+        {
+          path: "InfoIZavka",
+          name: "InfoIZavka",
+          component: InfoIZavka,
         },
       ],
     },

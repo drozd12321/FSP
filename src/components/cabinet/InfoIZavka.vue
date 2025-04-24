@@ -4,7 +4,7 @@
     <div v-if="msgE"><AppMsg :act="msgE" @close="close" /></div>
     <div class="teams-container">
       <div class="teams-header">
-        <h2>Заявки на проведение</h2>
+        <h2>Мои заявки</h2>
       </div>
 
       <div class="teams-list">
@@ -13,27 +13,11 @@
         </div>
         <div v-if="isData" class="empty-state">
           <img src="/src/assets/user.png" alt="Нет команд" class="empty-icon" />
-          <p>
-            Региональные представители не оставляли заявок на проведение
-            соревнований
-          </p>
-          <button class="primary-btn" @click="gotoComp">Участвовать</button>
+          <p>Вы пока не подавали заявок на участие в командах</p>
+          <button class="primary-btn" @click="gotoComm">Найти команду</button>
         </div>
         <div v-else>
-          <InfoZavka
-            v-for="zavk in zavkaProved"
-            :isIndividual="true"
-            :name="zavk.name"
-            :competition_type_display="zavk.competition_type_display"
-            :type_display="zavk.type_display"
-            :discipline_name="zavk.discipline_name"
-            :startDate="zavk.dates.start_date"
-            :endDate="zavk.dates.end_date"
-            :description="zavk.description"
-            :id="zavk.id"
-            @rejectApplication="rejectApplication"
-            @approveApplication="approveApplication"
-          />
+          <Izavka />
         </div>
       </div>
     </div>
@@ -49,18 +33,19 @@ import { storeToRefs } from "pinia";
 import InfoZavka from "./InfoZavka.vue";
 import Loader from "../Loader.vue";
 import AppMsg from "../message/AppMsg.vue";
+import Izavka from "./Izavka.vue";
 const router = useRouter();
-const zavkaProved = ref();
+const izavka = ref();
 const msgStore = useMsgStore();
 const { getMsg } = storeToRefs(useMsgStore());
 const loading = ref(false);
 const isData = ref(false);
 const token = ref();
-const getzavkaProved = async () => {
+const getIzavka = async () => {
   try {
     loading.value = true;
     const response = await axios.get(
-      "http://10.8.0.23:8000/competitions/pending/",
+      "http://10.8.0.23:8000/user/vacancy-responses/",
       {
         headers: {
           Authorization: `Token ${token.value}`,
@@ -69,9 +54,9 @@ const getzavkaProved = async () => {
       }
     );
     isData.value = false;
-    zavkaProved.value = response.data.competitions;
+    izavka.value = response.data.competitions;
     loading.value = false;
-    console.log(zavkaProved.value);
+    console.log(Izavka.value);
     return response.data;
   } catch (error) {
     isData.value = true;
@@ -80,8 +65,8 @@ const getzavkaProved = async () => {
     throw error;
   }
 };
-const gotoComp = () => {
-  router.push("/competitions");
+const gotoComm = () => {
+  router.push("/command");
 };
 const msgE = computed(() => {
   return getMsg.value;
@@ -94,61 +79,10 @@ const msg = ref({
 const close = () => {
   msg.value = { show: false, type: "", title: "" };
 };
-const approveApplication = async (id) => {
-  try {
-    const response = await axios.post(
-      "http://10.8.0.23:8000/competitions/decision/",
-      {
-        action: "accept",
-        competition_id: id,
-      },
-      {
-        headers: {
-          Authorization: `Token ${token.value}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    getzavkaProved();
-    msgStore.setMesg({
-      show: true,
-      type: "succses",
-      title: response.data.detail,
-    });
-    console.log(response.data);
-  } catch (error) {
-    console.log(error);
-  }
-};
-const rejectApplication = async (id) => {
-  try {
-    const response = await axios.post(
-      "http://10.8.0.23:8000/competitions/decision/",
-      {
-        action: "reject",
-        competition_id: id,
-      },
-      {
-        headers: {
-          Authorization: `Token ${token.value}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    msgStore.setMesg({
-      show: true,
-      type: "succses",
-      title: response.data.detail,
-    });
-    getzavkaProved();
-    console.log(response.data);
-  } catch (error) {
-    console.log(error);
-  }
-};
+
 onMounted(() => {
   token.value = localStorage.getItem("jwtToken").trim();
-  getzavkaProved();
+  getIzavka();
 });
 </script>
 
