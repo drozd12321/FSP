@@ -1,5 +1,15 @@
 <template>
-  <div>fdfds</div>
+  <div class="region-container">
+    <h1>Информация о регионах</h1>
+
+    <RouterView />
+  </div>
 </template>
-<script></script>
-<style scoped></style>
+
+<script setup></script>
+
+<style scoped>
+.region-container {
+  padding: 20px;
+}
+</style>

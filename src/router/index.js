@@ -9,7 +9,6 @@ import FAQ from "@/views/FAQ.vue";
 import Rating from "@/views/Rating.vue";
 import News from "@/views/News.vue";
 import Cabinet from "@/views/Cabinet.vue";
-import CardInfoComp from "@/components/compititions/CardInfoComp.vue";
 import CompLayuot from "@/views/CompLayuot.vue";
 import LayoutCabinet from "@/components/cabinet/LayoutCabinet.vue";
 import InfoCommandUser from "@/components/user/infoCommandUser.vue";
@@ -20,6 +19,8 @@ import InfoIZavka from "@/components/cabinet/InfoIZavka.vue";
 import MyInfoZavkaCommand from "@/components/cabinet/MyInfoZavkaCommand.vue";
 import MessagePoch from "@/components/pocha/MessagePoch.vue";
 import Region from "@/components/home/Region.vue";
+import InfReg from "@/components/home/InfReg.vue";
+import Reg from "@/components/home/Reg.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -42,7 +43,24 @@ const router = createRouter({
         auth: false,
       },
     },
-    { path: "/region", name: "region", component: Region },
+    {
+      path: "/region",
+      name: "region",
+      component: Region,
+      children: [
+        {
+          path: "",
+          name: "region-main",
+          component: Reg,
+        },
+        {
+          path: ":name",
+          name: "region-detail",
+          component: InfReg,
+          props: true,
+        },
+      ],
+    },
     {
       path: "/command",
       name: "command",
