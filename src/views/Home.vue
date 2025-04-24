@@ -19,7 +19,7 @@ const getDat = async () => {
   try {
     const isoDate = getISODateTime();
     console.log(isoDate);
-    const response = await axios.get(
+    const response = await axios.post(
       "http://10.8.0.23:8000/competitions/status/",
       isoDate
     );
