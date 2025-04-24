@@ -2,26 +2,28 @@
   <div class="map-wrap">
     <svg viewBox="0 0 512.483 350" preserveAspectRatio="xMidYMid meet">
       <g transform="scale(0.5176595959595959) translate(0, 41.55999418517301)">
-        <path
-          v-for="region in russia"
-          :data-tooltip="region.name"
-          :key="region.id"
-          :d="region.d"
-          :stroke-width="region.strokewidth"
-          :stroke-linecap="region.strokelinecap"
-          :stroke-linejoin="region.strokelinejoin"
-          :stroke-opacity="region.strokeopacity"
-          :fill="region.fill"
-          original="#3175b5"
-          :id="region.id"
-          class="jvectormap-region"
-          @mouseover="showTooltip(region.name, $event)"
-          @mouseleave="hideTooltip"
-          :class="{
-            hovered: activeCity === region.name,
-            check: region.isCheck,
-          }"
-        ></path>
+        <RouterLink>
+          <path
+            v-for="region in russia"
+            :data-tooltip="region.name"
+            :key="region.id"
+            :d="region.d"
+            :stroke-width="region.strokewidth"
+            :stroke-linecap="region.strokelinecap"
+            :stroke-linejoin="region.strokelinejoin"
+            :stroke-opacity="region.strokeopacity"
+            :fill="region.fill"
+            original="#3175b5"
+            :id="region.id"
+            class="jvectormap-region"
+            @mouseover="showTooltip(region.name, $event)"
+            @mouseleave="hideTooltip"
+            :class="{
+              hovered: activeCity === region.name,
+              check: region.isCheck,
+            }"
+          ></path>
+        </RouterLink>
       </g>
     </svg>
     <div

@@ -19,6 +19,7 @@ import InfoCardZavkaProved from "@/components/cabinet/InfoCardZavkaProved.vue";
 import InfoIZavka from "@/components/cabinet/InfoIZavka.vue";
 import MyInfoZavkaCommand from "@/components/cabinet/MyInfoZavkaCommand.vue";
 import MessagePoch from "@/components/pocha/MessagePoch.vue";
+import Region from "@/components/home/Region.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -41,6 +42,7 @@ const router = createRouter({
         auth: false,
       },
     },
+    { path: "/region", name: "region", component: Region },
     {
       path: "/command",
       name: "command",
@@ -93,6 +95,7 @@ const router = createRouter({
         auth: false,
       },
     },
+
     {
       path: "/cabinet",
       name: "cabinet",
