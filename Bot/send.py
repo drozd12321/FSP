@@ -1,7 +1,7 @@
 import asyncio
 from bot_app import BotNewsletter
 
-BOT_TOKEN = "7396130456:AAG8C8b5R1A_eKGgsbOmjXQ93039wKbSbkQ"
+BOT_TOKEN = "YOU_TOKEN"
 
 async def main(usernames):
     """Асинхронная функция для запуска рассылки сообщений через Telegram бота.

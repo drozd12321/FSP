@@ -473,7 +473,7 @@ async def main():
     и запускает бота в режиме polling.
     """
     await init_db()
-    app = Application.builder().token("7396130456:AAG8C8b5R1A_eKGgsbOmjXQ93039wKbSbkQ").build()
+    app = Application.builder().token("YOU_TOKEN").build()
     app.add_handler(CommandHandler("start", start))
     conv_handler = ConversationHandler(
         entry_points=[MessageHandler(filters.Text("🏆 Найти соревнования"), find_competitions_start)],
